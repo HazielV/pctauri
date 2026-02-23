@@ -107,7 +107,7 @@ export default function Page() {
         <Link href={"pacientes/nuevo"}>
           <button className="flex gap-3 p-2.5 pl-3 pr-4.5 items-center font-medium text-xs bg-blue-500 hover:bg-blue-600 rounded-2xl text-white cursor-pointer hover:shadow-md transition ">
             <PlusIcon size={16} absoluteStrokeWidth strokeWidth={"2"} />
-            <span>Nuevo paciente</span>
+            <span>Nuevo usuario</span>
           </button>
         </Link>
       </div>

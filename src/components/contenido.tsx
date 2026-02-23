@@ -6,7 +6,7 @@ export const LayoutContenido = ({
   ...props
 }: ComponentProps<"div">) => (
   <div
-    className={cn(" flex-1 flex flex-col overflow-auto ", className)}
+    className={cn(" flex-1 flex flex-col overflow-auto pb-4 ", className)}
     {...props}
   />
 );
@@ -24,8 +24,8 @@ export const ContenedorTabla = ({
 }: ComponentProps<"div">) => (
   <div
     className={cn(
-      " border border-gray-200 dark:border-gray-500/40 rounded-2xl overflow-x-auto flex flex-col",
-      className
+      " border border-gray-200 dark:border-gray-500/40 rounded-2xl  flex flex-col",
+      className,
     )}
     {...props}
   />
@@ -37,7 +37,7 @@ export const BusquedaTabla = ({
   <div
     className={cn(
       "px-5 flex justify-between py-1.5 items-center flex-1",
-      className
+      className,
     )}
     {...props}
   />
@@ -59,7 +59,7 @@ export const TableRow = ({ className, ...props }: ComponentProps<"tr">) => (
   <tr
     className={cn(
       "ext-left text-xs font-medium text-gray-400 dark:text-gray-200 border-t border-gray-200 dark:border-gray-500/40 *:px-5 *:py-3.5",
-      className
+      className,
     )}
     {...props}
   />

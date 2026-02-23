@@ -7,15 +7,17 @@ import PaginacionItem from "./PaginacionItem";
 interface props extends ComponentProps<"div"> {
   total?: number;
   actual?: number;
+  perPage?: number;
 }
 export default function Paginacion({
   total = 0,
-  actual = 0,
+  actual = 1,
+  perPage = 10,
   className,
 }: props) {
   const [_, setSearchParams] = useSearchParams();
-
-  const generarPaginas = (total: number, actual: number) => {
+  const totalPaginas = Math.ceil(total / perPage);
+  /* const generarPaginas = (total: number, actual: number) => {
     total = Math.ceil(total / 10);
     const paginas: number[] = [];
     if (total < 8) {
@@ -27,11 +29,10 @@ export default function Paginacion({
       return paginas;
     }
 
-    const delta = 1; // Muestra un elemento antes y uno después de la página actual
+    const delta = 1; 
 
-    paginas.push(1); // Siempre muestra la primera página
+    paginas.push(1); 
 
-    // Mostrar "..." si la página actual es mayor a 4 (para evitar mostrar todas las primeras páginas)
     if (actual > delta + 3) {
       paginas.push(-1);
     } else {
@@ -40,7 +41,6 @@ export default function Paginacion({
       }
     }
 
-    // Muestra páginas alrededor de la página actual
     const inicio = Math.max(2, actual - delta);
     const fin = Math.min(total - 1, actual + delta);
     if (actual > total - delta - 2) {
@@ -61,23 +61,82 @@ export default function Paginacion({
       });
     }
 
-    // Mostrar "..." si la página actual está muy cerca del final
     if (actual < total - delta - 2) {
       paginas.push(0);
     } else {
       for (let i = total - 1; i > actual + delta; i--) {
         paginas.push(i);
       }
-      /*  */
     }
 
-    // Siempre muestra la última página si es mayor que 1
     if (total > 1) {
       paginas.push(total);
     }
 
     return paginas;
+  }; */
+  const generarPaginas = (totalPag: number, pagActual: number) => {
+    const paginas: number[] = [];
+
+    // Si no hay páginas, retornamos vacío
+    if (totalPag <= 0) return [];
+
+    if (totalPag < 8) {
+      for (let i = 1; i <= totalPag; i++) {
+        paginas.push(i);
+      }
+      return paginas;
+    }
+
+    const delta = 1;
+    paginas.push(1);
+
+    if (pagActual > delta + 3) {
+      paginas.push(-1); // Representa "..."
+    } else {
+      for (let i = 2; i < pagActual - delta; i++) {
+        paginas.push(i);
+      }
+    }
+
+    const inicio = Math.max(2, pagActual - delta);
+    const fin = Math.min(totalPag - 1, pagActual + delta);
+
+    if (pagActual > totalPag - delta - 2) {
+      for (let i = totalPag - 4; i < pagActual - delta; i++) {
+        paginas.push(i);
+      }
+    }
+
+    for (let i = inicio; i <= fin; i++) {
+      paginas.push(i);
+    }
+
+    if (pagActual < delta + 3) {
+      const aux = [];
+      for (let i = 5; i > pagActual + delta; i--) {
+        aux.push(i);
+      }
+      aux.reverse().forEach((element) => {
+        if (element < totalPag) paginas.push(element);
+      });
+    }
+
+    if (pagActual < totalPag - delta - 2) {
+      paginas.push(0); // Representa el otro "..."
+    } else {
+      for (let i = totalPag - 1; i > pagActual + delta; i--) {
+        if (i > 1) paginas.push(i);
+      }
+    }
+
+    if (totalPag > 1) {
+      paginas.push(totalPag);
+    }
+
+    return paginas;
   };
+
   const setQueryParams = (page: number) => {
     setSearchParams((prev) => {
       prev.set("page", page.toString());
@@ -85,16 +144,22 @@ export default function Paginacion({
     });
   };
 
-  const paginas = useMemo(() => generarPaginas(total, actual), [total, actual]);
-  const anterior = actual > 1 ? actual - 1 : 1;
-  const siguiente = actual < total ? actual + 1 : total;
+  const paginas = useMemo(
+    () => generarPaginas(totalPaginas, actual),
+    [totalPaginas, actual],
+  );
+  /* const paginas = useMemo(() => generarPaginas(total, actual), [total, actual]); */
+  /*  const anterior = actual > 1 ? actual - 1 : 1;
+  const siguiente = actual < total ? actual + 1 : total; */
+  const anterior = actual - 1;
+  const siguiente = actual + 1;
   return (
     <div className={cn("", className)}>
       <ul className="flex gap-2 justify-center ">
         <div onClick={() => setQueryParams(anterior)}>
           <button
             className="bg-background dark:bg-secondary p-2.5  rounded-full disabled:bg-gray-200 disabled:text-gray-400 shadow transform duration-200 hover:-translate-y-1 disabled:shadow-none cursor-pointer disabled:cursor-not-allowed disabled:hover:translate-y-0"
-            disabled={actual === 1}
+            disabled={actual <= 1}
           >
             <ChevronLeft size={20} />
           </button>
@@ -107,7 +172,7 @@ export default function Paginacion({
         <div onClick={() => setQueryParams(siguiente)}>
           <button
             className="bg-background dark:bg-secondary p-2.5  rounded-full disabled:bg-gray-200 disabled:text-gray-400 shadow transform duration-200 hover:-translate-y-1 disabled:shadow-none cursor-pointer disabled:cursor-not-allowed disabled:hover:translate-y-0"
-            disabled={actual === total}
+            disabled={actual >= totalPaginas || totalPaginas === 0}
           >
             <ChevronRight size={20} />
           </button>

@@ -25,6 +25,7 @@ const buttonVariants = cva(
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
         icon: "size-9",
+        "icon-xs": "size-6",
         "icon-sm": "size-8",
         "icon-lg": "size-10",
       },
@@ -33,7 +34,7 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
+  },
 );
 
 const Button = React.forwardRef<
@@ -49,13 +50,13 @@ const Button = React.forwardRef<
       asChild = false,
       ...props
     },
-    ref
+    ref,
   ) => {
     const Comp = asChild ? Slot : "button";
 
     return (
       <Comp
-        ref={ref} // <--- ESTO ES LO QUE FALTA
+        ref={ref}
         data-slot="button"
         data-variant={variant}
         data-size={size}
@@ -63,11 +64,9 @@ const Button = React.forwardRef<
         {...props}
       />
     );
-  }
+  },
 );
 
-Button.displayName = "Button"; // Buena práctica para debugging
+Button.displayName = "Button";
 
-/* export { Button };
- */
 export { Button, buttonVariants };

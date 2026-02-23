@@ -1,18 +1,28 @@
 import { Route, Switch, Redirect } from "wouter";
 import Layout from "./components/Layout";
-import Usuarios from "./pages/Dashboard";
+
 import Dashboard from "./pages/Dashboard";
+import Roles from "./pages/Roles";
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CustomTitlebar from "./components/CustomTitlebar";
 import { ThemeProvider } from "./components/themeProvider";
-
+import { ModalContext } from "./components/ModalContext";
+import { Toaster } from "@/components/ui/sonner";
+import { AlertContext } from "./components/AlertContext";
+import Usuarios from "./pages/Usuarios";
+import Menus from "./pages/Menus";
+import Permisos from "./pages/Permisos";
+import Recursos from "./pages/Recursos";
 function App() {
   const queryClient = new QueryClient();
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <Layout>
+          <AlertContext />
+          <ModalContext />
+          <Toaster />
           <CustomTitlebar />
           <Switch>
             {/* Ruta base redirigida a admin */}
@@ -22,6 +32,10 @@ function App() {
 
             <Route path="/admin" component={Dashboard} />
             <Route path="/admin/usuarios" component={Usuarios} />
+            <Route path="/admin/roles" component={Roles} />
+            <Route path="/admin/menus" component={Menus} />
+            <Route path="/admin/permisos" component={Permisos} />
+            <Route path="/admin/recursos" component={Recursos} />
 
             {/* Ruta 404 opcional */}
             <Route>

@@ -1,58 +1,73 @@
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 import Database from "@tauri-apps/plugin-sql";
 import * as schema from "./schema";
+import * as relations from "./relations";
 
-// 1. Singleton para la base de datos
 let instance: Database | null = null;
 
-// src/db/client.ts
 async function getDb() {
   if (!instance) {
-    const dbName = import.meta.env.VITE_DB_NAME || "proyecto2.db";
+    const dbName = import.meta.env.VITE_DB_NAME || "proyecto3.db";
     instance = await Database.load(`sqlite:${dbName}`);
-
-    // ASEGURAR TABLAS (MIGRACIÓN MANUAL RÁPIDA)
-    // Esto evita el error "no such table"
-    /* await instance.execute(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT UNIQUE,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
-      );
-    `); */
   }
   return instance;
 }
-// Helper para detectar si es SELECT
-const isSelectQuery = (sql: string) =>
-  sql.trim().toLowerCase().startsWith("select");
 
+/* export const db = drizzle(
+  async (sql, params, method) => {
+    const sqlite = await getDb();
+    try {
+      const rows = await sqlite.select<any[]>(sql, params);
+      if (method === "get") {
+        const firstRow = rows[0];
+        return {
+          rows: firstRow ? Object.values(firstRow) : [],
+        };
+      } else {
+        const valuesArray = rows.map((row) => Object.values(row));
+        return { rows: valuesArray };
+      }
+    } catch (e) {
+      console.error("Error en el puente de Rust:", e);
+      try {
+        await sqlite.execute(sql, params);
+        return { rows: [] };
+      } catch (execError) {
+        throw execError;
+      }
+    }
+  },
+  { schema: { ...schema, ...relations } },
+);
+ */
 export const db = drizzle(
   async (sql, params, method) => {
     const sqlite = await getDb();
-
     try {
-      if (isSelectQuery(sql)) {
-        const rows = await sqlite.select<any[]>(sql, params);
+      // 1. Decidimos qué método del plugin de Tauri usar
+      // 'run' suele ser para INSERT/UPDATE/DELETE (execute)
+      // 'all', 'values', 'get' suelen ser para SELECT
 
-        // Drizzle Proxy espera que "all" devuelva un array de arrays
-        // o un array de objetos dependiendo de la versión,
-        // pero lo más seguro con el proxy de SQLite es mapear los valores:
-        if (method === "all") {
-          return { rows: rows.map((r) => Object.values(r)) };
-        }
-        // Para "get", devolvemos la primera fila mapeada
-        return { rows: rows.length > 0 ? Object.values(rows[0]) : [] };
-      } else {
-        // Para INSERT, UPDATE, DELETE
-        await sqlite.execute(sql, params);
+      if (method === "run") {
+        const result = await sqlite.execute(sql, params);
+        // Drizzle espera { rows: [] } para ejecuciones que no devuelven datos
         return { rows: [] };
       }
+
+      const rows = await sqlite.select<any[]>(sql, params);
+
+      if (method === "get") {
+        // Retorna la primera fila como un array de valores
+        return { rows: rows[0] ? Object.values(rows[0]) : [] };
+      }
+
+      // Retorna todas las filas como un array de arrays de valores
+      return { rows: rows.map((row) => Object.values(row)) };
     } catch (e) {
-      console.error("Error en DB Proxy:", e);
-      return { rows: [] };
+      // IMPORTANTE: Lanza el error para que llegue a la mutación
+      console.error("Error en el puente de Rust:", e);
+      throw e;
     }
   },
-  { schema, logger: true }
+  { schema: { ...schema, ...relations } },
 );

@@ -6,7 +6,7 @@ import Page from "./page";
 export default function Dashboard() {
   return (
     <LayoutContenido>
-      <Header texto="Pacientes">
+      <Header texto="Usuarios">
         <RiContactsBook3Line size={20} className="z-10 relative" />
       </Header>
       <Page />

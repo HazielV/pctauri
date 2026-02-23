@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1771035422471,
+      "tag": "0000_puzzling_medusa",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1771035927883,
+      "tag": "0001_wise_killmonger",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1771258646432,
+      "tag": "0002_white_the_twelve",
+      "breakpoints": true
+    }
+  ]
+}
