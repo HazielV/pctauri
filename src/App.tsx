@@ -14,6 +14,10 @@ import Usuarios from "./pages/Usuarios";
 import Menus from "./pages/Menus";
 import Permisos from "./pages/Permisos";
 import Recursos from "./pages/Recursos";
+import Gestion from "./pages/Gestion";
+import Sucursales from "./pages/Sucursales";
+import Vehiculos from "./pages/Vehiculos";
+import Instructores from "./pages/Instructores";
 function App() {
   const queryClient = new QueryClient();
   return (
@@ -36,6 +40,10 @@ function App() {
             <Route path="/admin/menus" component={Menus} />
             <Route path="/admin/permisos" component={Permisos} />
             <Route path="/admin/recursos" component={Recursos} />
+            <Route path="/admin/gestion" component={Gestion} />
+            <Route path="/admin/sucursales" component={Sucursales} />
+            <Route path="/admin/vehiculos" component={Vehiculos} />
+            <Route path="/admin/instructores" component={Instructores} />
 
             {/* Ruta 404 opcional */}
             <Route>

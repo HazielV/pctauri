@@ -4,18 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form } from "./form";
 import { db } from "@/db/client";
-import { rol } from "@/db/schema";
+import { sucursal } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export function LoaderForm({ id }: { id?: number }) {
   const { data, isLoading } = useQuery({
-    queryKey: ["usuario_data", id],
+    queryKey: ["sucursal_data", id],
     queryFn: async () => {
-      const initialData = await db.query.usuario.findFirst({
-        where: eq(rol.id, id!),
-        with: {
-          persona: true,
-        },
+      const initialData = await db.query.sucursal.findFirst({
+        where: eq(sucursal.id, id!),
       });
       return initialData;
     },

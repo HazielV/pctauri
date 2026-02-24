@@ -7,7 +7,7 @@ import {
   PlusIcon,
   Trash2,
 } from "lucide-react";
-import { DynamicIcon, IconName } from "lucide-react/dynamic";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,24 +31,20 @@ import Paginacion from "@/components/Paginacion";
 
 import { useActions } from "./useActions";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-export const toKebabCase = (str: string): IconName => {
-  const result = str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
 
-  return result as IconName;
-};
 export default function Page() {
   const { handleCreate, handleEdit, handleToggleStatus, useGetData } =
     useActions();
 
   const [searchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
-  const perPage = parseInt(searchParams.get("perpage") || "5");
+  const perPage = parseInt(searchParams.get("perpage") || "10");
   const { data, isLoading, isError } = useGetData(page, perPage);
 
   if (isLoading) return <div>Cargando...</div>;
   if (isError || !data) return <div>Error o sin datos</div>;
 
-  const { data: roles, meta } = data;
+  const { data: instructores, meta } = data;
   return (
     <Contendor>
       <div className="flex justify-end py-2 pb-4">
@@ -57,7 +53,7 @@ export default function Page() {
           className="flex gap-3 p-2.5 pl-3 pr-4.5 items-center font-medium text-xs bg-blue-500 hover:bg-blue-600 rounded-2xl text-white cursor-pointer hover:shadow-md transition "
         >
           <PlusIcon size={16} absoluteStrokeWidth strokeWidth={"2"} />
-          <span>Nuevo menu</span>
+          <span>Nueva gestion</span>
         </button>
       </div>
       <ScrollArea className="pb-3">
@@ -96,31 +92,30 @@ export default function Page() {
             <TableHeader>
               <TableRow className="text-left text-xs font-medium text-gray-400 border-t border-gray-200 *:px-5 *:py-3.5">
                 <TableCell className="">Id</TableCell>
-                <TableCell>icono</TableCell>
+                <TableCell>nroLicencia</TableCell>
                 <TableCell>nombre</TableCell>
-                <TableCell>orden</TableCell>
-                <TableCell>ruta</TableCell>
+                <TableCell>primer apellido</TableCell>
+                <TableCell>segundo apellido</TableCell>
+                <TableCell>disponibilidad</TableCell>
                 <TableCell>estado</TableCell>
                 <TableCell>acciones</TableCell>
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {roles.map((data, index) => (
+              {instructores.map((data, index) => (
                 <TableRow
                   className="font-medium text-gray-600 border-t border-b last:border-b-0 *:px-5 *:py-3.5 border-gray-200"
                   key={index}
                 >
                   <TableCell>{data.id}</TableCell>
+                  <TableCell>{data.nroLicencia}</TableCell>
+                  <TableCell>{data.persona.nombres}</TableCell>
+                  <TableCell>{data.persona.primerApellido}</TableCell>
+                  <TableCell>{data.persona.segundoApellido}</TableCell>
                   <TableCell>
-                    <DynamicIcon
-                      name={toKebabCase(data?.icono || "CircleQuestionMark")}
-                      size={18}
-                    />
+                    {data.disponibilidadActiva ? "disponible" : "no disponible"}
                   </TableCell>
-                  <TableCell>{data.nombre}</TableCell>
-                  <TableCell>{data.orden}</TableCell>
-                  <TableCell>{data.ruta}</TableCell>
                   <TableCell className="flex">
                     <div className="text-xs rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 ">
                       {data.estado}

@@ -1,7 +1,7 @@
 // Roles/useRoles.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/db/client";
-import { persona, usuario } from "@/db/schema";
+import { instructor, persona } from "@/db/schema";
 import { count, eq } from "drizzle-orm";
 import { useModalStore } from "@/store/modalState";
 import { useAlertStore } from "@/store/AlertState";
@@ -14,21 +14,16 @@ export const useActions = () => {
   const { showAlert } = useAlertStore();
   const getData = async (page: number, perPage: number) => {
     try {
-      const [totalResult] = await db.select({ value: count() }).from(usuario);
+      const [totalResult] = await db
+        .select({ value: count() })
+        .from(instructor);
       const totalItems = totalResult?.value ?? 0;
       const skip = (page - 1) * perPage;
-      const data = await db.query.usuario.findMany({
+      const data = await db.query.instructor.findMany({
         offset: skip,
         limit: perPage,
         with: {
-          persona: {
-            columns: {
-              nombres: true,
-              primerApellido: true,
-              segundoApellido: true,
-              nroDocumento: true,
-            },
-          },
+          persona: true,
         },
       });
 
@@ -42,7 +37,7 @@ export const useActions = () => {
         },
       };
     } catch (error) {
-      console.error("Error obteniendo roles de SQLite:", error);
+      console.error("Error obteniendo datos de SQLite:", error);
 
       return {
         data: [],
@@ -58,7 +53,7 @@ export const useActions = () => {
   // --- QUERIES ---
   const useGetData = (page: number, perPage: number) =>
     useQuery({
-      queryKey: ["usuarios-list", page, perPage], // Si esto cambia, se refetchea
+      queryKey: ["instructor-list", page, perPage], // Si esto cambia, se refetchea
       queryFn: () => getData(page, perPage),
     });
 
@@ -66,16 +61,16 @@ export const useActions = () => {
   const upsertMutation = useMutation({
     mutationFn: async ({ id, values }: { id?: number; values: any }) => {
       setLoading(true);
-      const { username, password, ...dataPersona } = values;
+      const { nroLicencia, ...dataPersona } = values;
       if (id) {
         return await db.transaction(async (tx) => {
           const [u] = await tx
-            .update(usuario)
-            .set({ username, password })
-            .where(eq(usuario.id, id))
-            .returning({ personaId: usuario.personaId });
+            .update(instructor)
+            .set({ nroLicencia })
+            .where(eq(instructor.id, id))
+            .returning({ personaId: instructor.personaId });
 
-          if (!u) throw new Error("Usuario no encontrado");
+          if (!u) throw new Error("Instructor no encontrado");
           return await tx
             .update(persona)
             .set(dataPersona)
@@ -90,18 +85,20 @@ export const useActions = () => {
 
           if (!u) throw new Error("No se pudo completar la accion");
           return await tx
-            .insert(usuario)
-            .values({ username, password, personaId: u.id });
+            .insert(instructor)
+            .values({ nroLicencia, personaId: u.id });
         });
     },
     onSuccess: (_, variables) => {
       setLoading(false);
-      queryClient.invalidateQueries({ queryKey: ["usuarios-list"] });
+      queryClient.invalidateQueries({ queryKey: ["instructor-list"] });
       if (variables.id)
         queryClient.invalidateQueries({
-          queryKey: ["usuario_data", variables.id],
+          queryKey: ["instructor_data", variables.id],
         });
-      toast.success(variables.id ? "Usuario actualizado" : "Usuario creado");
+      toast.success(
+        variables.id ? "Instructor actualizado" : "Instructor creado",
+      );
       close();
     },
     onError: () => {
@@ -119,30 +116,33 @@ export const useActions = () => {
       estado: "activo" | "inactivo";
     }) => {
       // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
-      return await db.update(usuario).set({ estado }).where(eq(usuario.id, id));
+      return await db
+        .update(instructor)
+        .set({ estado })
+        .where(eq(instructor.id, id));
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["usuarios-list"] }),
+      queryClient.invalidateQueries({ queryKey: ["instructor-list"] }),
   });
 
   const handleCreate = () => {
     show(<LoaderForm />, {
-      title: "Crear nuevo usuario",
-      formId: "usuario-formulario-create",
+      title: "Crear nuevo instructor",
+      formId: "instructor-formulario-create",
     });
   };
   const handleEdit = (id: number) => {
     show(<LoaderForm id={id} />, {
-      title: "Crear nuevo usuario",
-      formId: "usuario-formulario-edit",
+      title: "Editar instructor",
+      formId: "instructor-formulario-edit",
     });
   };
 
   const handleToggleStatus = (id: number, currentStatus: string) => {
     const isInactive = currentStatus === "inactivo";
     showAlert({
-      title: isInactive ? "¿Activar Rol?" : "¿Deshabilitar Rol?",
-      description: `El rol pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
+      title: isInactive ? "¿Activar Instructor?" : "¿Deshabilitar Instructor?",
+      description: `El Instructor pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
       variant: isInactive ? "success" : "error",
       actionText: "Confirmar",
       onAction: async () => {

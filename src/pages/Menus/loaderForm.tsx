@@ -4,15 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form } from "./form";
 import { db } from "@/db/client";
-import { rol } from "@/db/schema";
+import { menu } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export function LoaderForm({ id }: { id?: number }) {
   const { data, isLoading } = useQuery({
-    queryKey: ["menu-data", id],
+    queryKey: ["menu_data", id],
     queryFn: async () => {
       const initialData = await db.query.menu.findFirst({
-        where: eq(rol.id, id!),
+        where: eq(menu.id, id!),
       });
       return initialData;
     },

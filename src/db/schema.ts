@@ -5,6 +5,7 @@ import {
   uniqueIndex,
   foreignKey,
   primaryKey,
+  real,
 } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
@@ -263,6 +264,411 @@ export const usuariosRoles = sqliteTable(
       columns: [table.rolId],
       foreignColumns: [rol.id],
       name: "UsuariosRoles_rolId_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+  ],
+);
+// ==========================================
+// NIVEL 1: TIEMPO, UBICACIÓN Y CATÁLOGO
+// ==========================================
+export const gestion = sqliteTable("Gestion", {
+  id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+  nombre: text().notNull(), // Ej: "Gestión 2025"
+  fechaInicio: text().notNull(),
+  fechaFin: text().notNull(),
+  estadoGestion: text("EstadoGestion", { enum: ["ACTIVA", "CERRADA"] })
+    .notNull()
+    .default("ACTIVA"),
+  createdAt: text()
+    .default(sql`(CURRENT_TIMESTAMP)`)
+    .notNull(),
+  updatedAt: text()
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
+  estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+    .notNull()
+    .default("activo"),
+});
+
+export const sucursal = sqliteTable("Sucursal", {
+  id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+  nombre: text().notNull(),
+  direccion: text().notNull(),
+  createdAt: text()
+    .default(sql`(CURRENT_TIMESTAMP)`)
+    .notNull(),
+  updatedAt: text()
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
+  estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+    .notNull()
+    .default("activo"),
+});
+
+export const curso = sqliteTable(
+  "Curso",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    nombreCurso: text().notNull(),
+    precioBase: real().notNull(),
+    horasTeoricasReq: integer().notNull().default(0),
+    horasPracticasReq: integer().notNull().default(0),
+    gestionId: integer().notNull(),
+    sucursalId: integer().notNull(),
+    createdAt: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    updatedAt: text()
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+      .notNull()
+      .default("activo"),
+  },
+  (table) => [
+    foreignKey({ columns: [table.gestionId], foreignColumns: [gestion.id] })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({ columns: [table.sucursalId], foreignColumns: [sucursal.id] })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+// ==========================================
+// NIVEL 2: ACTORES Y RECURSOS
+// ==========================================
+
+export const estudiante = sqliteTable(
+  "Estudiante",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    personaId: integer("personaId").notNull().unique(),
+    codigoInterno: text("codigoInterno").unique(),
+    createdAt: text("createdAt")
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    updatedAt: text("updatedAt")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+      .notNull()
+      .default("activo"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.personaId],
+      foreignColumns: [persona.id],
+      name: "Estudiante_personaId_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+export const instructor = sqliteTable(
+  "Instructor",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    personaId: integer("personaId").notNull().unique(),
+    nroLicencia: text("nroLicencia").notNull().unique(),
+    disponibilidadActiva: integer("disponibilidadActiva", { mode: "boolean" })
+      .notNull()
+      .default(true),
+    createdAt: text("createdAt")
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    updatedAt: text("updatedAt")
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+      .notNull()
+      .default("activo"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.personaId],
+      foreignColumns: [persona.id],
+      name: "Instructor_personaId_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+export const vehiculo = sqliteTable("Vehiculo", {
+  id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+  placa: text().notNull().unique(),
+  marca: text().notNull(),
+  estadoOperativo: text("EstadoOperativo", {
+    enum: ["DISPONIBLE", "MANTENIMIENTO", "AVERIADO"],
+  })
+    .notNull()
+    .default("DISPONIBLE"),
+  createdAt: text()
+    .default(sql`(CURRENT_TIMESTAMP)`)
+    .notNull(),
+  updatedAt: text()
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
+  estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+    .notNull()
+    .default("activo"),
+});
+
+export const aula = sqliteTable(
+  "Aula",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    nombre: text().notNull(),
+    capacidad: integer().notNull(),
+    sucursalId: integer().notNull(),
+    createdAt: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    updatedAt: text()
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+      .notNull()
+      .default("activo"),
+  },
+  (table) => [
+    foreignKey({ columns: [table.sucursalId], foreignColumns: [sucursal.id] })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+// ==========================================
+// NIVEL 3: CONTRATO Y FINANZAS
+// ==========================================
+
+export const inscripcion = sqliteTable(
+  "Inscripcion",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    estudianteId: integer().notNull(),
+    cursoId: integer().notNull(),
+    gestionId: integer().notNull(),
+    precioPactado: real().notNull(),
+    fechaInscripcion: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    estadoInscripcion: text("EstadoInscripcion", {
+      enum: ["ACTIVA", "FINALIZADA", "ABANDONADA"],
+    })
+      .notNull()
+      .default("ACTIVA"),
+    createdAt: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    updatedAt: text()
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+      .notNull()
+      .default("activo"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.estudianteId],
+      foreignColumns: [estudiante.id],
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({ columns: [table.cursoId], foreignColumns: [curso.id] })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({ columns: [table.gestionId], foreignColumns: [gestion.id] })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+export const pago = sqliteTable(
+  "Pago",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    inscripcionId: integer().notNull(),
+    montoPagado: real().notNull(),
+    fechaPago: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    metodoPago: text("MetodoPago", {
+      enum: ["EFECTIVO", "TARJETA", "TRANSFERENCIA"],
+    }).notNull(),
+    createdAt: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    updatedAt: text()
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+      .notNull()
+      .default("activo"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.inscripcionId],
+      foreignColumns: [inscripcion.id],
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+  ],
+);
+
+// ==========================================
+// NIVEL 4: OPERACIÓN (PLANTILLAS Y CLASES)
+// ==========================================
+
+export const horarioPlantilla = sqliteTable(
+  "HorarioPlantilla",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    nombre: text().notNull(), // Ej: "Lunes-Miercoles 08:00-10:00"
+    diasSemana: text().notNull(), // Ej: "LUN,MIE"
+    horaInicio: text().notNull(), // Ej: "08:00"
+    horaFin: text().notNull(), // Ej: "10:00"
+    tipo: text("TipoClase", { enum: ["TEORICO", "PRACTICO"] }).notNull(),
+    instructorId: integer().notNull(),
+    cursoId: integer(), // Null si es un horario genérico para prácticas libres
+    createdAt: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    updatedAt: text()
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+      .notNull()
+      .default("activo"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.instructorId],
+      foreignColumns: [instructor.id],
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({ columns: [table.cursoId], foreignColumns: [curso.id] })
+      .onUpdate("cascade")
+      .onDelete("set null"),
+  ],
+);
+
+export const claseTeorica = sqliteTable(
+  "ClaseTeorica",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    horarioPlantillaId: integer().notNull(),
+    aulaId: integer().notNull(),
+    fechaExacta: text().notNull(),
+    estadoClase: text("EstadoClase", {
+      enum: ["PROGRAMADA", "DICTADA", "CANCELADA"],
+    })
+      .notNull()
+      .default("PROGRAMADA"),
+    createdAt: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    updatedAt: text()
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+      .notNull()
+      .default("activo"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.horarioPlantillaId],
+      foreignColumns: [horarioPlantilla.id],
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({ columns: [table.aulaId], foreignColumns: [aula.id] })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+export const clasePractica = sqliteTable(
+  "ClasePractica",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    horarioPlantillaId: integer().notNull(),
+    vehiculoId: integer().notNull(),
+    fechaExacta: text().notNull(),
+    estadoClase: text("EstadoClase", {
+      enum: ["PROGRAMADA", "COMPLETADA", "CANCELADA"],
+    })
+      .notNull()
+      .default("PROGRAMADA"),
+    createdAt: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    updatedAt: text()
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+      .notNull()
+      .default("activo"),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.horarioPlantillaId],
+      foreignColumns: [horarioPlantilla.id],
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({ columns: [table.vehiculoId], foreignColumns: [vehiculo.id] })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+// ==========================================
+// NIVEL 5: ASISTENCIA Y REPROGRAMACIÓN
+// ==========================================
+
+export const asistenciaGeneral = sqliteTable(
+  "AsistenciaGeneral",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    inscripcionId: integer().notNull(),
+    claseTeoricaId: integer(), // Null si asiste a práctica
+    clasePracticaId: integer(), // Null si asiste a teoría
+    estadoAsistencia: text("EstadoAsistencia", {
+      enum: ["PROGRAMADA", "PRESENTE", "FALTA", "REPROGRAMADA"],
+    })
+      .notNull()
+      .default("PROGRAMADA"),
+    esReprogramado: integer({ mode: "boolean" }).notNull().default(false), // True si proviene de un cambio
+    createdAt: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    updatedAt: text()
+      .notNull()
+      .default(sql`(CURRENT_TIMESTAMP)`),
+    // Al ser una tabla N:N puramente transaccional/operativa, NO lleva "estado" (soft delete).
+    // Si se cancela, su "estadoAsistencia" cambia a REPROGRAMADA u otro estado lógico.
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.inscripcionId],
+      foreignColumns: [inscripcion.id],
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.claseTeoricaId],
+      foreignColumns: [claseTeorica.id],
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.clasePracticaId],
+      foreignColumns: [clasePractica.id],
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
