@@ -123,7 +123,6 @@ export function Form({
 
     //upsertMutation.mutate({ id: data?.id, values: formdata });
   };
-  console.log(data);
   return (
     <form id={formId} onSubmit={handleSubmit} className="grid gap-5">
       <FieldGroup className="grid grid-cols-2 lg:grid-cols-3">
@@ -154,7 +153,7 @@ export function Form({
             }
           >
             <SelectTrigger id="Menu">
-              <SelectValue placeholder="Seleccione un tipo" />
+              <SelectValue placeholder="Seleccione un menu" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
@@ -163,6 +162,23 @@ export function Form({
                     {valor.nombre}
                   </SelectItem>
                 ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field className="w-full">
+          <FieldLabel htmlFor="tipo">
+            Tipo permiso <span className="text-destructive">*</span>
+          </FieldLabel>
+
+          <Select name="tipo">
+            <SelectTrigger id="tipo">
+              <SelectValue placeholder="Seleccione un tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value={"front"}>Aplicacion</SelectItem>
+                <SelectItem value={"back"}>Servidor</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>
@@ -180,6 +196,9 @@ export function Form({
               <MultiSelect
                 multiple
                 name="roles"
+                defaultData={data?.rolesRecursos.map((rolrec) =>
+                  String(rolrec.rolId),
+                )}
                 data={roles?.map((e) => ({
                   descripcion: e.nombre,
                   valor: String(e.id),
@@ -195,6 +214,9 @@ export function Form({
               <MultiSelect
                 multiple
                 name="permisos"
+                defaultData={data?.rolesRecursos.map((rolrec) =>
+                  String(rolrec.permisos),
+                )}
                 data={permisos?.map((e) => ({
                   descripcion: e.descripcion || "",
                   valor: String(e.id),

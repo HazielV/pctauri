@@ -4,25 +4,28 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form } from "./form";
 import { db } from "@/db/client";
-import { instructor } from "@/db/schema";
+import { curso } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export function LoaderForm({ id }: { id?: number }) {
   const { data, isLoading } = useQuery({
-    queryKey: ["instructor_data", id],
+    queryKey: ["curso_data", id],
     queryFn: async () => {
-      const initialData = await db.query.instructor.findFirst({
-        where: eq(instructor.id, id!),
-        with: {
-          persona: true,
-        },
+      const initialData = await db.query.curso.findFirst({
+        where: eq(curso.id, id!),
       });
       return initialData;
     },
-    enabled: !!id, // Solo ejecuta la query si hay un ID
+    enabled: !!id,
   });
-
-  if (id && isLoading) {
+  const { data: sucursales, isLoading: loadingSucursales } = useQuery({
+    queryKey: ["sucursales-activos"],
+    queryFn: () =>
+      db.query.sucursal.findMany({
+        where: (sucursal, { eq }) => eq(sucursal.estado, "activo"),
+      }),
+  });
+  if ((id && isLoading) || loadingSucursales) {
     return (
       <div className="p-4 space-y-4">
         <Skeleton className="h-10 w-full" />
@@ -31,5 +34,5 @@ export function LoaderForm({ id }: { id?: number }) {
     );
   }
 
-  return <Form data={data} />;
+  return <Form data={data} sucursales={sucursales} />;
 }

@@ -18,6 +18,7 @@ import Gestion from "./pages/Gestion";
 import Sucursales from "./pages/Sucursales";
 import Vehiculos from "./pages/Vehiculos";
 import Instructores from "./pages/Instructores";
+import Cursos from "./pages/Cursos";
 function App() {
   const queryClient = new QueryClient();
   return (
@@ -44,6 +45,7 @@ function App() {
             <Route path="/admin/sucursales" component={Sucursales} />
             <Route path="/admin/vehiculos" component={Vehiculos} />
             <Route path="/admin/instructores" component={Instructores} />
+            <Route path="/admin/cursos" component={Cursos} />
 
             {/* Ruta 404 opcional */}
             <Route>

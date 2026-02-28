@@ -14,9 +14,11 @@ const menus = [
   },
 ];
 export const toKebabCase = (str: string): IconName => {
-  const result = str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-
-  return result as IconName;
+  return str
+    .split(/(?=[A-Z0-9])/)
+    .filter(Boolean) // Por si el primero es Mayúscula y deja un "" al inicio
+    .join("-") // Une con guiones: "A-Arrow-Up"
+    .toLowerCase() as IconName; // "a-arrow-up"
 };
 export const getMenusData = async () => {
   try {

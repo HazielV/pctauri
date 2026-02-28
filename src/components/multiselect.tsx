@@ -6,12 +6,14 @@ export default function MultiSelect({
   data,
   multiple = false,
   name,
+  defaultData,
 }: {
   data: Record<string, string>[];
   multiple?: boolean;
   name: string;
+  defaultData?: string[];
 }) {
-  const [select, setSelect] = useState<string[]>([]);
+  const [select, setSelect] = useState<string[]>(defaultData ?? []);
   const seleccionar = (elegido: string) => {
     if (multiple) {
       setSelect((prev) => {
@@ -26,12 +28,7 @@ export default function MultiSelect({
       setSelect((prev) => (prev[0] === elegido ? [] : [elegido]));
     }
   };
-  /* <input
-          name={name}
-          value={select.map((e) => e)}
-          type="checkbox"
-          data-slot="input"
-        /> */
+
   return (
     <>
       {multiple ? (

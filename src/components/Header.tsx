@@ -1,6 +1,6 @@
 import { RiSettings4Fill } from "@remixicon/react";
 import React from "react";
-import { ModeToggle } from "./themeToggle";
+import ToggleTheme from "./ToggleTheme";
 
 export default function Header({
   children,
@@ -19,14 +19,13 @@ export default function Header({
           <span className="text-xl  font-medium">{texto}</span>
         </div>
         <div className="text-sm flex justify-center items-center gap-2">
-          <ModeToggle></ModeToggle>
           <button className="text-blue-600 p-1.5 bg-blue-50/70 rounded-lg  after:text-blue-600 cursor-pointer flex font-medium items-center  group transition dark:text-blue-100 dark:bg-blue-600/80">
             <RiSettings4Fill className="z-10 relative transform group-hover:rotate-180 transition-all duration-300" />
             <span className="w-0 group-hover:w-27.5 text-center overflow-hidden transition-all">
               Configuraciones
             </span>
           </button>
-
+          <ToggleTheme />
           <div className=" rounded-full font-medium text-blue-600 border p-1.5">
             <span>HE</span>
           </div>

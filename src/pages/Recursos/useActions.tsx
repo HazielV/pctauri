@@ -147,7 +147,9 @@ export const useActions = () => {
       setLoading(false);
       queryClient.invalidateQueries({ queryKey: ["recursos-list"] });
       if (variables.id)
-        queryClient.invalidateQueries({ queryKey: ["rol_data", variables.id] });
+        queryClient.invalidateQueries({
+          queryKey: ["recurso_data", variables.id],
+        });
       toast.success(variables.id ? "Usuario actualizado" : "Usuario creado");
       close();
     },

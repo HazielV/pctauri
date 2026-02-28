@@ -31,7 +31,7 @@ export function LoaderForm({ id }: { id?: number }) {
   });
 
   const { data: recurso, isLoading: loadingRecurso } = useQuery({
-    queryKey: ["recurso-data", id],
+    queryKey: ["recurso_data", id],
     queryFn: () =>
       db.query.recurso.findFirst({
         where: (recurso, { eq }) => eq(recurso.id, id!),

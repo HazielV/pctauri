@@ -7,7 +7,7 @@ import {
   PlusIcon,
   Trash2,
 } from "lucide-react";
-import { DynamicIcon, IconName } from "lucide-react/dynamic";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,20 +31,14 @@ import Paginacion from "@/components/Paginacion";
 
 import { useActions } from "./useActions";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-export const toKebabCase = (str: string): IconName => {
-  return str
-    .split(/(?=[A-Z0-9])/)
-    .filter(Boolean) // Por si el primero es Mayúscula y deja un "" al inicio
-    .join("-") // Une con guiones: "A-Arrow-Up"
-    .toLowerCase() as IconName; // "a-arrow-up"
-};
+
 export default function Page() {
   const { handleCreate, handleEdit, handleToggleStatus, useGetData } =
     useActions();
 
   const [searchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
-  const perPage = parseInt(searchParams.get("perpage") || "5");
+  const perPage = parseInt(searchParams.get("perpage") || "10");
   const { data, isLoading, isError } = useGetData(page, perPage);
 
   if (isLoading) return <div>Cargando...</div>;
@@ -59,7 +53,7 @@ export default function Page() {
           className="flex gap-3 p-2.5 pl-3 pr-4.5 items-center font-medium text-xs bg-blue-500 hover:bg-blue-600 rounded-2xl text-white cursor-pointer hover:shadow-md transition "
         >
           <PlusIcon size={16} absoluteStrokeWidth strokeWidth={"2"} />
-          <span>Nuevo menu</span>
+          <span>Nuevo curso</span>
         </button>
       </div>
       <ScrollArea className="pb-3">
@@ -98,10 +92,10 @@ export default function Page() {
             <TableHeader>
               <TableRow className="text-left text-xs font-medium text-gray-400 border-t border-gray-200 *:px-5 *:py-3.5">
                 <TableCell className="">Id</TableCell>
-                <TableCell>icono</TableCell>
-                <TableCell>nombre</TableCell>
-                <TableCell>orden</TableCell>
-                <TableCell>ruta</TableCell>
+                <TableCell>nombre curso</TableCell>
+                <TableCell>precio</TableCell>
+                <TableCell>gestion</TableCell>
+                <TableCell>sucursal</TableCell>
                 <TableCell>estado</TableCell>
                 <TableCell>acciones</TableCell>
               </TableRow>
@@ -114,15 +108,10 @@ export default function Page() {
                   key={index}
                 >
                   <TableCell>{data.id}</TableCell>
-                  <TableCell>
-                    <DynamicIcon
-                      name={toKebabCase(data?.icono || "CircleQuestionMark")}
-                      size={18}
-                    />
-                  </TableCell>
-                  <TableCell>{data.nombre}</TableCell>
-                  <TableCell>{data.orden}</TableCell>
-                  <TableCell>{data.ruta}</TableCell>
+                  <TableCell>{data.nombreCurso}</TableCell>
+                  <TableCell>{data.precioBase}</TableCell>
+                  <TableCell>{data.gestion.nombre}</TableCell>
+                  <TableCell>{data.sucursal.nombre}</TableCell>
                   <TableCell className="flex">
                     <div className="text-xs rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 ">
                       {data.estado}
