@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8fd367b0-8101-4a55-8f13-68147f0673f2",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "43fb4a5f-39ae-4aae-8f86-a1ce964e4a4a",
+  "prevId": "5e4abb1b-5ddf-4341-85ce-1952558dc6eb",
   "tables": {
     "AsistenciaGeneral": {
       "name": "AsistenciaGeneral",
@@ -200,22 +200,43 @@
           "notNull": true,
           "autoincrement": true
         },
-        "horarioPlantillaId": {
-          "name": "horarioPlantillaId",
+        "inscripcionId": {
+          "name": "inscripcionId",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "instructorId": {
+          "name": "instructorId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "vehiculoId": {
           "name": "vehiculoId",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "fechaExacta": {
           "name": "fechaExacta",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "horaInicio": {
+          "name": "horaInicio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "horaFin": {
+          "name": "horaFin",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -256,12 +277,25 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "ClasePractica_horarioPlantillaId_HorarioPlantilla_id_fk": {
-          "name": "ClasePractica_horarioPlantillaId_HorarioPlantilla_id_fk",
+        "ClasePractica_inscripcionId_Inscripcion_id_fk": {
+          "name": "ClasePractica_inscripcionId_Inscripcion_id_fk",
           "tableFrom": "ClasePractica",
-          "tableTo": "HorarioPlantilla",
+          "tableTo": "Inscripcion",
           "columnsFrom": [
-            "horarioPlantillaId"
+            "inscripcionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "ClasePractica_instructorId_Instructor_id_fk": {
+          "name": "ClasePractica_instructorId_Instructor_id_fk",
+          "tableFrom": "ClasePractica",
+          "tableTo": "Instructor",
+          "columnsFrom": [
+            "instructorId"
           ],
           "columnsTo": [
             "id"
@@ -311,6 +345,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "cursoId": {
+          "name": "cursoId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "fechaExacta": {
           "name": "fechaExacta",
           "type": "text",
@@ -353,6 +394,19 @@
       },
       "indexes": {},
       "foreignKeys": {
+        "ClaseTeorica_cursoId_Curso_id_fk": {
+          "name": "ClaseTeorica_cursoId_Curso_id_fk",
+          "tableFrom": "ClaseTeorica",
+          "tableTo": "Curso",
+          "columnsFrom": [
+            "cursoId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
         "ClaseTeorica_horarioPlantillaId_HorarioPlantilla_id_fk": {
           "name": "ClaseTeorica_horarioPlantillaId_HorarioPlantilla_id_fk",
           "tableFrom": "ClaseTeorica",
@@ -824,6 +878,22 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "fechaInicio": {
+          "name": "fechaInicio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'2026-01-01'"
+        },
+        "fechaFin": {
+          "name": "fechaFin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'2026-12-31'"
         },
         "fechaInscripcion": {
           "name": "fechaInscripcion",

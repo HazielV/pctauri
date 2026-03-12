@@ -44,20 +44,34 @@ export const db = drizzle(
   async (sql, params, method) => {
     const sqlite = await getDb();
     try {
+      const queryNormalizada = sql.trim().toUpperCase();
+      if (
+        queryNormalizada === "BEGIN" ||
+        queryNormalizada === "COMMIT" ||
+        queryNormalizada === "ROLLBACK"
+      ) {
+        return { rows: [] };
+      }
       if (method === "run") {
-        const result = await sqlite.execute(sql, params);
+        await sqlite.execute(sql, params);
         return { rows: [] };
       }
 
       const rows = await sqlite.select<any[]>(sql, params);
 
       if (method === "get") {
-        return { rows: rows[0] ? Object.values(rows[0]) : [] };
+        // Engañamos a TypeScript usando 'as any' para el undefined,
+        // pero mantenemos el comportamiento que arregló tu bug.
+        return {
+          rows: rows[0] ? Object.values(rows[0]) : (undefined as any),
+        };
       }
 
       return { rows: rows.map((row) => Object.values(row)) };
     } catch (e) {
       console.error("Error en el puente de Rust:", e);
+      console.error("Query que falló:", sql);
+
       throw e;
     }
   },

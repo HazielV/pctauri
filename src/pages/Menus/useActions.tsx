@@ -57,16 +57,18 @@ export const useActions = () => {
     mutationFn: async ({ id, values }: { id?: number; values: any }) => {
       setLoading(true);
       if (id) {
-        await db
+        return await db
           .update(menu)
           .set({ ...values, orden: Number(values["orden"]) })
           .where(eq(menu.id, id));
       } else return await db.insert(menu).values(values);
     },
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       setLoading(false);
-      queryClient.invalidateQueries({ queryKey: ["menus-list"] });
-      queryClient.invalidateQueries({ queryKey: ["menus-aside"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["menus-list"] }),
+        queryClient.invalidateQueries({ queryKey: ["menus-aside"] }),
+      ]);
       if (variables.id)
         queryClient.invalidateQueries({
           queryKey: ["menu_data", variables.id],

@@ -13,6 +13,9 @@ export function LoaderForm({ id }: { id?: number }) {
     queryFn: async () => {
       const initialData = await db.query.curso.findFirst({
         where: eq(curso.id, id!),
+        with: {
+          horarioPlantillas: true,
+        },
       });
       return initialData;
     },
@@ -25,7 +28,23 @@ export function LoaderForm({ id }: { id?: number }) {
         where: (sucursal, { eq }) => eq(sucursal.estado, "activo"),
       }),
   });
-  if ((id && isLoading) || loadingSucursales) {
+  const { data: gestiones, isLoading: loadingGestiones } = useQuery({
+    queryKey: ["gestiones-activa"],
+    queryFn: () => {
+      const hoy = new Date().toISOString().split("T")[0];
+      return db.query.gestion.findMany({
+        where: (gestion, { eq, and, lte, gte }) =>
+          and(
+            eq(gestion.estado, "activo"),
+            lte(gestion.fechaInicio, hoy), // La gestión ya empezó (o empieza hoy)
+            gte(gestion.fechaFin, hoy), // La gestión termina hoy o en el futuro
+          ),
+        // Opcional: ordenarlas para que la más reciente salga primero
+        orderBy: (gestion, { desc }) => [desc(gestion.fechaInicio)],
+      });
+    },
+  });
+  if ((id && isLoading) || loadingSucursales || loadingGestiones) {
     return (
       <div className="p-4 space-y-4">
         <Skeleton className="h-10 w-full" />
@@ -34,5 +53,5 @@ export function LoaderForm({ id }: { id?: number }) {
     );
   }
 
-  return <Form data={data} sucursales={sucursales} />;
+  return <Form data={data} sucursales={sucursales} gestiones={gestiones} />;
 }

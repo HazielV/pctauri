@@ -2,6 +2,7 @@
 import { create } from "zustand";
 
 interface ModalState {
+  size: "sm" | "md" | "lg";
   isOpen: boolean;
   view: React.ReactNode | null;
   title: string;
@@ -11,6 +12,7 @@ interface ModalState {
   show: (
     view: React.ReactNode,
     options?: {
+      size?: "sm" | "md" | "lg";
       title?: string;
       footer?: React.ReactNode;
       formId?: string; // Podemos pasar un ID fijo o dejar que el form lo registre
@@ -23,6 +25,7 @@ interface ModalState {
 }
 
 export const useModalStore = create<ModalState>((set) => ({
+  size: "lg",
   isLoading: false,
   isOpen: false,
   view: null,
@@ -34,6 +37,7 @@ export const useModalStore = create<ModalState>((set) => ({
     set({
       isOpen: true,
       view,
+      size: options?.size || "lg",
       title: options?.title || "",
       footer: options?.footer || null,
       formId: options?.formId || "",

@@ -118,15 +118,19 @@ export const asistenciaGeneralRelations = relations(
 export const clasePracticaRelations = relations(
   clasePractica,
   ({ one, many }) => ({
-    asistenciaGenerals: many(asistenciaGeneral),
+    inscripcion: one(inscripcion, {
+      fields: [clasePractica.inscripcionId],
+      references: [inscripcion.id],
+    }),
+    instructor: one(instructor, {
+      fields: [clasePractica.instructorId],
+      references: [instructor.id],
+    }),
     vehiculo: one(vehiculo, {
       fields: [clasePractica.vehiculoId],
       references: [vehiculo.id],
     }),
-    horarioPlantilla: one(horarioPlantilla, {
-      fields: [clasePractica.horarioPlantillaId],
-      references: [horarioPlantilla.id],
-    }),
+    asistenciaGenerals: many(asistenciaGeneral),
   }),
 );
 
@@ -191,6 +195,10 @@ export const horarioPlantillaRelations = relations(
     instructor: one(instructor, {
       fields: [horarioPlantilla.instructorId],
       references: [instructor.id],
+    }),
+    aula: one(aula, {
+      fields: [horarioPlantilla.aulaId],
+      references: [aula.id],
     }),
   }),
 );

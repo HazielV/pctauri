@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8fd367b0-8101-4a55-8f13-68147f0673f2",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "afb08ab6-518d-4a66-9765-4403f4307a2f",
+  "prevId": "8fd367b0-8101-4a55-8f13-68147f0673f2",
   "tables": {
     "AsistenciaGeneral": {
       "name": "AsistenciaGeneral",
@@ -461,6 +461,22 @@
           "notNull": true,
           "autoincrement": false,
           "default": "'activo'"
+        },
+        "fechaInicio": {
+          "name": "fechaInicio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'2026-01-01'"
+        },
+        "fechaFin": {
+          "name": "fechaFin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'2026-12-31'"
         }
       },
       "indexes": {},

@@ -21,66 +21,80 @@ import Instructores from "./pages/Instructores";
 import Cursos from "./pages/Cursos";
 import Login from "./pages/login";
 import { useAuthStore } from "./store/authStore";
+import Inscripciones from "./pages/Inscripciones";
+import Archivo from "./pages/Inscripciones/archivo";
+import Asistencia from "./pages/asistencia";
+
 function App() {
   const queryClient = new QueryClient();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         {/* El Titlebar siempre debe estar presente, fuera del Switch */}
         <CustomTitlebar />
 
-       <Switch>
-  <Route path="/login" component={Login} />
-
-  {/* Capturamos todo lo que empiece con /admin */}
-  <Route path="/admin/:rest*">
-    {!isAuthenticated ? (
-      <Redirect to="/login" />
-    ) : (
-      <Layout>
-        <AlertContext />
-        <ModalContext />
-        <Toaster />
         <Switch>
-          {/* Dashboard: IMPORTANTE usar el path exacto */}
-          <Route path="/admin" component={Dashboard} />
-          
-          {/* Rutas hijas */}
-          <Route path="/admin/usuarios" component={Usuarios} />
-          <Route path="/admin/roles" component={Roles} />
-          <Route path="/admin/menus" component={Menus} />
-          <Route path="/admin/permisos" component={Permisos} />
-          <Route path="/admin/recursos" component={Recursos} />
-          <Route path="/admin/gestion" component={Gestion} />
-          <Route path="/admin/sucursales" component={Sucursales} />
-          <Route path="/admin/vehiculos" component={Vehiculos} />
-          <Route path="/admin/instructores" component={Instructores} />
-          <Route path="/admin/cursos" component={Cursos} />
+          <Route path="/login">
+            {isAuthenticated ? <Redirect to="/admin" /> : <Login />}
+          </Route>
 
-          {/* Fallback dentro de admin: Si entran a /admin/lo-que-sea y no existe */}
+          {/* 1. Usamos 'nest' en lugar de ':rest*' */}
+          <Route path="/admin" nest>
+            {!isAuthenticated ? (
+              <Redirect to="/login" />
+            ) : (
+              <Layout>
+                <AlertContext />
+                <ModalContext />
+                <Toaster />
+                <Switch>
+                  {/* 2. Las rutas ahora son relativas a /admin */}
+                  {/* Dashboard: la ruta base dentro de admin */}
+                  <Route path="/" component={Dashboard} />
+                  {/* Rutas hijas más limpias */}
+                  <Route path="/usuarios" component={Usuarios} />
+                  <Route path="/roles" component={Roles} />
+                  <Route path="/menus" component={Menus} />
+                  <Route path="/permisos" component={Permisos} />
+                  <Route path="/recursos" component={Recursos} />
+                  <Route path="/gestion" component={Gestion} />
+                  <Route path="/sucursales" component={Sucursales} />
+                  <Route path="/vehiculos" component={Vehiculos} />
+                  <Route path="/instructores" component={Instructores} />
+                  <Route path="/cursos" component={Cursos} />
+                  <Route path="/inscripciones" component={Inscripciones} />
+                  <Route
+                    path="/inscripciones/archivo/:id"
+                    component={Archivo}
+                  />
+                  <Route path="/asistencia" component={Asistencia} />
+                  <Route>
+                    <div className="flex items-center justify-center h-screen">
+                      404 | Página no encontrada Global
+                    </div>
+                  </Route>
+                </Switch>
+              </Layout>
+            )}
+          </Route>
+
+          {/* Raíz del sitio */}
+          <Route path="/">
+            <Redirect to={isAuthenticated ? "/admin" : "/login"} />
+          </Route>
+
+          {/* 404 Global fuera de /admin */}
           <Route>
-            <Redirect to="/admin" />
+            <div className="flex items-center justify-center h-screen">
+              404 | Página no encontrada Global
+            </div>
           </Route>
         </Switch>
-      </Layout>
-    )}
-  </Route>
-
-  {/* Raíz del sitio */}
-  <Route path="/">
-    <Redirect to={isAuthenticated ? "/admin" : "/login"} />
-  </Route>
-
-  {/* 404 Global fuera de /admin */}
-  <Route>
-    <div className="flex items-center justify-center h-screen">
-      404 | Página no encontrada
-    </div>
-  </Route>
-</Switch>
       </ThemeProvider>
     </QueryClientProvider>
   );
 }
+
 export default App;

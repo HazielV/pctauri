@@ -1,8 +1,10 @@
 import { RiSearch2Line } from "@remixicon/react";
-import { useSearchParams } from "wouter";
+import { Link, useSearchParams } from "wouter";
 import {
   ChevronDown,
   CircleCheckBig,
+  Eye,
+  FileStack,
   PenLine,
   PlusIcon,
   Trash2,
@@ -53,7 +55,7 @@ export default function Page() {
           className="flex gap-3 p-2.5 pl-3 pr-4.5 items-center font-medium text-xs bg-blue-500 hover:bg-blue-600 rounded-2xl text-white cursor-pointer hover:shadow-md transition "
         >
           <PlusIcon size={16} absoluteStrokeWidth strokeWidth={"2"} />
-          <span>Nuevo curso</span>
+          <span>Nueva inscripcion</span>
         </button>
       </div>
       <ScrollArea className="pb-3">
@@ -92,11 +94,11 @@ export default function Page() {
             <TableHeader>
               <TableRow className="text-left text-xs font-medium text-gray-400 border-t border-gray-200 *:px-5 *:py-3.5">
                 <TableCell className="">Id</TableCell>
-                <TableCell>nombre curso</TableCell>
-
-                <TableCell>precio</TableCell>
-                <TableCell>gestion</TableCell>
-                <TableCell>sucursal</TableCell>
+                <TableCell>nombres</TableCell>
+                <TableCell>primer apellido</TableCell>
+                <TableCell>segundo apellido</TableCell>
+                <TableCell>nro. documento</TableCell>
+                <TableCell>Inscripciones</TableCell>
                 <TableCell>estado</TableCell>
                 <TableCell>acciones</TableCell>
               </TableRow>
@@ -109,11 +111,22 @@ export default function Page() {
                   key={index}
                 >
                   <TableCell>{data.id}</TableCell>
-                  <TableCell>{data.nombreCurso}</TableCell>
-
-                  <TableCell>{data.precioBase}</TableCell>
-                  <TableCell>{data.gestion.nombre}</TableCell>
-                  <TableCell>{data.sucursal.nombre}</TableCell>
+                  <TableCell>{data.persona.nombres}</TableCell>
+                  <TableCell>{data.persona.primerApellido}</TableCell>
+                  <TableCell>{data.persona.segundoApellido}</TableCell>
+                  <TableCell>{data.persona.nroDocumento}</TableCell>
+                  <TableCell>
+                    <Link href={`/inscripciones/archivo/${data.id}`}>
+                      <Button
+                        size={"sm"}
+                        variant={"outline"}
+                        className=" h-auto py-1 px-3 text-xs cursor-pointer"
+                      >
+                        <FileStack size={18} />
+                        Ver Inscripciones
+                      </Button>
+                    </Link>
+                  </TableCell>
                   <TableCell className="flex">
                     <div className="text-xs rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 ">
                       {data.estado}

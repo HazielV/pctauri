@@ -1,7 +1,7 @@
 // Roles/useRoles.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/db/client";
-import { curso } from "@/db/schema";
+import { curso, horarioPlantilla } from "@/db/schema";
 import { count, eq } from "drizzle-orm";
 import { useModalStore } from "@/store/modalState";
 import { useAlertStore } from "@/store/AlertState";
@@ -68,12 +68,40 @@ export const useActions = () => {
   const upsertMutation = useMutation({
     mutationFn: async ({ id, values }: { id?: number; values: any }) => {
       setLoading(true);
-      if (id) {
-        await db
-          .update(curso)
-          .set({ ...values })
-          .where(eq(curso.id, id));
-      } else return await db.insert(curso).values(values);
+      const { horarios, ...datosCurso } = values;
+      return await db.transaction(async (tx) => {
+        let cursoId = id;
+
+        if (id) {
+          // 1. UPDATE CURSO
+          await tx
+            .update(curso)
+            .set({ ...datosCurso, updatedAt: new Date().toISOString() })
+            .where(eq(curso.id, id));
+
+          // 2. REFRESCAR HORARIOS (La forma más limpia en un Update es borrar y reinsertar)
+          await tx
+            .delete(horarioPlantilla)
+            .where(eq(horarioPlantilla.cursoId, id));
+        } else {
+          // 1. INSERT CURSO
+          const nuevoCurso = await tx
+            .insert(curso)
+            .values(datosCurso)
+            .returning({ id: curso.id });
+          cursoId = nuevoCurso[0].id;
+        }
+
+        // 3. INSERTAR HORARIOS (Tanto para Create como para Update)
+        if (horarios && horarios.length > 0) {
+          const horariosConId = horarios.map((h: any) => ({
+            ...h,
+            cursoId: cursoId,
+            nombre: `${h.tipo} - ${h.diaSemana}`, // Autogeneramos un nombre si no hay uno
+          }));
+          await tx.insert(horarioPlantilla).values(horariosConId);
+        }
+      });
     },
     onSuccess: (_, variables) => {
       setLoading(false);

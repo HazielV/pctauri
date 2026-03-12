@@ -1,4 +1,4 @@
-import { useLocation } from "wouter";
+import { useLocation, useRouter } from "wouter";
 import { JSX } from "react";
 export default function ItemMenu({
   icono,
@@ -11,11 +11,12 @@ export default function ItemMenu({
   className?: string;
   url?: string;
 }) {
+  const router = useRouter();
   const [location] = useLocation();
-
+  const pathActual = router.base + location;
   return (
     <>
-      {url === location ? (
+      {url === pathActual ? (
         <li
           className={
             "flex cursor-pointer  relative after:-inset-1  after:rounded-xl  after:absolute  after:transition  p-2 group after:bg-blue-100/40 text-blue-600 dark:after:bg-transparent dark:after:from-blue-600/5 dark:after:to-blue-600/60  dark:text-blue-100 dark:after:from-5%  dark:after:bg-linear-to-r "
@@ -28,7 +29,7 @@ export default function ItemMenu({
             </div>
           </div>
         </li>
-      ) : url && url !== "/admin" && location.includes(url) ? (
+      ) : url && url !== "/admin" && pathActual.includes(url) ? (
         <li
           className={
             "flex cursor-pointer  relative after:-inset-1  after:rounded-xl  after:absolute  after:transition  p-2 group after:bg-blue-100/40 text-blue-600 dark:after:bg-transparent dark:after:from-blue-600/5 dark:after:to-blue-600/60  dark:text-blue-100 dark:after:from-5%  dark:after:bg-linear-to-r"

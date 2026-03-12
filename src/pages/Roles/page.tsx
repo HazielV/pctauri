@@ -45,7 +45,6 @@ export default function Page() {
   if (isError || !data) return <div>Error o sin datos</div>;
 
   const { data: roles, meta } = data;
-  console.log(data);
   return (
     <Contendor>
       <div className="flex justify-end py-2 pb-4">

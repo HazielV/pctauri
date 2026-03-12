@@ -453,6 +453,9 @@ export const inscripcion = sqliteTable(
     cursoId: integer().notNull(),
     gestionId: integer().notNull(),
     precioPactado: real().notNull(),
+    fechaInicio: text().notNull().default("2026-01-01"), // Valor temporal
+    fechaFin: text().notNull().default("2026-12-31"),
+
     fechaInscripcion: text()
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
@@ -484,6 +487,10 @@ export const inscripcion = sqliteTable(
     foreignKey({ columns: [table.gestionId], foreignColumns: [gestion.id] })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    uniqueIndex("Inscripcion_estudiante_curso_uk").on(
+      table.estudianteId,
+      table.cursoId,
+    ),
   ],
 );
 
@@ -527,13 +534,28 @@ export const horarioPlantilla = sqliteTable(
   "HorarioPlantilla",
   {
     id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-    nombre: text().notNull(), // Ej: "Lunes-Miercoles 08:00-10:00"
-    diasSemana: text().notNull(), // Ej: "LUN,MIE"
-    horaInicio: text().notNull(), // Ej: "08:00"
-    horaFin: text().notNull(), // Ej: "10:00"
+    nombre: text().notNull(),
+    diaSemana: text("diaSemana", {
+      enum: [
+        "LUNES",
+        "MARTES",
+        "MIERCOLES",
+        "JUEVES",
+        "VIERNES",
+        "SABADO",
+        "DOMINGO",
+      ],
+    }).notNull(),
+    horaInicio: text().notNull(),
+    horaFin: text().notNull(),
     tipo: text("TipoClase", { enum: ["TEORICO", "PRACTICO"] }).notNull(),
-    instructorId: integer().notNull(),
-    cursoId: integer(), // Null si es un horario genérico para prácticas libres
+
+    // OPCIONALES: Quitamos el .notNull()
+    instructorId: integer(),
+    aulaId: integer(),
+
+    cursoId: integer().notNull(), // El curso sí es obligatorio para que el horario exista
+
     createdAt: text()
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
@@ -550,10 +572,21 @@ export const horarioPlantilla = sqliteTable(
       foreignColumns: [instructor.id],
     })
       .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({ columns: [table.cursoId], foreignColumns: [curso.id] })
+      .onDelete("set null"), // Importante: set null si se borra el instructor
+
+    foreignKey({
+      columns: [table.aulaId],
+      foreignColumns: [aula.id],
+    })
       .onUpdate("cascade")
       .onDelete("set null"),
+
+    foreignKey({
+      columns: [table.cursoId],
+      foreignColumns: [curso.id],
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
   ],
 );
 
@@ -563,6 +596,7 @@ export const claseTeorica = sqliteTable(
     id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
     horarioPlantillaId: integer().notNull(),
     aulaId: integer().notNull(),
+    cursoId: integer().notNull(),
     fechaExacta: text().notNull(),
     estadoClase: text("EstadoClase", {
       enum: ["PROGRAMADA", "DICTADA", "CANCELADA"],
@@ -580,6 +614,9 @@ export const claseTeorica = sqliteTable(
       .default("activo"),
   },
   (table) => [
+    foreignKey({ columns: [table.cursoId], foreignColumns: [curso.id] })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
     foreignKey({
       columns: [table.horarioPlantillaId],
       foreignColumns: [horarioPlantilla.id],
@@ -596,9 +633,13 @@ export const clasePractica = sqliteTable(
   "ClasePractica",
   {
     id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-    horarioPlantillaId: integer().notNull(),
-    vehiculoId: integer().notNull(),
+
+    inscripcionId: integer().notNull(),
+    instructorId: integer(), // El instructor asignado para esta hora
+    vehiculoId: integer(),
     fechaExacta: text().notNull(),
+    horaInicio: text().notNull(), // Ej: "14:00"
+    horaFin: text().notNull(), // Ej: "15:00"
     estadoClase: text("EstadoClase", {
       enum: ["PROGRAMADA", "COMPLETADA", "CANCELADA"],
     })
@@ -616,8 +657,14 @@ export const clasePractica = sqliteTable(
   },
   (table) => [
     foreignKey({
-      columns: [table.horarioPlantillaId],
-      foreignColumns: [horarioPlantilla.id],
+      columns: [table.inscripcionId],
+      foreignColumns: [inscripcion.id],
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.instructorId],
+      foreignColumns: [instructor.id],
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
