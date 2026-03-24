@@ -5,11 +5,13 @@ export default function ItemMenu({
   descripcion,
   className,
   url,
+  onClick,
 }: {
   icono: JSX.Element;
   descripcion: string;
   className?: string;
   url?: string;
+  onClick?: () => void;
 }) {
   const router = useRouter();
   const [location] = useLocation();
@@ -18,6 +20,7 @@ export default function ItemMenu({
     <>
       {url === pathActual ? (
         <li
+          onClick={onClick}
           className={
             "flex cursor-pointer  relative after:-inset-1  after:rounded-xl  after:absolute  after:transition  p-2 group after:bg-blue-100/40 text-blue-600 dark:after:bg-transparent dark:after:from-blue-600/5 dark:after:to-blue-600/60  dark:text-blue-100 dark:after:from-5%  dark:after:bg-linear-to-r "
           }
@@ -31,6 +34,7 @@ export default function ItemMenu({
         </li>
       ) : url && url !== "/admin" && pathActual.includes(url) ? (
         <li
+          onClick={onClick}
           className={
             "flex cursor-pointer  relative after:-inset-1  after:rounded-xl  after:absolute  after:transition  p-2 group after:bg-blue-100/40 text-blue-600 dark:after:bg-transparent dark:after:from-blue-600/5 dark:after:to-blue-600/60  dark:text-blue-100 dark:after:from-5%  dark:after:bg-linear-to-r"
           }
@@ -44,6 +48,7 @@ export default function ItemMenu({
         </li>
       ) : (
         <li
+          onClick={onClick}
           className={
             "flex cursor-pointer  relative after:-inset-1  after:rounded-xl  after:absolute after:scale-0 after:transition hover:after:scale-100 p-2 group " +
             (className

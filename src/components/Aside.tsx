@@ -4,12 +4,13 @@ import { House, LogOut } from "lucide-react";
 import { db } from "@/db/client";
 import { useQuery } from "@tanstack/react-query";
 import { DynamicIcon, IconName } from "lucide-react/dynamic";
+import { useAuthStore } from "@/store/authStore";
 const menus = [
   {
     id: 1,
     descripcion: "Inicio",
     icono: <House size={20} />,
-    url: "/admin",
+    url: "/",
   },
 ];
 const toKebabCase = (str: string): IconName => {
@@ -34,6 +35,7 @@ const getMenusData = async () => {
   }
 };
 export default function Aside() {
+  const { logout } = useAuthStore();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["menus-aside"],
     queryFn: () => getMenusData(),
@@ -72,6 +74,7 @@ export default function Aside() {
         ))}
       </ul>
       <ItemMenu
+        onClick={() => logout()}
         className="after:bg-red-100/50 text-red-600 dark:text-red-300 dark:after:bg-transparent dark:after:from-red-600/5 dark:after:to-red-600/40 dark:after:bg-linear-to-r dark:after:from-10% "
         descripcion="Cerrar Sesion"
         icono={<LogOut size={20} />}

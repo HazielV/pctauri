@@ -12,24 +12,15 @@ import {
 
 import { useActions } from "./useActions";
 import {
-  Check,
+  CheckCircle,
   ChevronLeft,
   ChevronRight,
   CircleDashed,
   Clock,
-  ClockAlert,
+  Clock4,
   Plus,
-  RefreshCw,
   X,
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import {
   addDays,
@@ -59,7 +50,8 @@ const mapaDias: Record<string, string> = {
 };
 
 export default function Page() {
-  const { useGetData, handleAsignarClase } = useActions();
+  const { useGetData, handleAsignarClase, handleLlenarAsistencia } =
+    useActions();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
   const perPage = parseInt(searchParams.get("perpage") || "10");
@@ -231,7 +223,6 @@ export default function Page() {
                 )}
 
                 {matriz?.inscripciones.map((ins) => {
-                  // Sacamos los días de teoría que ESTE alumno debería tener según su curso
                   const diasTeoriaConfig = new Set(
                     ins.curso?.horarioPlantillas?.map((h: any) =>
                       h.diaSemana.toUpperCase(),
@@ -240,7 +231,6 @@ export default function Page() {
 
                   return (
                     <TableRow key={ins.id} className="">
-                      {/* COLUMNA IDENTIFICADORA */}
                       <TableCell className="border-r font-medium  z-10 min-w-45">
                         <div className="text-sm leading-none mb-1">
                           {`${ins.estudiante.persona.nombres} ${ins.estudiante.persona.primerApellido}`}
@@ -282,12 +272,19 @@ export default function Page() {
                           },
                         );
 
-                        // 2. ¿Este alumno "debería" estar aquí hoy?
-                        const esDiaTeoria =
+                        // 2. ¿El horario oficial (contrato) dice que debería estar aquí?
+                        const esDiaTeoriaOficial =
                           estaEnRangoInscripcion &&
                           diasTeoriaConfig.has(nombreDiaDB);
+                        const plantillaDelDia =
+                          ins.curso?.horarioPlantillas?.find(
+                            (h: any) =>
+                              h.diaSemana.toUpperCase() === nombreDiaDB,
+                          );
 
-                        const tieneClase = esDiaTeoria || !!claseP;
+                        // 3. LA NUEVA REGLA: Tiene clase si hay un registro físico (T o P) O si el contrato lo exige
+                        const tieneClase =
+                          !!claseT || !!claseP || esDiaTeoriaOficial;
 
                         if (!tieneClase) {
                           return (
@@ -320,14 +317,30 @@ export default function Page() {
                         return (
                           <TableCell
                             key={fechaDia}
-                            className="text-center border-r border-dashed  align-top p-0!"
+                            className="text-center border-r border-dashed  
+                             p-0! "
                           >
-                            <div className="flex flex-col gap-1.5 items-center">
-                              {/* BLOQUE TEORÍA: Solo si el curso lo tiene configurado para este día */}
-                              {esDiaTeoria && (
+                            <div className="flex flex-col items-center gap-2 p-1">
+                              {(claseT || esDiaTeoriaOficial) && (
                                 <IconoAsistencia
+                                  onClick={() => {
+                                    if (claseT) {
+                                      const asis = mapaAsistencias.get(
+                                        `T-${ins.id}-${claseT.id}`,
+                                      );
+                                      handleLlenarAsistencia({
+                                        fecha: fechaDia,
+                                        claseId: claseT.id,
+                                        tipoClase: "T",
+                                        inscripcionId: ins.id,
+                                        data: asis || null,
+                                      });
+                                    }
+                                  }}
                                   tipo="T"
                                   clase={claseT}
+                                  fallbackInicio={plantillaDelDia?.horaInicio}
+                                  fallbackFin={plantillaDelDia?.horaFin}
                                   asistencia={
                                     claseT
                                       ? mapaAsistencias.get(
@@ -338,9 +351,20 @@ export default function Page() {
                                 />
                               )}
 
-                              {/* BLOQUE PRÁCTICA: Solo si hay una clase agendada individualmente */}
                               {claseP && (
                                 <IconoAsistencia
+                                  onClick={() => {
+                                    const asis = mapaAsistencias.get(
+                                      `P-${ins.id}-${claseP.id}`,
+                                    );
+                                    handleLlenarAsistencia({
+                                      fecha: fechaDia,
+                                      claseId: claseP.id,
+                                      tipoClase: "P",
+                                      inscripcionId: ins.id,
+                                      data: asis || null,
+                                    });
+                                  }}
                                   tipo="P"
                                   clase={claseP}
                                   asistencia={mapaAsistencias.get(
@@ -364,34 +388,52 @@ export default function Page() {
     </Contendor>
   );
 }
-const IconoAsistencia = ({ tipo, clase, asistencia }: any) => {
+const IconoAsistencia = ({
+  tipo,
+  clase,
+  asistencia,
+  fallbackInicio,
+  fallbackFin,
+  ...props
+}: any) => {
+  const horaInicio = clase?.horaInicio || fallbackInicio || "--:--";
+  const horaFin = clase?.horaFin || fallbackFin || "--:--";
   return (
     <div
-      className={`flex items-center justify-between w-full p-1 rounded border ${
-        !clase
-          ? "  opacity-50"
-          : !asistencia
-            ? " "
-            : asistencia.estadoAsistencia === "PRESENTE"
-              ? " border-emerald-200"
-              : " border-rose-200"
+      {...props}
+      className={`flex flex-1  items-center justify-center w-full p-1 py-1 rounded border relative overflow-hidden cursor-pointer group${
+        !clase ? "  opacity-50" : ""
       }`}
     >
-      <span
-        className={`text-xs font-black ${tipo === "T" ? "text-blue-600" : "text-purple-600"}`}
-      >
-        {tipo}
-      </span>
-
-      {!clase ? (
-        <CircleDashed size={14} className="text-slate-300 animate-pulse" />
-      ) : !asistencia ? (
-        <Clock size={14} className="text-blue-400" />
-      ) : asistencia.estadoAsistencia === "PRESENTE" ? (
-        <Check size={14} className="text-emerald-500" />
+      {tipo === "T" ? (
+        <div className="flex-1 flex flex-col justify-start items-start px-2">
+          <div className="w-1 bg-blue-700 h-full absolute transition-all top-0 left-0 z-5"></div>
+          <span className="z-10  group-hover:z-100">Teorico </span>
+          <span className="z-10  group-hover:z-100">{`${horaInicio} - ${horaFin}`}</span>
+        </div>
       ) : (
-        <X size={14} className="text-rose-500" />
+        <div className="flex-1 flex flex-col justify-start items-start px-2">
+          <div className="w-1 bg-violet-700 h-full absolute top-0   left-0 transition-all"></div>
+          <span className="z-10  group-hover:z-100 ">Practico </span>
+          <span className="z-10  group-hover:z-100">
+            {`${horaInicio} - ${horaFin}`}
+          </span>
+        </div>
       )}
+
+      <div className="absolute top-1 right-1">
+        {!clase ? (
+          <CircleDashed size={14} className="text-slate-300 animate-pulse" />
+        ) : !asistencia ? (
+          <Clock size={14} className="text-blue-400" />
+        ) : asistencia.estadoAsistencia === "PRESENTE" ? (
+          <CheckCircle size={14} className="text-emerald-500" />
+        ) : asistencia.estadoAsistencia === "REPROGRAMADA" ? (
+          <Clock4 size={14} className="text-yellow-500" />
+        ) : (
+          <X size={14} className="text-rose-500" />
+        )}
+      </div>
     </div>
   );
 };

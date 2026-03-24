@@ -34,7 +34,7 @@ function App() {
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         {/* El Titlebar siempre debe estar presente, fuera del Switch */}
         <CustomTitlebar />
-
+        <Toaster />
         <Switch>
           <Route path="/login">
             {isAuthenticated ? <Redirect to="/admin" /> : <Login />}
@@ -43,12 +43,12 @@ function App() {
           {/* 1. Usamos 'nest' en lugar de ':rest*' */}
           <Route path="/admin" nest>
             {!isAuthenticated ? (
-              <Redirect to="/login" />
+              <Redirect to="~/login" />
             ) : (
               <Layout>
                 <AlertContext />
                 <ModalContext />
-                <Toaster />
+
                 <Switch>
                   {/* 2. Las rutas ahora son relativas a /admin */}
                   {/* Dashboard: la ruta base dentro de admin */}

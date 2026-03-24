@@ -28,20 +28,20 @@ type NewData =
       id: number;
       createdAt: string;
       updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
-      sucursalId: number;
+      estado: "activo" | "inactivo" | "finalizado" | "en curso" | "programado";
       nombreCurso: string;
       precioBase: number;
       horasTeoricasReq: number;
       horasPracticasReq: number;
       gestionId: number;
+      sucursalId: number;
       horarioPlantillas: {
         id: number;
-        aulaId: number | null;
         createdAt: string;
         updatedAt: string;
         estado: "activo" | "inactivo" | "pendiente";
         nombre: string;
+        cursoId: number;
         diaSemana:
           | "LUNES"
           | "MARTES"
@@ -54,7 +54,7 @@ type NewData =
         horaFin: string;
         tipo: "TEORICO" | "PRACTICO";
         instructorId: number | null;
-        cursoId: number;
+        aulaId: number | null;
       }[];
     }
   | undefined;

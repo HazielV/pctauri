@@ -141,8 +141,8 @@ export const useActions = () => {
   const handleToggleStatus = (id: number, currentStatus: string) => {
     const isInactive = currentStatus === "inactivo";
     showAlert({
-      title: isInactive ? "¿Activar Rol?" : "¿Deshabilitar Rol?",
-      description: `El rol pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
+      title: isInactive ? "¿Activar Usuario?" : "¿Deshabilitar Usuario?",
+      description: `El usuario pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
       variant: isInactive ? "success" : "error",
       actionText: "Confirmar",
       onAction: async () => {

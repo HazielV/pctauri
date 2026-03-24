@@ -26,6 +26,7 @@ export const useActions = () => {
               nombre: true,
             },
           },
+          horarioPlantillas: true,
           sucursal: {
             columns: {
               nombre: true,
@@ -125,13 +126,13 @@ export const useActions = () => {
       estado,
     }: {
       id: number;
-      estado: "activo" | "inactivo";
+      estado: "activo" | "inactivo" | "finalizado" | "en curso" | "programado";
     }) => {
       // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
       return await db.update(curso).set({ estado }).where(eq(curso.id, id));
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["curso-list"] }),
+      queryClient.invalidateQueries({ queryKey: ["cursos-list"] }),
   });
 
   const handleCreate = () => {
@@ -164,6 +165,38 @@ export const useActions = () => {
       },
     });
   };
+  const handleComenzarCurso = (id: number) => {
+    showAlert({
+      title: "Comenzar curso?",
+      description: "El curso dara inicio",
+      variant: "info",
+      actionText: "Comenzar",
+      onAction: async () => {
+        // Al ser una mutación de TanStack Query, lanzamos la promesa
+        await statusMutation.mutateAsync({
+          id,
+          estado: "en curso",
+        });
+        toast.success("Estado actualizado");
+      },
+    });
+  };
+  const handleFinalizarCurso = (id: number) => {
+    showAlert({
+      title: "Finalizar curso?",
+      description: "El curso finalizara",
+      variant: "warning",
+      actionText: "Finalizar",
+      onAction: async () => {
+        // Al ser una mutación de TanStack Query, lanzamos la promesa
+        await statusMutation.mutateAsync({
+          id,
+          estado: "finalizado",
+        });
+        toast.success("Estado actualizado");
+      },
+    });
+  };
 
   return {
     useGetData,
@@ -171,5 +204,7 @@ export const useActions = () => {
     handleCreate,
     handleEdit,
     handleToggleStatus,
+    handleComenzarCurso,
+    handleFinalizarCurso,
   };
 };

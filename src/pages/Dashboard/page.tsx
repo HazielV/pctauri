@@ -1,221 +1,264 @@
-import { useQuery } from "@tanstack/react-query";
-import { RiSearch2Line } from "@remixicon/react";
-import { Link, useLocation, useSearch, useSearchParams } from "wouter";
 import {
-  ChevronDown,
-  Contact,
-  MoreHorizontal,
-  MoveRight,
-  PenLine,
-  PlusIcon,
-  Search,
-  Trash2,
+  Activity,
+  Users,
+  CalendarDays,
+  CarFront,
+  DollarSign,
+  Clock,
+  BookOpen,
+  Flag,
 } from "lucide-react";
+import { Contendor } from "@/components/contenido";
+import { useActions } from "./useActions";
+// Asegúrate de importar tu componente Calendar si quieres el calendario interactivo abajo
+import { Calendar } from "@/components/ui/calendar";
+import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  BusquedaTabla,
-  Contendor,
-  ContenedorTabla,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/contenido";
+export default function DashboardPage() {
+  const { useGetData } = useActions(); // Asumiendo que conectaste la query arriba
+  const [date, setDate] = useState<Date>(new Date());
 
-import Paginacion from "@/components/Paginacion";
-import * as React from "react";
+  // Para propósitos de este ejemplo, usaremos el data estático si isLoading
+  const { data, isLoading, isError, error } = useGetData();
 
-interface paciente {
-  id: number;
-  nombres: string;
-  apellidos: string;
-  fechaNacimiento: string;
-  fechaIngreso: string;
-  estado: string;
-}
-interface ResPag<T> {
-  data: T[];
-  meta: {
-    totalItems: number;
-    itemsPerPage: number;
-    currentPage: number;
-    totalPages: number;
+  if (isLoading)
+    return <div className="p-8 text-slate-500">Cargando panel...</div>;
+  if (isError)
+    return <div className="p-8 text-rose-500">Error al cargar datos</div>;
+
+  const dashboard = data || {
+    estudiantesActivos: 25,
+    clasesHoyTotales: 8,
+    ingresosMes: 4500,
+    agendaHoy: [
+      {
+        id: 1,
+        tipo: "Práctica",
+        titulo: "Clase Práctica - Vehículo 1",
+        horaInicio: "10:00",
+        horaFin: "12:00",
+        estado: "Pendiente",
+      },
+      {
+        id: 2,
+        tipo: "Teoría",
+        titulo: "Educación Vial - Curso 2",
+        horaInicio: "14:00",
+        horaFin: "16:00",
+        estado: "Pendiente",
+      },
+    ],
   };
-}
 
-export const getPacientesData = async (page: number, perPage: number) => {
-  // Simulamos un pequeño retraso de red/disco para probar los estados de carga (loading)
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  const totalSimulado = 50; // Supongamos que hay 50 pacientes en total
-
-  // Generamos datos de prueba dinámicos según la página
-  const mockData = Array.from({ length: perPage })
-    .map((_, i) => {
-      const id = (page - 1) * perPage + i + 1;
-
-      // Evitamos generar más de los 50 totales
-      if (id > totalSimulado) return null;
-
-      return {
-        id: id,
-        nombres: `Paciente de Prueba ${id}`,
-        email: `paciente${id}@ejemplo.com`,
-        fechaNacimiento: new Date().toISOString(),
-      };
-    })
-    .filter(Boolean); // Limpiamos los nulos
-
-  return {
-    data: mockData,
-    meta: {
-      totalItems: totalSimulado,
-      pageCount: Math.ceil(totalSimulado / perPage),
-      currentPage: page,
-      perPage: perPage,
-    },
-  };
-};
-export default function Page() {
-  const [searchParams] = useSearchParams();
-  const page = parseInt(searchParams.get("page") || "1");
-  const perPage = parseInt(searchParams.get("perpage") || "10");
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["pacientes", page, perPage], // Si esto cambia, se refetchea
-    queryFn: () => getPacientesData(page, perPage),
-    // Útil para que la tabla no "parpadee" al paginar
-  });
-
-  if (isLoading) return <div>Cargando pacientes desde SQLite...</div>;
-  if (isError) return <div>Error: {(error as Error).message}</div>;
-
-  // Ahora pacientes y meta vienen de 'data'
-  const { data: pacientes, meta } = data;
   return (
     <Contendor>
-      <div className="flex justify-end py-2 pb-4">
-        <Link href={"pacientes/nuevo"}>
-          <button className="flex gap-3 p-2.5 pl-3 pr-4.5 items-center font-medium text-xs bg-blue-500 hover:bg-blue-600 rounded-2xl text-white cursor-pointer hover:shadow-md transition ">
-            <PlusIcon size={16} absoluteStrokeWidth strokeWidth={"2"} />
-            <span>Nuevo usuario</span>
-          </button>
-        </Link>
+      {/* HEADER */}
+      <div className="flex flex-col py-4 mb-2">
+        <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
+          Buen día, Administrador 👋
+        </h1>
+        <p className="text-primary/60 text-sm mt-1">
+          Aquí tienes un resumen del rendimiento y las clases de hoy.
+        </p>
       </div>
-      <ContenedorTabla>
-        <BusquedaTabla>
-          <div className="flex flex-1 items-center gap-2 text-gray-400 relative  group focus-within:text-blue-600 dark:focus-within:text-blue-300">
-            <input
-              id="search-params"
-              type="text"
-              placeholder="Buscar o filtrar..."
-              className="text-xs py-3.5 outline-none ps-6 text-black dark:text-gray-200 placeholder:text-gray-400 peer w-full"
-            />
-            <RiSearch2Line
-              size={14}
-              className="absolute pointer-events-none group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors peer-placeholder-shown:text-gray-400 peer-hover:text-blue-600 text-blue-600 dark:text-blue-300 dark:peer-hover:text-blue-300"
-            />
-          </div>
 
+      {/* BLOQUE 1: TARJETAS PRINCIPALES (Grid de 3) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Tarjeta 1 */}
+        <div className="bg-background border border-border rounded-3xl p-6 shadow-sm flex flex-col justify-between h-40">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2 text-secondary-foreground font-medium">
+              <Activity className="text-amber-500" size={20} />
+              Estado de ingresos
+            </div>
+            <span className="text-xs text-slate-400 hover:text-blue-500 cursor-pointer">
+              Ver finanzas
+            </span>
+          </div>
           <div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto text-xs">
-                  Estado <ChevronDown />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Activo</DropdownMenuLabel>
-                <DropdownMenuItem>Inactivo</DropdownMenuItem>
-                <DropdownMenuItem>Otro</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex justify-between items-end mb-2">
+              <span className="text-primary/70 text-sm">Este mes</span>
+              <span className="text-2xl font-bold text-primary">
+                Bs. {dashboard.ingresosMes}
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-1.5">
+              <div
+                className="bg-amber-400 h-1.5 rounded-full"
+                style={{ width: "70%" }}
+              ></div>
+            </div>
           </div>
-        </BusquedaTabla>
+        </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow className="text-left text-xs font-medium text-gray-400 border-t border-gray-200 *:px-5 *:py-3.5">
-              <TableCell className="">Id</TableCell>
-              <TableCell>Nombre(s)</TableCell>
-              <TableCell>Apellido(s)</TableCell>
-              <TableCell>Fecha Nacimiento</TableCell>
-              <TableCell>Fecha Ingreso</TableCell>
-              <TableCell>Expediente </TableCell>
-              <TableCell>Estado</TableCell>
-              <TableCell>Acciones</TableCell>
-            </TableRow>
-          </TableHeader>
+        {/* Tarjeta 2 */}
+        <div className="bg-background border border-border  rounded-3xl p-6 shadow-sm flex flex-col justify-between h-40">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2 text-secondary-foreground font-medium">
+              <CarFront className="text-violet-500" size={20} />
+              Próxima Clase
+            </div>
+            <span className="text-xs text-slate-400 hover:text-blue-500 cursor-pointer">
+              Gestionar
+            </span>
+          </div>
+          <div>
+            <div className="flex justify-between items-end mb-2">
+              <span className="text-primary/70 text-sm">Hora de inicio</span>
+              <span className="text-2xl font-bold text-primary">10:00 AM</span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-1.5">
+              <div
+                className="bg-violet-500 h-1.5 rounded-full"
+                style={{ width: "40%" }}
+              ></div>
+            </div>
+          </div>
+        </div>
 
-          <TableBody>
-            {pacientes.map((pac) => (
-              <TableRow
-                className="font-medium text-gray-600 border-t border-b last:border-b-0 *:px-5 *:py-3.5 border-gray-200"
-                key={pac.id}
-              >
-                <TableCell>{pac.id}</TableCell>
-                <TableCell>{pac.nombres}</TableCell>
-                <TableCell>{pac.apellidos}</TableCell>
-                <TableCell>{pac.fechaNacimiento}</TableCell>
-                <TableCell>{pac.fechaIngreso}</TableCell>
-                <TableCell>
-                  {/* <Link
-                    href={{
-                      pathname: 'pacientes/expediente',
-                      query: { id: pac.id },
-                    }}
-                  >
-                    <button className="flex text-xs whitespace-nowrap gap-2 items-center bg-gray-50 px-2.5 py-1 rounded-lg hover:text-blue-600 cursor-pointer group shadow">
-                      <span>Ver</span>
-                      <MoveRight
-                        size={18}
-                        className="transition group-hover:translate-x-0.5"
-                      />
-                    </button>
-                  </Link> */}
-                </TableCell>
-                <TableCell className="flex">
-                  <div className="text-xs rounded-full p-[3px] px-2 bg-emerald-50 text-emerald-700 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-[60px] ">
-                    {pac.estado}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className=" flex gap-2 h-auto">
-                    {/* <Link
-                      href={{
-                        pathname: `pacientes/editar`,
-                        query: { id: pac.id },
-                      }}
-                    >
-                      <button>
-                        <PenLine
-                          size={17}
-                          className="cursor-pointer hover:text-black bg"
-                        />
-                      </button>
-                    </Link> */}
+        {/* Tarjeta 3 */}
+        <div className="bg-background border border-border rounded-3xl p-6 shadow-sm flex flex-col justify-between h-40">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2 text-secondary-foreground font-medium">
+              <Users className="text-emerald-500" size={20} />
+              Estudiantes Activos
+            </div>
+            <span className="text-xs text-slate-400 hover:text-blue-500 cursor-pointer">
+              Ver todos
+            </span>
+          </div>
+          <div>
+            <div className="flex justify-between items-end mb-2">
+              <span className="text-primary/70 text-sm">Inscripciones</span>
+              <span className="text-2xl font-bold text-primary">
+                {dashboard.estudiantesActivos}
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-1.5 flex gap-1">
+              <div className="bg-emerald-400 h-1.5 rounded-full flex-1"></div>
+              <div className="bg-emerald-200 h-1.5 rounded-full w-1/4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                    <Trash2
-                      size={17}
-                      className="cursor-pointer hover:text-black"
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </ContenedorTabla>
-      <Paginacion total={10} actual={1} className="mx-8" />
+      {/* BLOQUE 2: PÍLDORAS RÁPIDAS (Grid de 4) */}
+      <h2 className="text-lg font-semibold text-primary mb-4">
+        Métricas de Hoy
+      </h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-background border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm cursor-pointer hover:shadow-md transition">
+          <div className="flex items-center gap-3">
+            <div className="bg-indigo-50 p-2.5 rounded-full text-indigo-500 dark:bg-indigo-600/40 dark:text-indigo-200">
+              <BookOpen size={20} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-primary">
+                {dashboard.clasesHoyTotales}
+              </span>
+              <span className="text-xs text-slate-400 font-medium">
+                Clases Programadas
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-background border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm cursor-pointer hover:shadow-md transition">
+          <div className="flex items-center gap-3">
+            <div className="bg-orange-50 p-2.5 rounded-full text-orange-500 dark:bg-orange-600/40 dark:text-orange-20">
+              <Flag size={20} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-primary">3</span>
+              <span className="text-xs text-slate-400 font-medium">
+                Exámenes Hoy
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-background border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm cursor-pointer hover:shadow-md transition">
+          <div className="flex items-center gap-3">
+            <div className="bg-emerald-50 p-2.5 rounded-full text-emerald-500 dark:bg-emerald-600/40 dark:text-emerald-20">
+              <DollarSign size={20} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-primary">5</span>
+              <span className="text-xs text-slate-400 font-medium">
+                Pagos Pendientes
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-background border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm cursor-pointer hover:shadow-md transition">
+          <div className="flex items-center gap-3">
+            <div className="bg-cyan-50 p-2.5 rounded-full text-cyan-500 dark:bg-cyan-600/40 dark:text-cyan-20">
+              <CarFront size={20} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-primary">8</span>
+              <span className="text-xs text-slate-400 font-medium">
+                Vehículos en Uso
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* BLOQUE 3: CALENDARIO Y AGENDA */}
+      <h2 className="text-lg font-semibold text-primary mb-4">Agenda</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Calendario (Columna izquierda) */}
+        <div className="bg-background border border-border rounded-3xl p-6 shadow-sm">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={(d) => d && setDate(d)}
+            className="w-full h-full flex justify-center border-none"
+          />
+        </div>
+
+        {/* Lista de Eventos (Columna derecha, ocupa 2 espacios) */}
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {dashboard.agendaHoy.map((clase: any, idx: number) => (
+            <div
+              key={idx}
+              className="bg-background border border-border rounded-3xl p-5 shadow-sm hover:border-slate-200 transition"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-2 h-2 rounded-full ${clase.tipo === "Teoría" ? "bg-blue-400" : "bg-emerald-400"}`}
+                  ></div>
+                  <h3 className="font-semibold text-slate-800">
+                    {clase.titulo}
+                  </h3>
+                </div>
+                <span
+                  className={`text-[10px] px-2 py-1 rounded-full font-medium ${clase.tipo === "Teoría" ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"}`}
+                >
+                  {clase.tipo}
+                </span>
+              </div>
+
+              <div className="flex items-end justify-between mt-6">
+                <div>
+                  <span className="text-2xl font-bold text-primary">
+                    {clase.horaInicio}
+                  </span>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Horario programado
+                  </p>
+                </div>
+                <div className="w-1/2 bg-slate-100 rounded-full h-1.5 mb-1">
+                  <div className="bg-blue-500 h-1.5 rounded-full w-1/3"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </Contendor>
   );
 }

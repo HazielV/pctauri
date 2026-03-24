@@ -112,7 +112,7 @@ export default function Page() {
                   <TableCell>
                     {data.rolesRecursos.map((elem, index) => (
                       <div key={index} className="flex gap-2 flex-wrap">
-                        <span className="flex px-2.5 py-0.5 capitalize text-xs  bg-gray-900 text-white/60 rounded border border-white/10">
+                        <span className="flex px-2.5 py-0.5 capitalize text-xs bg-gray-200/60 text-gray-700 border-gray-600  dark:bg-gray-900 dark:text-white/60  rounded border dark:border-white/10">
                           {elem.rol.nombre.toLowerCase()}
                         </span>
                       </div>
@@ -126,12 +126,6 @@ export default function Page() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <div className=" flex gap-2 h-auto">
-                        <Trash2
-                          size={17}
-                          className="cursor-pointer hover:text-black"
-                        />
-                      </div>
                       {data.estado === "activo" && (
                         <button
                           onClick={() => handleEdit(data.id)}

@@ -43,6 +43,34 @@
       "when": 1773208640622,
       "tag": "0005_loud_slipstream",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1773455776698,
+      "tag": "0006_redundant_cassandra_nova",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1773552722006,
+      "tag": "0007_clear_lilith",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1774363233374,
+      "tag": "0008_smiling_black_crow",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1774370592962,
+      "tag": "0009_small_skullbuster",
+      "breakpoints": true
     }
   ]
 }

@@ -164,6 +164,11 @@ export const inscripcionRelations = relations(inscripcion, ({ one, many }) => ({
     references: [estudiante.id],
   }),
   pagos: many(pago),
+  horarioElegido: one(horarioPlantilla, {
+    fields: [inscripcion.horarioPlantillaId],
+    references: [horarioPlantilla.id],
+  }),
+  clasesPracticas: many(clasePractica),
 }));
 
 export const aulaRelations = relations(aula, ({ one, many }) => ({

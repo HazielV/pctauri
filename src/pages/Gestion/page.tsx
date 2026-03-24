@@ -117,12 +117,6 @@ export default function Page() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <div className=" flex gap-2 h-auto">
-                        <Trash2
-                          size={17}
-                          className="cursor-pointer hover:text-black"
-                        />
-                      </div>
                       {data.estado === "activo" && (
                         <button
                           onClick={() => handleEdit(data.id)}

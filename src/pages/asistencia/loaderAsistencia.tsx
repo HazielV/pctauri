@@ -1,21 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 /* import { useStudentMutation } from "@/hooks/useStudentMutation"; */
-
 import { Skeleton } from "@/components/ui/skeleton";
-import { Form } from "./form";
 import { db } from "@/db/client";
 import { FormAsistencia } from "./formAsistencia";
 
-export function LoaderFormAsistencia({
-  inscripcionId,
-  fechaActual,
-  tipo,
-}: any) {
+export function LoaderFormAsistencia({ inscripcionId, fechaActual }: any) {
   const { data: inscripcion, isLoading: loadingInscripcion } = useQuery({
-    queryKey: ["cursos-activa"],
+    queryKey: ["inscripcion-asistencia"],
     queryFn: () => {
       return db.query.inscripcion.findFirst({
-        where: (curso, { eq }) => eq(curso.estado, "activo"),
+        where: (inscripcion, { eq }) =>
+          eq(inscripcion.id, Number(inscripcionId)),
         with: {
           estudiante: {
             columns: {
@@ -42,7 +37,23 @@ export function LoaderFormAsistencia({
       });
     },
   });
-  if (loadingInscripcion) {
+  const { data: vehiculos, isLoading: loadingVehiculos } = useQuery({
+    queryKey: ["vehiculos-disponibles"],
+    queryFn: () => {
+      return db.query.vehiculo.findMany();
+    },
+  });
+  const { data: instructores, isLoading: loadingInstructores } = useQuery({
+    queryKey: ["instructores-disponibles"],
+    queryFn: () => {
+      return db.query.instructor.findMany({
+        with: {
+          persona: true,
+        },
+      });
+    },
+  });
+  if (loadingInscripcion || loadingVehiculos || loadingInstructores) {
     return (
       <div className="p-4 space-y-4">
         <Skeleton className="h-10 w-full" />
@@ -53,6 +64,8 @@ export function LoaderFormAsistencia({
 
   return (
     <FormAsistencia
+      instructores={instructores}
+      vehiculos={vehiculos}
       dataInscripcion={inscripcion}
       fechaActual={fechaActual} /* sucursales={sucursales} */
     />

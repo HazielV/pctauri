@@ -100,7 +100,6 @@ export default function Page() {
                 <TableCell>nro. documento</TableCell>
                 <TableCell>Inscripciones</TableCell>
                 <TableCell>estado</TableCell>
-                <TableCell>acciones</TableCell>
               </TableRow>
             </TableHeader>
 
@@ -132,7 +131,7 @@ export default function Page() {
                       {data.estado}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     <div className="flex gap-2">
                       <div className=" flex gap-2 h-auto">
                         <Trash2
@@ -178,7 +177,7 @@ export default function Page() {
                         </button>
                       )}
                     </div>
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>
               ))}
             </TableBody>

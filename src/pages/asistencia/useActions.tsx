@@ -8,16 +8,18 @@ import {
   estudiante,
   horarioPlantilla,
   inscripcion,
+  pago,
   persona,
 } from "@/db/schema";
 import { and, between, count, eq, inArray } from "drizzle-orm";
 import { useModalStore } from "@/store/modalState";
 import { useAlertStore } from "@/store/AlertState";
 import { toast } from "sonner";
-import { LoaderForm } from "./loaderForm";
 import { LoaderFormAsistencia } from "./loaderAsistencia";
 import { FormAsistencia } from "./formAsistencia";
 import FormFotter from "./formFotter";
+import FormClase from "./formClase";
+import { format } from "date-fns";
 
 export const useActions = () => {
   const queryClient = useQueryClient();
@@ -117,68 +119,126 @@ export const useActions = () => {
 
   // --- MUTACIONES ---
   const upsertMutation = useMutation({
-    mutationFn: async ({
-      id,
-      values,
-      nroDocumento,
-    }: {
-      id?: number;
-      values: any;
-      nroDocumento?: number;
-    }) => {
+    mutationFn: async ({ values, fecha }: { values: any; fecha: Date }) => {
       setLoading(true);
+      const { vehiculoId, instructorId, inscripcionId, horaIni, horaFin } =
+        values;
+      const fechaFormateada = format(fecha, "yyyy-MM-dd");
 
-      const { cursoId, gestionId, precioPactado, ...dataPersona } = values;
-      if (nroDocumento) {
-        const per = await db.query.persona.findFirst({
-          where: eq(persona.nroDocumento, Number(nroDocumento)),
-        });
-        if (per) {
-          const [u] = await db
-            .insert(estudiante)
-            .values({ personaId: per.id })
-            .returning({ estudianteId: estudiante.id });
-
-          if (u) {
-            await db.insert(inscripcion).values({
-              cursoId: cursoId,
-              estudianteId: u.estudianteId,
-              precioPactado: precioPactado,
-              gestionId: gestionId,
-            });
-          }
-        }
-      } else {
-        const [p] = await db
-          .insert(persona)
-          .values({ ...dataPersona })
-          .returning({ personaId: persona.id });
-        if (p) {
-          const [u] = await db
-            .insert(estudiante)
-            .values({ personaId: p.personaId })
-            .returning({ estudianteId: estudiante.id });
-
-          if (u) {
-            await db.insert(inscripcion).values({
-              cursoId: cursoId,
-              estudianteId: u.estudianteId,
-              precioPactado: precioPactado,
-              gestionId: gestionId,
-            });
-          }
-        }
-      }
+      // 1. Crear Clase Práctica Manual
+      return await db.insert(clasePractica).values({
+        inscripcionId: Number(inscripcionId),
+        instructorId: Number(instructorId),
+        vehiculoId: Number(vehiculoId),
+        fechaExacta: fechaFormateada,
+        horaInicio: horaIni, // O podrías añadir inputs de hora al form
+        horaFin: horaFin,
+        estadoClase: "PROGRAMADA",
+      });
     },
     onSuccess: (_, variables) => {
       setLoading(false);
-      queryClient.invalidateQueries({ queryKey: ["estudiantes-list"] });
+      queryClient.invalidateQueries({
+        queryKey: ["inscripcion-matriz-asistencia-mes"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["inscripciones_x_estudiante"],
+      });
+      toast.success("Nueva clase practica");
+      close();
+    },
+    onError: (e) => {
+      console.log(e);
+      setLoading(false);
+      toast.error("Error al procesar la solicitud");
+    },
+  });
+  const upsertAsistenciaMutation = useMutation({
+    mutationFn: async ({ id, values }: { id?: number; values: any }) => {
+      setLoading(true);
+      const {
+        inscripcionId,
+        estadoAsistencia,
+        tipoClase,
+        claseId,
+        montoPago,
+        metodoPago,
+      } = values;
+
+      const monto = Number(montoPago);
+      console.log(monto);
+      const iId = Number(inscripcionId);
+      const cId = Number(claseId);
+
+      let asistenciaIdFinal = id;
+
+      // --- 1. GESTIÓN DE ASISTENCIA ---
+      if (id) {
+        // Caso: Actualizar asistencia existente
+        await db
+          .update(asistenciaGeneral)
+          .set({
+            estadoAsistencia,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(asistenciaGeneral.id, id));
+      } else {
+        // Caso: Nueva asistencia (Insert)
+        const payload: any = {
+          inscripcionId: iId,
+          estadoAsistencia,
+        };
+
+        // Asignamos el ID de clase según el tipo (T o P)
+        if (tipoClase === "P") {
+          payload.clasePracticaId = cId;
+        } else {
+          payload.claseTeoricaId = cId;
+        }
+
+        const [nuevaAsis] = await db
+          .insert(asistenciaGeneral)
+          .values(payload)
+          .returning({ id: asistenciaGeneral.id });
+
+        asistenciaIdFinal = nuevaAsis.id;
+      }
+
+      // --- 2. GESTIÓN DE PAGO (Independiente) ---
+      // Solo insertamos si el administrativo escribió un monto válido
+      if (monto > 0) {
+        try {
+          await db.insert(pago).values({
+            inscripcionId: iId,
+            montoPagado: monto,
+            metodoPago: metodoPago || "EFECTIVO",
+            estado: "activo",
+          });
+        } catch (error) {
+          console.error(
+            "Error al registrar el pago, pero la asistencia se guardó:",
+            error,
+          );
+          // No lanzamos error aquí para que no se "caiga" la UI si solo falló el pago
+        }
+      }
+
+      return asistenciaIdFinal;
+    },
+    onSuccess: (_, variables) => {
+      setLoading(false);
+      queryClient.invalidateQueries({
+        queryKey: ["inscripcion-matriz-asistencia-mes"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["inscripciones_x_estudiante"],
+      });
       if (variables.id)
         queryClient.invalidateQueries({
-          queryKey: ["estudiante_data", variables.id],
+          queryKey: ["inscripcion-matriz-asistencia-mes", variables.id],
         });
       toast.success(
-        variables.id ? "Inscripcion actualizada" : "Inscripcion creado",
+        variables.id ? "Asistencia actualizada" : "Asistencia creada",
       );
       close();
     },
@@ -187,7 +247,6 @@ export const useActions = () => {
       toast.error("Error al procesar la solicitud");
     },
   });
-
   const statusMutation = useMutation({
     mutationFn: async ({
       id,
@@ -206,7 +265,7 @@ export const useActions = () => {
       queryClient.invalidateQueries({ queryKey: ["estudiantes-list"] }),
   });
 
-  const handleCreate = () => {
+  /*   const handleCreate = () => {
     show(<LoaderForm />, {
       title: "Crear nueva inscripcion",
       formId: "inscripcion-formulario-create",
@@ -217,7 +276,7 @@ export const useActions = () => {
       title: "Editar inscripcion",
       formId: "inscripcion-formulario-edit",
     });
-  };
+  }; */
   const handleAsignarClase = ({ inscripcionId, fechaActual, tipo }: any) => {
     show(
       <LoaderFormAsistencia
@@ -228,8 +287,29 @@ export const useActions = () => {
       {
         title: "Asignar Clase",
         formId: "inscripcion-asignar-clase",
+        size: "md",
+      },
+    );
+  };
+  const handleLlenarAsistencia = ({
+    fecha,
+    claseId,
+    tipoClase,
+    inscripcionId,
+    data,
+  }: any) => {
+    show(
+      <FormClase
+        data={data}
+        inscripcionId={inscripcionId}
+        fecha={fecha}
+        claseId={claseId}
+        tipoClase={tipoClase}
+      />,
+      {
+        title: "Llenar asistencia",
+        formId: "llenar-asistencia-clase",
         size: "sm",
-        footer: <FormFotter />,
       },
     );
   };
@@ -282,9 +362,9 @@ export const useActions = () => {
     useGetData,
     handleAsignarClase,
     upsertMutation,
-    handleCreate,
-    handleEdit,
     handleToggleStatus,
     searchMutation,
+    handleLlenarAsistencia,
+    upsertAsistenciaMutation,
   };
 };

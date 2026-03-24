@@ -322,7 +322,9 @@ export const curso = sqliteTable(
     updatedAt: text()
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+    estado: text("Estado", {
+      enum: ["activo", "inactivo", "finalizado", "en curso", "programado"],
+    })
       .notNull()
       .default("activo"),
   },
@@ -455,22 +457,24 @@ export const inscripcion = sqliteTable(
     precioPactado: real().notNull(),
     fechaInicio: text().notNull().default("2026-01-01"), // Valor temporal
     fechaFin: text().notNull().default("2026-12-31"),
-
+    horarioPlantillaId: integer("horarioPlantillaId").notNull(),
     fechaInscripcion: text()
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
     estadoInscripcion: text("EstadoInscripcion", {
-      enum: ["ACTIVA", "FINALIZADA", "ABANDONADA"],
+      enum: ["pendiente", "reprobado", "aprobado"],
     })
       .notNull()
-      .default("ACTIVA"),
+      .default("pendiente"),
     createdAt: text()
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
     updatedAt: text()
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
+    estado: text("Estado", {
+      enum: ["activo", "inactivo", "pendiente", "finalizada", "abandonada"],
+    })
       .notNull()
       .default("activo"),
   },
@@ -487,10 +491,12 @@ export const inscripcion = sqliteTable(
     foreignKey({ columns: [table.gestionId], foreignColumns: [gestion.id] })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    uniqueIndex("Inscripcion_estudiante_curso_uk").on(
-      table.estudianteId,
-      table.cursoId,
-    ),
+    foreignKey({
+      columns: [table.horarioPlantillaId],
+      foreignColumns: [horarioPlantilla.id],
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
   ],
 );
 
@@ -550,7 +556,6 @@ export const horarioPlantilla = sqliteTable(
     horaFin: text().notNull(),
     tipo: text("TipoClase", { enum: ["TEORICO", "PRACTICO"] }).notNull(),
 
-    // OPCIONALES: Quitamos el .notNull()
     instructorId: integer(),
     aulaId: integer(),
 
@@ -594,10 +599,12 @@ export const claseTeorica = sqliteTable(
   "ClaseTeorica",
   {
     id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-    horarioPlantillaId: integer().notNull(),
+    horarioPlantillaId: integer(),
     aulaId: integer().notNull(),
     cursoId: integer().notNull(),
     fechaExacta: text().notNull(),
+    horaInicio: text().notNull(), // Ej: "14:00"
+    horaFin: text().notNull(), // Ej: "15:00"
     estadoClase: text("EstadoClase", {
       enum: ["PROGRAMADA", "DICTADA", "CANCELADA"],
     })

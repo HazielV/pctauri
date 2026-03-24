@@ -1,9 +1,11 @@
 import { RiSearch2Line } from "@remixicon/react";
 import { useSearchParams } from "wouter";
 import {
+  CheckCheck,
   ChevronDown,
   CircleCheckBig,
   PenLine,
+  Play,
   PlusIcon,
   Trash2,
 } from "lucide-react";
@@ -33,8 +35,14 @@ import { useActions } from "./useActions";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function Page() {
-  const { handleCreate, handleEdit, handleToggleStatus, useGetData } =
-    useActions();
+  const {
+    handleCreate,
+    handleEdit,
+    handleToggleStatus,
+    useGetData,
+    handleComenzarCurso,
+    handleFinalizarCurso,
+  } = useActions();
 
   const [searchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
@@ -97,6 +105,7 @@ export default function Page() {
                 <TableCell>precio</TableCell>
                 <TableCell>gestion</TableCell>
                 <TableCell>sucursal</TableCell>
+                <TableCell>horarios</TableCell>
                 <TableCell>estado</TableCell>
                 <TableCell>acciones</TableCell>
               </TableRow>
@@ -114,19 +123,49 @@ export default function Page() {
                   <TableCell>{data.precioBase}</TableCell>
                   <TableCell>{data.gestion.nombre}</TableCell>
                   <TableCell>{data.sucursal.nombre}</TableCell>
+                  <TableCell>
+                    {data.horarioPlantillas.map((h, index) => (
+                      <div key={index} className="grid grid-cols-2 gap-x-2 ">
+                        <span>{h.diaSemana}</span>
+                        <div>{`${h.horaInicio}-${h.horaFin}`}</div>
+                      </div>
+                    ))}
+                  </TableCell>
                   <TableCell className="flex">
-                    <div className="text-xs rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 ">
-                      {data.estado}
-                    </div>
+                    {data.estado === "activo" && (
+                      <div className="text-xs rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 ">
+                        {data.estado}
+                      </div>
+                    )}
+                    {data.estado === "en curso" && (
+                      <div className="text-xs rounded-full p-0.75 px-2 bg-indigo-50 text-indigo-700 dark:bg-indigo-800/20 dark:text-indigo-300 text-center border-[0.5px] border-indigo-700/10 cursor-default w-auto min-w-15 ">
+                        {data.estado}
+                      </div>
+                    )}
+                    {data.estado === "finalizado" && (
+                      <div className="text-xs rounded-full p-0.75 px-2 bg-yellow-50 text-yellow-700 dark:bg-yellow-800/20 dark:text-yellow-300 text-center border-[0.5px] border-yellow-700/10 cursor-default w-auto min-w-15 ">
+                        {data.estado}
+                      </div>
+                    )}
+                    {data.estado === "inactivo" && (
+                      <div className="text-xs rounded-full p-0.75 px-2 bg-red-50 text-red-700 dark:bg-red-800/20 dark:text-red-300 text-center border-[0.5px] border-red-700/10 cursor-default w-auto min-w-15 ">
+                        {data.estado}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <div className=" flex gap-2 h-auto">
-                        <Trash2
-                          size={17}
-                          className="cursor-pointer hover:text-black"
-                        />
-                      </div>
+                      {data.estado === "activo" && (
+                        <button
+                          onClick={() => handleComenzarCurso(data.id)}
+                          className=" flex gap-2 h-auto"
+                        >
+                          <Play
+                            size={17}
+                            className="cursor-pointer hover:text-indigo-400"
+                          />
+                        </button>
+                      )}
                       {data.estado === "activo" && (
                         <button
                           onClick={() => handleEdit(data.id)}
@@ -138,6 +177,7 @@ export default function Page() {
                           />
                         </button>
                       )}
+
                       {data.estado === "activo" && (
                         <button
                           onClick={() =>
@@ -161,6 +201,17 @@ export default function Page() {
                           <CircleCheckBig
                             size={17}
                             className="cursor-pointer hover:text-green-400"
+                          />
+                        </button>
+                      )}
+                      {data.estado === "en curso" && (
+                        <button
+                          onClick={() => handleFinalizarCurso(data.id)}
+                          className=" flex gap-2 h-auto"
+                        >
+                          <CheckCheck
+                            size={17}
+                            className="cursor-pointer hover:text-blue-400"
                           />
                         </button>
                       )}
