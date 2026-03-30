@@ -1,4 +1,10 @@
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import {
   Select,
@@ -11,8 +17,10 @@ import {
 import { asistenciaGeneral, pago } from "@/db/schema";
 import { useModalStore } from "@/store/modalState";
 import { useActions } from "./useActions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 export default function FormClase({
+  cursoId,
   fecha,
   claseId,
   tipoClase,
@@ -24,11 +32,54 @@ export default function FormClase({
   tipoClase: string;
   inscripcionId: number;
   data: any;
+  cursoId: number;
 }) {
   const { formId } = useModalStore();
   const [metodoPago, setMetodoPago] = useState("");
-  const { upsertAsistenciaMutation } = useActions();
+  const { upsertAsistenciaMutation, useModalContextData } = useActions();
+  const { data: contexto, isLoading } = useModalContextData({
+    inscripcionId,
+    cursoId,
+    fecha,
+    tipoClase,
+    claseId,
+  });
+  const [temasSeleccionados, setTemasSeleccionados] = useState<number[]>([]);
+
+  // Cuando la data cargue, inicializamos los checkboxes que ya estaban guardados
+  useEffect(() => {
+    if (contexto?.avanzadosHoy) {
+      setTemasSeleccionados(contexto.avanzadosHoy);
+    }
+  }, [contexto]);
+  const toggleTema = (temaId: number) => {
+    setTemasSeleccionados((prev) =>
+      prev.includes(temaId)
+        ? prev.filter((id) => id !== temaId)
+        : [...prev, temaId],
+    );
+  };
   const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formdata = Object.fromEntries(
+      new FormData(e.currentTarget as HTMLFormElement),
+    );
+
+    upsertAsistenciaMutation.mutate({
+      id: data?.id,
+      values: {
+        ...formdata,
+        inscripcionId,
+        tipoClase,
+        claseId,
+        // Agregamos los temas seleccionados y el id del examen si hubo nota
+        temasAvanzados: temasSeleccionados,
+        examenProgramadoId: contexto?.examen?.id,
+      },
+    });
+  };
+
+  /* const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const formdata = Object.fromEntries(
       new FormData(e.currentTarget as HTMLFormElement),
@@ -38,10 +89,132 @@ export default function FormClase({
       id: data?.id,
       values: { ...formdata, inscripcionId, tipoClase, claseId },
     });
-  };
-  console.log(data?.estadoAsistencia);
+  }; */
+  console.log("contexto", contexto);
+  if (isLoading)
+    return (
+      <div className="p-10 text-center">Cargando datos de la clase...</div>
+    );
   return (
-    <form id={formId} onSubmit={handleSubmit}>
+    <form
+      id={formId}
+      onSubmit={handleSubmit}
+      className="grid grid-cols-2 gap-8"
+    >
+      <FieldSet className="">
+        <FieldLegend variant="label">
+          Avance de la Clase (Checklist)
+        </FieldLegend>
+        <FieldGroup className="p-3 rounded-lg border grid gap-2">
+          {contexto?.temas && contexto.temas.length > 0 && (
+            <>
+              {contexto.temas.map((t: any, index) => (
+                <Field orientation="horizontal" key={index}>
+                  <Checkbox
+                    id={String(t.id + "-" + index)}
+                    name={t.id}
+                    checked={temasSeleccionados.includes(t.id)}
+                    onCheckedChange={(e) => {
+                      console.log(e);
+                      toggleTema(t.id);
+                    }}
+                  />
+                  <FieldLabel
+                    htmlFor={String(t.id + "-" + index)}
+                    className="font-normal capitalize"
+                  >
+                    {t.titulo}
+                  </FieldLabel>
+                </Field>
+              ))}
+            </>
+          )}
+        </FieldGroup>
+        <div className=" ">
+          <h3 className="font-semibold text-sm mb-3">Pagos del curso</h3>
+          <div className="flex gap-4 mb-4 p-3 rounded-lg border border-border  flex-col">
+            <div className="flex justify-between border-b pb-4">
+              <div className="text-base flex flex-col ">
+                <span className="text-center font-medium ">
+                  Bs. {contexto?.finanzas.deuda}
+                </span>
+                <span className="block text-muted-foreground font-medium text-sm">
+                  Costo Total:
+                </span>
+              </div>
+              <div className="text-base flex flex-col ">
+                <span className="text-center font-medium">
+                  Bs. {contexto?.finanzas.pagado}
+                </span>
+                <span className="block text-muted-foreground font-medium text-sm">
+                  Pagado:
+                </span>
+              </div>
+              <div className="text-base flex flex-col ">
+                <span className="text-center font-medium">
+                  Bs. {contexto?.finanzas.total}
+                </span>
+                <span className="block text-muted-foreground font-medium text-sm">
+                  Deuda Actual:
+                </span>
+              </div>
+            </div>
+
+            <FieldGroup className="flex-row gap-4">
+              <Field className="flex-1 ">
+                <FieldLabel
+                  htmlFor="metodoPago"
+                  className="max-w-fit whitespace-nowrap"
+                >
+                  Metodo de pago
+                </FieldLabel>
+                <Select
+                  disabled={contexto?.finanzas.deuda === 0}
+                  value={metodoPago}
+                  onValueChange={(e) => setMetodoPago(e)}
+                  name="metodoPago"
+                  defaultValue="EFECTIVO"
+                >
+                  <SelectTrigger id="metodoPago" className="flex-1 w-full">
+                    <SelectValue placeholder="Seleccione un tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {pago.metodoPago.enumValues.map((e, ind) => (
+                        <SelectItem key={ind} value={e}>
+                          {e}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+
+              <Field className="w-2/6 ">
+                <FieldLabel
+                  htmlFor="montoPago"
+                  className="max-w-fit whitespace-nowrap"
+                >
+                  Monto (bs.)
+                  <span className="text-destructive ">*</span>
+                </FieldLabel>
+                <InputGroup>
+                  <InputGroupInput
+                    className="disabled:cursor-not-allowed"
+                    placeholder="pago/cuota"
+                    name="montoPago"
+                    type="number"
+                    required
+                    autoComplete={"off"}
+                    disabled={contexto?.finanzas.deuda === 0}
+                    max={contexto?.finanzas.deuda}
+                  />
+                </InputGroup>
+              </Field>
+            </FieldGroup>
+          </div>
+        </div>
+      </FieldSet>
       <FieldGroup className="">
         <Field className=" ">
           <FieldLabel
@@ -97,51 +270,31 @@ export default function FormClase({
           </Select>
         </Field>
 
-        <Field className=" ">
-          <FieldLabel
-            htmlFor="metodoPago"
-            className="max-w-fit whitespace-nowrap"
-          >
-            Metodo de pago
-          </FieldLabel>
-          <Select
-            value={metodoPago}
-            onValueChange={(e) => setMetodoPago(e)}
-            name="metodoPago"
-            defaultValue="EFECTIVO"
-          >
-            <SelectTrigger id="metodoPago" className="flex-1 w-full">
-              <SelectValue placeholder="Seleccione un tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {pago.metodoPago.enumValues.map((e, ind) => (
-                  <SelectItem key={ind} value={e}>
-                    {e}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
-        {metodoPago && (
-          <Field className=" ">
-            <FieldLabel
-              htmlFor="montoPago"
-              className="max-w-fit whitespace-nowrap"
-            >
-              Pago de la clase (bs.){" "}
-              <span className="text-destructive ">*</span>
-            </FieldLabel>
-            <InputGroup>
-              <InputGroupInput
-                placeholder="Ingrese el pago/cuota"
-                name="montoPago"
-                required
-              />
-            </InputGroup>
-          </Field>
-        )}
+        <div className="">
+          <h3 className="font-semibold text-sm mb-2 ">Examenes:</h3>
+          {contexto?.examen ? (
+            <Field className="flex gap-2 items-center">
+              <FieldLabel className="whitespace-nowrap">
+                Nota obtenida:
+              </FieldLabel>
+              <InputGroup className="w-24">
+                <InputGroupInput
+                  type="number"
+                  step="0.01"
+                  name="notaExamen"
+                  defaultValue={
+                    contexto.examen.evaluacionesEstudiantes[0]?.nota || ""
+                  }
+                  placeholder="/ 100"
+                />
+              </InputGroup>
+            </Field>
+          ) : (
+            <div className="p-3 text-sm border rounded-lg">
+              no tiene ningun examen programado en esta fecha
+            </div>
+          )}
+        </div>
       </FieldGroup>
     </form>
   );

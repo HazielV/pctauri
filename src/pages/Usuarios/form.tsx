@@ -7,8 +7,7 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
-import { persona, usuario } from "../../db/schema";
-import { InferSelectModel } from "drizzle-orm";
+import { persona } from "../../db/schema";
 import { useModalStore } from "@/store/modalState";
 
 import { useActions } from "./useActions";
@@ -21,14 +20,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-type UsuarioBase = InferSelectModel<typeof usuario>;
-type PersonaBase = InferSelectModel<typeof persona>;
 
-export type NewData = UsuarioBase & {
-  persona: PersonaBase;
-};
-
-export function Form({ data }: { data?: NewData | undefined }) {
+export type NewData =
+  | {
+      id: number;
+      createdAt: string;
+      updatedAt: string;
+      estado: "activo" | "inactivo" | "pendiente";
+      username: string;
+      password: string;
+      personaId: number;
+      usuariosRoles: {
+        rol: {
+          id: number;
+        };
+      }[];
+      persona: {
+        id: number;
+        nombres: string;
+        primerApellido: string;
+        segundoApellido: string | null;
+        nroDocumento: number;
+        nroCelular: number;
+        email: string;
+        sexo: "MASCULINO" | "FEMENINO" | "OTRO";
+        fechaNacimiento: string;
+        direccion: string | null;
+        createdAt: string;
+        updatedAt: string;
+        tipoDocumento: "CEDULA" | "PASAPORTE" | "EXTRANJERO";
+        estado: "activo" | "inactivo" | "pendiente";
+      };
+    }
+  | undefined;
+type roles =
+  | {
+      id: number;
+      estado: "activo" | "inactivo" | "pendiente";
+      nombre: string;
+      descripcion: string | null;
+    }[]
+  | undefined;
+export function Form({
+  data,
+  roles,
+}: {
+  data?: NewData | undefined;
+  roles: roles;
+}) {
   const { formId } = useModalStore();
   const { upsertMutation } = useActions();
 
@@ -37,11 +76,9 @@ export function Form({ data }: { data?: NewData | undefined }) {
     const formdata = Object.fromEntries(
       new FormData(e.currentTarget as HTMLFormElement),
     );
-    console.log(formdata);
 
     upsertMutation.mutate({ id: data?.id, values: formdata });
   };
-
   return (
     <form id={formId} onSubmit={handleSubmit} className="grid gap-5">
       <FieldGroup className="grid grid-cols-2 lg:grid-cols-3">
@@ -70,6 +107,29 @@ export function Form({ data }: { data?: NewData | undefined }) {
               name="password"
             />
           </InputGroup>
+        </Field>
+        <Field className="w-full">
+          <FieldLabel htmlFor="rolId">
+            Rol del usuario <span className="text-destructive">*</span>
+          </FieldLabel>
+
+          <Select
+            name="rolId"
+            defaultValue={String(data?.usuariosRoles?.[0]?.rol?.id) || ""}
+          >
+            <SelectTrigger id="rolId">
+              <SelectValue placeholder="Seleccione un rol" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {roles?.map((valor, index) => (
+                  <SelectItem key={index} value={String(valor.id)}>
+                    {valor.descripcion}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </Field>
       </FieldGroup>
       <FieldSeparator />

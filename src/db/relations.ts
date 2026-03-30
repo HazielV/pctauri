@@ -21,6 +21,10 @@ import {
   instructor,
   estudiante,
   pago,
+  tema,
+  avanceClase,
+  examenProgramado,
+  evaluacionEstudiante,
 } from "./schema";
 
 export const menuRelations = relations(menu, ({ one, many }) => ({
@@ -39,8 +43,11 @@ export const menuRelations = relations(menu, ({ one, many }) => ({
   rolesMenus: many(rolesMenus),
 }));
 
-export const recursoRelations = relations(recurso, ({ many }) => ({
-  menus: many(menu),
+export const recursoRelations = relations(recurso, ({ one, many }) => ({
+  menu: one(menu, {
+    fields: [recurso.id],
+    references: [menu.recursoId],
+  }),
   rolesRecursos: many(rolesRecursos),
 }));
 
@@ -131,6 +138,7 @@ export const clasePracticaRelations = relations(
       references: [vehiculo.id],
     }),
     asistenciaGenerals: many(asistenciaGeneral),
+    avances: many(avanceClase), // NUEVO
   }),
 );
 
@@ -145,6 +153,11 @@ export const claseTeoricaRelations = relations(
     horarioPlantilla: one(horarioPlantilla, {
       fields: [claseTeorica.horarioPlantillaId],
       references: [horarioPlantilla.id],
+    }),
+    avances: many(avanceClase), // NUEVO
+    curso: one(curso, {
+      fields: [claseTeorica.cursoId],
+      references: [curso.id],
     }),
   }),
 );
@@ -169,6 +182,7 @@ export const inscripcionRelations = relations(inscripcion, ({ one, many }) => ({
     references: [horarioPlantilla.id],
   }),
   clasesPracticas: many(clasePractica),
+  evaluaciones: many(evaluacionEstudiante), // NUEVO
 }));
 
 export const aulaRelations = relations(aula, ({ one, many }) => ({
@@ -217,8 +231,11 @@ export const cursoRelations = relations(curso, ({ one, many }) => ({
     fields: [curso.gestionId],
     references: [gestion.id],
   }),
+  claseTeoricas: many(claseTeorica),
   horarioPlantillas: many(horarioPlantilla),
   inscripcions: many(inscripcion),
+  temas: many(tema), // NUEVO
+  examenesProgramados: many(examenProgramado), // NUEVO
 }));
 
 export const gestionRelations = relations(gestion, ({ many }) => ({
@@ -248,3 +265,50 @@ export const pagoRelations = relations(pago, ({ one }) => ({
     references: [inscripcion.id],
   }),
 }));
+export const temaRelations = relations(tema, ({ one, many }) => ({
+  curso: one(curso, {
+    fields: [tema.cursoId],
+    references: [curso.id],
+  }),
+  avances: many(avanceClase),
+}));
+
+export const avanceClaseRelations = relations(avanceClase, ({ one }) => ({
+  tema: one(tema, {
+    fields: [avanceClase.temaId],
+    references: [tema.id],
+  }),
+  claseTeorica: one(claseTeorica, {
+    fields: [avanceClase.claseTeoricaId],
+    references: [claseTeorica.id],
+  }),
+  clasePractica: one(clasePractica, {
+    fields: [avanceClase.clasePracticaId],
+    references: [clasePractica.id],
+  }),
+}));
+
+export const examenProgramadoRelations = relations(
+  examenProgramado,
+  ({ one, many }) => ({
+    curso: one(curso, {
+      fields: [examenProgramado.cursoId],
+      references: [curso.id],
+    }),
+    evaluacionesEstudiantes: many(evaluacionEstudiante),
+  }),
+);
+
+export const evaluacionEstudianteRelations = relations(
+  evaluacionEstudiante,
+  ({ one }) => ({
+    examenProgramado: one(examenProgramado, {
+      fields: [evaluacionEstudiante.examenProgramadoId],
+      references: [examenProgramado.id],
+    }),
+    inscripcion: one(inscripcion, {
+      fields: [evaluacionEstudiante.inscripcionId],
+      references: [inscripcion.id],
+    }),
+  }),
+);

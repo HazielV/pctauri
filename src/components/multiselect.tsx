@@ -7,34 +7,45 @@ export default function MultiSelect({
   multiple = false,
   name,
   defaultData,
+  setDataSelect,
 }: {
   data: Record<string, string>[];
   multiple?: boolean;
   name: string;
   defaultData?: string[];
+  setDataSelect?: (e: any) => void;
 }) {
   const [select, setSelect] = useState<string[]>(defaultData ?? []);
   const seleccionar = (elegido: string) => {
     if (multiple) {
-      setSelect((prev) => {
-        const existe = prev.some((e) => e === elegido);
+      // 1. Calculamos el nuevo estado basado en el estado actual
+      const existe = select.includes(elegido);
+      const nuevoEstado = existe
+        ? select.filter((e) => e !== elegido) // Si existe, lo quitamos
+        : [...select, elegido]; // Si no existe, lo agregamos
 
-        if (existe) {
-          return prev.filter((e) => e !== elegido);
-        }
-        return [...prev, elegido];
-      });
+      // 2. Actualizamos ambos estados de forma segura y paralela
+      setSelect(nuevoEstado);
+      if (setDataSelect) {
+        setDataSelect(nuevoEstado);
+      }
     } else {
-      setSelect((prev) => (prev[0] === elegido ? [] : [elegido]));
+      // Misma lógica para el caso de selección única
+      const nuevoEstado = select[0] === elegido ? [] : [elegido];
+
+      setSelect(nuevoEstado);
+      if (setDataSelect) {
+        setDataSelect(nuevoEstado);
+      }
     }
   };
 
   return (
     <>
-      {multiple ? (
+      {!setDataSelect && multiple ? (
         <select
           name={name}
-          value={select}
+          defaultValue={select}
           multiple
           id="multiple-select"
           hidden
@@ -45,15 +56,17 @@ export default function MultiSelect({
           ))}
         </select>
       ) : (
-        <input
-          readOnly
-          hidden
-          data-slot="input"
-          name={name}
-          value={select[0]}
-        />
+        !setDataSelect && (
+          <input
+            readOnly
+            hidden
+            data-slot="input"
+            name={name}
+            value={select[0]}
+          />
+        )
       )}
-      <ul className="flex flex-wrap gap-2.5 dark:bg-input/30 min-h-9 min-w-0 border border-input rounded-md items-center px-2 py-2">
+      <ul className="flex flex-wrap gap-2.5 dark:bg-input/30 min-h-9 min-w-0 border border-input rounded-md items-center px-2 py-2 w-full">
         {data.map((elem, index) => (
           <li
             onClick={() => seleccionar(elem["valor"])}

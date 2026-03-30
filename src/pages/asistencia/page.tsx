@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from "wouter";
+import { useSearchParams } from "wouter";
 
 import {
   Contendor,
@@ -27,8 +27,6 @@ import {
   startOfWeek,
   endOfWeek,
   format,
-  isBefore,
-  eachWeekOfInterval,
   parseISO,
   subWeeks,
   addWeeks,
@@ -38,7 +36,7 @@ import { es } from "date-fns/locale";
 import { useMemo } from "react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { inscripcion } from "@/db/schema";
+
 const mapaDias: Record<string, string> = {
   lunes: "LUNES",
   martes: "MARTES",
@@ -61,7 +59,6 @@ export default function Page() {
   const inicioSemana = startOfWeek(fechaReferencia, { weekStartsOn: 0 });
   const finSemana = endOfWeek(fechaReferencia, { weekStartsOn: 0 });
 
-  const labelSemana = `${format(inicioSemana, "dd MMM", { locale: es })} - ${format(finSemana, "dd MMM", { locale: es })}`;
   const cambiarSemana = (direccion: "ant" | "sig") => {
     const nuevaFecha =
       direccion === "ant"
@@ -74,12 +71,6 @@ export default function Page() {
     setSearchParams(params, { replace: true });
   };
 
-  const updateFiltro = (clave: string, valor: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (valor && valor !== "0") params.set(clave, valor);
-    else params.delete(clave);
-    setSearchParams(params, { replace: true });
-  };
   const diasSemanaArray = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
       const d = addDays(inicioSemana, i);
@@ -89,11 +80,7 @@ export default function Page() {
   const fInicio = format(inicioSemana, "yyyy-MM-dd");
   const fFin = format(finSemana, "yyyy-MM-dd");
 
-  const {
-    data: matriz,
-    isLoading: loadingMatriz,
-    isFetching: fetchingMatriz,
-  } = useGetData({
+  const { data: matriz, isLoading: loadingMatriz } = useGetData({
     fInicio: fInicio,
     fFin: fFin,
     page,
@@ -329,6 +316,7 @@ export default function Page() {
                                         `T-${ins.id}-${claseT.id}`,
                                       );
                                       handleLlenarAsistencia({
+                                        cursoId: ins.cursoId,
                                         fecha: fechaDia,
                                         claseId: claseT.id,
                                         tipoClase: "T",
@@ -358,6 +346,7 @@ export default function Page() {
                                       `P-${ins.id}-${claseP.id}`,
                                     );
                                     handleLlenarAsistencia({
+                                      cursoId: ins.cursoId,
                                       fecha: fechaDia,
                                       claseId: claseP.id,
                                       tipoClase: "P",

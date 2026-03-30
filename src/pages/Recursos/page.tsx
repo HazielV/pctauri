@@ -3,6 +3,7 @@ import { useSearchParams } from "wouter";
 import {
   ChevronDown,
   CircleCheckBig,
+  MoveRight,
   PenLine,
   PlusIcon,
   Trash2,
@@ -32,16 +33,42 @@ import Paginacion from "@/components/Paginacion";
 import { useActions } from "./useActions";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
+const obtenerPermisos = (
+  bitmask: number,
+  permisos:
+    | {
+        id: number;
+        nombre: string;
+        descripcion: string | null;
+        valor: number;
+      }[]
+    | undefined,
+) => {
+  /* retornar un array ej: ["leer", "escribir"] */
+  if (!permisos) return [];
+
+  // Filtramos los permisos cuyo valor bit a bit coincida con el bitmask
+  return permisos
+    .filter((p) => (bitmask & p.valor) !== 0)
+    .map((p) => p.nombre.toLowerCase());
+};
+
 export default function Page() {
-  const { handleCreate, handleEdit, handleToggleStatus, useGetData } =
-    useActions();
+  const {
+    handleCreate,
+    handleEdit,
+    handleToggleStatus,
+    useGetData,
+    useGetPermisos,
+  } = useActions();
 
   const [searchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
   const perPage = parseInt(searchParams.get("perpage") || "10");
   const { data, isLoading, isError } = useGetData(page, perPage);
+  const { data: permisos, isLoading: isLoadingPermisos } = useGetPermisos();
 
-  if (isLoading) return <div>Cargando...</div>;
+  if (isLoading || isLoadingPermisos) return <div>Cargando...</div>;
   if (isError || !data) return <div>Error o sin datos</div>;
 
   const { data: roles, meta } = data;
@@ -94,7 +121,13 @@ export default function Page() {
                 <TableCell className="">Id</TableCell>
                 <TableCell>nombre</TableCell>
                 <TableCell>url</TableCell>
-                <TableCell>Roles/Permiso</TableCell>
+                <TableCell>
+                  <div className="flex gap-2 items-center">
+                    <span>Rol(es)</span>
+                    <MoveRight size={15} />
+                    <span>Permisos</span>
+                  </div>
+                </TableCell>
                 <TableCell>estado</TableCell>
                 <TableCell>Acciones</TableCell>
               </TableRow>
@@ -109,19 +142,37 @@ export default function Page() {
                   <TableCell>{data.id}</TableCell>
                   <TableCell>{data.nombre}</TableCell>
                   <TableCell>{data.ruta}</TableCell>
-                  <TableCell>
-                    {data.rolesRecursos.map((elem, index) => (
-                      <div key={index} className="flex gap-2 flex-wrap">
-                        <span className="flex px-2.5 py-0.5 capitalize text-xs bg-gray-200/60 text-gray-700 border-gray-600  dark:bg-gray-900 dark:text-white/60  rounded border dark:border-white/10">
-                          {elem.rol.nombre.toLowerCase()}
-                        </span>
-                      </div>
-                    ))}
+                  <TableCell className="">
+                    <div className="flex flex-col gap-3">
+                      {data.rolesRecursos.map((elem, index) => (
+                        <div key={index} className="flex gap-2 items-center">
+                          <div className="flex  px-2.5 py-0.5 capitalize text-xs bg-gray-200/60 text-gray-700 border-gray-600  dark:bg-gray-900 dark:text-white/60  rounded border dark:border-white/10">
+                            {elem.rol.nombre.toLowerCase()}
+                          </div>
+                          <MoveRight size={15} />
+                          <div className="flex flex-wrap gap-1 text-xs">
+                            {obtenerPermisos(
+                              Number(elem.permisos),
+                              permisos,
+                            ).map((per) => (
+                              <div
+                                className="dark:bg-sky-700 text-center py-0.5 rounded-full dark:text-sky-100/90 px-2 text-sky-800 bg-sky-300/25"
+                                key={per}
+                              >
+                                {per}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </TableCell>
 
-                  <TableCell className="flex">
-                    <div className="text-xs rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 ">
-                      {data.estado}
+                  <TableCell>
+                    <div className="flex ">
+                      <div className="text-xs h-full rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 ">
+                        {data.estado}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>

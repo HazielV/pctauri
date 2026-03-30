@@ -1,24 +1,77 @@
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
-import { rol } from "../../db/schema";
-import { InferInsertModel } from "drizzle-orm";
+
 import { useModalStore } from "@/store/modalState";
 
 import { useActions } from "./useActions";
-export type NewRol = InferInsertModel<typeof rol>;
-export function Form({ data }: { data?: NewRol | undefined }) {
+import MultiSelect from "@/components/multiselect";
+import { useMemo, useState } from "react";
+export type NewRol =
+  | {
+      id: number;
+      estado: "activo" | "inactivo" | "pendiente";
+      nombre: string;
+      descripcion: string | null;
+      rolesMenus: {
+        estado: "activo" | "inactivo" | "pendiente";
+        rolId: number;
+        permisos: number;
+        menuId: number;
+      }[];
+    }
+  | undefined;
+type menus =
+  | {
+      id: number;
+      estado: "activo" | "inactivo" | "pendiente";
+      nombre: string;
+      ruta: string;
+      icono: string | null;
+      orden: number;
+      padreId: number | null;
+      recursoId: number | null;
+    }[]
+  | undefined;
+export function Form({
+  data,
+  menus,
+}: {
+  data?: NewRol | undefined;
+  menus: menus;
+}) {
   const { formId } = useModalStore();
   const { upsertMutation } = useActions();
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const [menusElegidos, setMenusElegidos] = useState<string | string[]>("");
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formdata = Object.fromEntries(
-      new FormData(e.currentTarget as HTMLFormElement),
-    );
+    const formData = new FormData(e.currentTarget);
 
-    upsertMutation.mutate({ id: data?.id, values: formdata });
+    const values: Record<string, any> = {};
+
+    formData.forEach((value, key) => {
+      if (!values[key]) {
+        values[key] = value;
+        return;
+      }
+      if (!Array.isArray(values[key])) {
+        values[key] = [values[key]];
+      }
+      values[key].push(value);
+    });
+
+    /* console.log({ ...values, menus: menusElegidos }); */
+    upsertMutation.mutate({
+      id: data?.id,
+      values: { ...values, menus: menusElegidos },
+    });
   };
-
+  const menusMapeados = useMemo(() => {
+    if (!menus) return [];
+    return menus.map((e) => ({
+      descripcion: e.nombre || "",
+      valor: String(e.id),
+    }));
+  }, [menus]);
   return (
     <form id={formId} onSubmit={handleSubmit}>
       <FieldGroup className="grid grid-cols-2">
@@ -47,6 +100,21 @@ export function Form({ data }: { data?: NewRol | undefined }) {
               defaultValue={data?.descripcion || undefined}
             />
           </InputGroup>
+        </Field>
+        <Field className="w-full md:col-span-2 ">
+          <FieldLabel htmlFor="roles">
+            Menus para el rol <span className="text-destructive">*</span>
+          </FieldLabel>
+
+          {menusMapeados && (
+            <MultiSelect
+              multiple
+              name="menus"
+              defaultData={data?.rolesMenus?.map((e) => String(e.menuId))}
+              setDataSelect={setMenusElegidos}
+              data={menusMapeados} // <-- Usamos la variable memorizada
+            />
+          )}
         </Field>
       </FieldGroup>
     </form>

@@ -24,6 +24,7 @@ import { useAuthStore } from "./store/authStore";
 import Inscripciones from "./pages/Inscripciones";
 import Archivo from "./pages/Inscripciones/archivo";
 import Asistencia from "./pages/asistencia";
+import Cronograma from "./pages/cronograma";
 
 function App() {
   const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ function App() {
                   <Route path="/instructores" component={Instructores} />
                   <Route path="/cursos" component={Cursos} />
                   <Route path="/inscripciones" component={Inscripciones} />
+                  <Route path="/cronograma" component={Cronograma} />
                   <Route
                     path="/inscripciones/archivo/:id"
                     component={Archivo}

@@ -150,7 +150,7 @@ export const menu = sqliteTable(
     })
       .notNull()
       .default("activo"),
-    recursoId: integer(),
+    recursoId: integer().unique(),
   },
   (table) => [
     uniqueIndex("Menu_ruta_key").on(table.ruta),
@@ -726,5 +726,120 @@ export const asistenciaGeneral = sqliteTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
+  ],
+);
+export const tema = sqliteTable(
+  "Tema",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    cursoId: integer().notNull(),
+    titulo: text().notNull(), // Ej: "Ley de Tránsito Art. 10", "Parqueo en reversa"
+    tipo: text("TipoTema", { enum: ["TEORICO", "PRACTICO"] }).notNull(),
+    orden: integer().default(0), // Para saber qué enseñar primero
+    estado: text("Estado", { enum: ["activo", "inactivo"] })
+      .default("activo")
+      .notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.cursoId],
+      foreignColumns: [curso.id],
+    }).onDelete("cascade"),
+  ],
+);
+export const avanceClase = sqliteTable(
+  "AvanceClase",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    temaId: integer().notNull(),
+
+    // Si es teoría, se asocia a la clase general (todos avanzan lo mismo)
+    claseTeoricaId: integer(),
+
+    // Si es práctica, se asocia a la clase individual del alumno
+    clasePracticaId: integer(),
+
+    createdAt: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+  },
+  (table) => [
+    foreignKey({ columns: [table.temaId], foreignColumns: [tema.id] }).onDelete(
+      "cascade",
+    ),
+    foreignKey({
+      columns: [table.claseTeoricaId],
+      foreignColumns: [claseTeorica.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.clasePracticaId],
+      foreignColumns: [clasePractica.id],
+    }).onDelete("cascade"),
+  ],
+);
+// 1. EL EVENTO (Lo que crea el administrador o instructor)
+export const examenProgramado = sqliteTable(
+  "ExamenProgramado",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    cursoId: integer().notNull(),
+    titulo: text().notNull(), // Ej: "Examen Final de Normativa" o "Prueba de Parqueo"
+    tipoExamen: text("TipoExamen", {
+      enum: ["TEORICO", "PRACTICO"],
+    }).notNull(),
+    fechaExacta: text().notNull(), // Cuándo se tomará
+    estado: text("Estado", {
+      enum: ["PROGRAMADO", "COMPLETADO", "CANCELADO"],
+    })
+      .default("PROGRAMADO")
+      .notNull(),
+    createdAt: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.cursoId],
+      foreignColumns: [curso.id],
+    }).onDelete("cascade"),
+  ],
+);
+
+// 2. EL RESULTADO (La nota de cada alumno)
+export const evaluacionEstudiante = sqliteTable(
+  "EvaluacionEstudiante",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    examenProgramadoId: integer().notNull(),
+    inscripcionId: integer().notNull(), // Quién dio el examen
+
+    nota: real(), // Puede ser NULL hasta que el instructor la llene
+    observaciones: text(),
+
+    estadoAsistencia: text("EstadoAsistencia", {
+      enum: ["PRESENTE", "FALTA"],
+    })
+      .default("PRESENTE")
+      .notNull(),
+
+    fechaCalificacion: text()
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+  },
+  (table) => [
+    // Clave única: Un alumno no puede tener dos notas para el mismo examen exacto
+    uniqueIndex("Evaluacion_Unica_key").on(
+      table.examenProgramadoId,
+      table.inscripcionId,
+    ),
+
+    foreignKey({
+      columns: [table.examenProgramadoId],
+      foreignColumns: [examenProgramado.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.inscripcionId],
+      foreignColumns: [inscripcion.id],
+    }).onDelete("cascade"),
   ],
 );

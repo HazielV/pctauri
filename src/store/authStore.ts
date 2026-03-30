@@ -1,30 +1,64 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface User {
   id: number;
   username: string;
-  roles?: { rolId: number; }[];
-  // Añade aquí los campos que necesites de tu tabla de usuarios
+  roles: { rolId: number }[];
 }
 
 interface AuthState {
-  user: User | null;
+  user: User;
   isAuthenticated: boolean;
-  setAuth: (user: User) => void;
+  permisosRutas: Record<string, string[]>;
+  setAuth: (user: User, permisosRutas: Record<string, string[]>) => void;
+  getPermisosParaRuta: (pathname: string) => string[];
   logout: () => void;
 }
 
+const defaultUser = { id: 0, username: "default", roles: [{ rolId: 0 }] };
+
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
-      user: null,
+    (set, get) => ({
+      user: defaultUser,
       isAuthenticated: false,
-      setAuth: (user) => set({ user, isAuthenticated: true }),
-      logout: () => set({ user: null, isAuthenticated: false }),
+      permisosRutas: {},
+      getPermisosParaRuta: (pathname: string) => {
+        const { permisosRutas } = get();
+
+        // 1. Normalizamos la ruta que viene del navegador
+        const cleanPath = pathname.replace(/\/$/, "") || "/";
+
+        // 2. Buscamos la coincidencia
+        const llave = Object.keys(permisosRutas).find((rutaDb) => {
+          const cleanDb = rutaDb.replace(/\/$/, "");
+
+          return (
+            cleanDb === cleanPath || // Coincidencia exacta
+            cleanPath.endsWith(cleanDb) || // Para cuando location es "/usuarios" y DB es "/admin/usuarios"
+            cleanDb.endsWith(cleanPath) || // Al revés
+            cleanPath.includes(cleanDb) // Por si hay parámetros dinámicos
+          );
+        });
+
+        console.log("🔍 Buscando permisos para:", cleanPath);
+        console.log("🔑 Llave encontrada en DB:", llave);
+
+        return llave ? permisosRutas[llave] : [];
+      },
+
+      setAuth: (user, permisosRutas) =>
+        set({ user, permisosRutas, isAuthenticated: true }),
+      logout: () =>
+        set({
+          user: defaultUser,
+          permisosRutas: {},
+          isAuthenticated: false,
+        }),
     }),
     {
-      name: 'auth-storage', // Nombre de la llave en el storage
-    }
-  )
+      name: "auth-storage",
+    },
+  ),
 );

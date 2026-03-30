@@ -32,7 +32,7 @@ import Paginacion from "@/components/Paginacion";
 import { useActions } from "./useActions";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-export default function Page() {
+export default function Page({ permisos }: { permisos: string[] }) {
   const { handleCreate, handleEdit, handleToggleStatus, useGetData } =
     useActions();
 
@@ -47,15 +47,18 @@ export default function Page() {
   const { data: roles, meta } = data;
   return (
     <Contendor>
-      <div className="flex justify-end py-2 pb-4">
-        <button
-          onClick={handleCreate}
-          className="flex gap-3 p-2.5 pl-3 pr-4.5 items-center font-medium text-xs bg-blue-500 hover:bg-blue-600 rounded-2xl text-white cursor-pointer hover:shadow-md transition "
-        >
-          <PlusIcon size={16} absoluteStrokeWidth strokeWidth={"2"} />
-          <span>Nuevo Usuario</span>
-        </button>
-      </div>
+      {permisos.includes("CREAR") && (
+        <div className="flex justify-end py-2 pb-4">
+          <button
+            onClick={handleCreate}
+            className="flex gap-3 p-2.5 pl-3 pr-4.5 items-center font-medium text-xs bg-blue-500 hover:bg-blue-600 rounded-2xl text-white cursor-pointer hover:shadow-md transition "
+          >
+            <PlusIcon size={16} absoluteStrokeWidth strokeWidth={"2"} />
+            <span>Nuevo Usuario</span>
+          </button>
+        </div>
+      )}
+
       <ScrollArea className="pb-3">
         <ContenedorTabla>
           <BusquedaTabla>
@@ -122,17 +125,19 @@ export default function Page() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      {data.estado === "activo" && (
-                        <button
-                          onClick={() => handleEdit(data.id)}
-                          className=" flex gap-2 h-auto"
-                        >
-                          <PenLine
-                            size={17}
-                            className="cursor-pointer hover:text-green-400"
-                          />
-                        </button>
-                      )}
+                      {permisos.includes("EDITAR") &&
+                        data.estado === "activo" && (
+                          <button
+                            onClick={() => handleEdit(data.id)}
+                            className=" flex gap-2 h-auto"
+                          >
+                            <PenLine
+                              size={17}
+                              className="cursor-pointer hover:text-green-400"
+                            />
+                          </button>
+                        )}
+
                       {data.estado === "activo" && (
                         <button
                           onClick={() =>

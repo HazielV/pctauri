@@ -4,6 +4,7 @@ import {
   CheckCheck,
   ChevronDown,
   CircleCheckBig,
+  Library,
   PenLine,
   Play,
   PlusIcon,
@@ -42,6 +43,7 @@ export default function Page() {
     useGetData,
     handleComenzarCurso,
     handleFinalizarCurso,
+    handleTemas,
   } = useActions();
 
   const [searchParams] = useSearchParams();
@@ -155,6 +157,24 @@ export default function Page() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
+                      {(data.estado === "activo" ||
+                        data.estado === "en curso") && (
+                        <button
+                          onClick={() =>
+                            handleTemas({
+                              temas: data.temas,
+                              cursoId: data.id,
+                              estado: data.estado,
+                            })
+                          }
+                          className=" flex gap-2 h-auto"
+                        >
+                          <Library
+                            size={17}
+                            className="cursor-pointer hover:text-orange-400"
+                          />
+                        </button>
+                      )}
                       {data.estado === "activo" && (
                         <button
                           onClick={() => handleComenzarCurso(data.id)}

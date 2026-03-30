@@ -18,6 +18,8 @@ export function LoaderForm({ id }: { id?: number }) {
         columns: {
           id: true,
           descripcion: true,
+          valor: true,
+          nombre: true,
         },
         where: (permisos, { eq }) => eq(permisos.estado, "activo"),
       }),
@@ -37,11 +39,7 @@ export function LoaderForm({ id }: { id?: number }) {
         where: (recurso, { eq }) => eq(recurso.id, id!),
         with: {
           rolesRecursos: { with: { rol: true } },
-          menus: {
-            with: {
-              menu: true,
-            },
-          },
+          menu: true,
         },
       }),
     enabled: !!id,

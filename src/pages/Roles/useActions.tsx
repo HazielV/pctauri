@@ -1,7 +1,7 @@
 // Roles/useRoles.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/db/client";
-import { rol } from "@/db/schema";
+import { rol, rolesMenus } from "@/db/schema";
 import { count, eq } from "drizzle-orm";
 import { useModalStore } from "@/store/modalState";
 import { useAlertStore } from "@/store/AlertState";
@@ -55,10 +55,47 @@ export const useActions = () => {
   // --- MUTACIONES ---
   const upsertMutation = useMutation({
     mutationFn: async ({ id, values }: { id?: number; values: any }) => {
+      const { menus, ...dataRol } = values;
       setLoading(true);
+      const menuIds = Array.isArray(menus)
+        ? menus.map(Number)
+        : menus
+          ? [Number(menus)]
+          : [];
+
+      let rolIdFinal = id;
+
       if (id) {
-        return await db.update(rol).set(values).where(eq(rol.id, id));
-      } else return await db.insert(rol).values(values);
+        // --- CASO A: ACTUALIZAR ROL ---
+        // 1. Actualizamos nombre y descripción
+        await db.update(rol).set(dataRol).where(eq(rol.id, id));
+
+        // 2. Borramos los menús anteriores (Wipe)
+        // Asegúrate de importar la tabla intermedia (ej. rolMenu)
+        await db.delete(rolesMenus).where(eq(rolesMenus.rolId, id));
+      } else {
+        // --- CASO B: CREAR NUEVO ROL ---
+        // 1. Insertamos y pedimos que nos devuelva el ID generado
+        const [nuevoRol] = await db
+          .insert(rol)
+          .values(dataRol)
+          .returning({ id: rol.id });
+
+        rolIdFinal = nuevoRol.id;
+      }
+
+      // --- FASE FINAL: INSERTAR LOS MENÚS (Para ambos casos) ---
+      // Si el usuario eligió menús, los insertamos en bloque (Bulk Insert)
+      if (menuIds.length > 0 && rolIdFinal) {
+        const menusAInsertar = menuIds.map((mId) => ({
+          rolId: rolIdFinal,
+          menuId: mId,
+        }));
+
+        await db.insert(rolesMenus).values(menusAInsertar);
+      }
+
+      return rolIdFinal;
     },
     onSuccess: (_, variables) => {
       setLoading(false);

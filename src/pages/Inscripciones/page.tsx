@@ -1,14 +1,6 @@
 import { RiSearch2Line } from "@remixicon/react";
 import { Link, useSearchParams } from "wouter";
-import {
-  ChevronDown,
-  CircleCheckBig,
-  Eye,
-  FileStack,
-  PenLine,
-  PlusIcon,
-  Trash2,
-} from "lucide-react";
+import { ChevronDown, FileStack, PlusIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {

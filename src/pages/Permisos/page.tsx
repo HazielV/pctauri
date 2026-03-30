@@ -93,6 +93,7 @@ export default function Page() {
               <TableRow className="text-left text-xs font-medium text-gray-400 border-t border-gray-200 *:px-5 *:py-3.5">
                 <TableCell className="">Id</TableCell>
                 <TableCell>nombre</TableCell>
+                <TableCell>descripcion</TableCell>
                 <TableCell>valor</TableCell>
                 <TableCell>estado</TableCell>
                 <TableCell>Acciones</TableCell>
@@ -107,6 +108,7 @@ export default function Page() {
                 >
                   <TableCell>{data.id}</TableCell>
                   <TableCell>{data.nombre}</TableCell>
+                  <TableCell>{data.descripcion}</TableCell>
                   <TableCell>{data.valor}</TableCell>
 
                   <TableCell className="flex">

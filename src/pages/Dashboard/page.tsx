@@ -13,8 +13,10 @@ import { useActions } from "./useActions";
 // Asegúrate de importar tu componente Calendar si quieres el calendario interactivo abajo
 import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
+import { useAuthStore } from "@/store/authStore";
 
 export default function DashboardPage() {
+  const { user } = useAuthStore();
   const { useGetData } = useActions(); // Asumiendo que conectaste la query arriba
   const [date, setDate] = useState<Date>(new Date());
 
@@ -55,7 +57,7 @@ export default function DashboardPage() {
       {/* HEADER */}
       <div className="flex flex-col py-4 mb-2">
         <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
-          Buen día, Administrador 👋
+          Buen día, <span>{user && user.username}</span> 👋
         </h1>
         <p className="text-primary/60 text-sm mt-1">
           Aquí tienes un resumen del rendimiento y las clases de hoy.

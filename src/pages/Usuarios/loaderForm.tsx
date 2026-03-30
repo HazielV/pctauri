@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form } from "./form";
 import { db } from "@/db/client";
-import { rol } from "@/db/schema";
+import { rol, usuario } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export function LoaderForm({ id }: { id?: number }) {
@@ -12,17 +12,35 @@ export function LoaderForm({ id }: { id?: number }) {
     queryKey: ["usuario_data", id],
     queryFn: async () => {
       const initialData = await db.query.usuario.findFirst({
-        where: eq(rol.id, id!),
+        where: eq(usuario.id, id!),
         with: {
           persona: true,
+          usuariosRoles: {
+            columns: {},
+            with: {
+              rol: {
+                columns: {
+                  id: true,
+                },
+              },
+            },
+          },
         },
       });
       return initialData;
     },
     enabled: !!id, // Solo ejecuta la query si hay un ID
   });
-
-  if (id && isLoading) {
+  const { data: roles, isLoading: isLoadingRoles } = useQuery({
+    queryKey: ["roles_data", id],
+    queryFn: async () => {
+      const initialData = await db.query.rol.findMany({
+        where: eq(rol.estado, "activo"),
+      });
+      return initialData;
+    },
+  });
+  if (id && (isLoading || isLoadingRoles)) {
     return (
       <div className="p-4 space-y-4">
         <Skeleton className="h-10 w-full" />
@@ -31,5 +49,5 @@ export function LoaderForm({ id }: { id?: number }) {
     );
   }
 
-  return <Form data={data} />;
+  return <Form data={data} roles={roles} />;
 }

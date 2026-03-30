@@ -4,7 +4,6 @@ import { db } from "@/db/client";
 import {
   clasePractica,
   claseTeorica,
-  curso,
   estudiante,
   horarioPlantilla,
   inscripcion,
@@ -55,10 +54,22 @@ async function generarClasesLote(params: GenerarClasesParams) {
   // 2. Obtener el horario teórico que eligió el alumno
   // NOTA: Si tu horarioPlantilla agrupa varios días, ajusta esta consulta para traerlos todos.
   // Aquí asumo que traes el registro del turno para saber qué días le toca teoría.
-  const horariosTeoricos = await db.query.horarioPlantilla.findMany({
-    where: and(eq(horarioPlantilla.cursoId, cursoId)),
+  const plantillaElegida = await db.query.horarioPlantilla.findFirst({
+    where: eq(horarioPlantilla.id, horarioPlantillaId),
   });
 
+  if (!plantillaElegida) throw new Error("Plantilla teórica no encontrada");
+
+  // 2. Buscamos TODOS los días que corresponden a ese mismo "Turno" (nombre)
+  const horariosTeoricos = await db.query.horarioPlantilla.findMany({
+    where: and(
+      eq(horarioPlantilla.cursoId, cursoId),
+      eq(horarioPlantilla.nombre, plantillaElegida.nombre), // Agrupador lógico
+    ),
+  });
+
+  if (horariosTeoricos.length === 0)
+    throw new Error("El curso no tiene horarios teóricos configurados.");
   if (horariosTeoricos.length === 0)
     throw new Error("El curso no tiene horarios teóricos configurados.");
 

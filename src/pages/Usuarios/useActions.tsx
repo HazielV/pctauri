@@ -1,7 +1,7 @@
 // Roles/useRoles.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/db/client";
-import { persona, usuario } from "@/db/schema";
+import { persona, usuario, usuariosRoles } from "@/db/schema";
 import { count, eq } from "drizzle-orm";
 import { useModalStore } from "@/store/modalState";
 import { useAlertStore } from "@/store/AlertState";
@@ -66,33 +66,71 @@ export const useActions = () => {
   const upsertMutation = useMutation({
     mutationFn: async ({ id, values }: { id?: number; values: any }) => {
       setLoading(true);
-      const { username, password, ...dataPersona } = values;
+      const { username, password, rolId, ...dataPersona } = values;
       if (id) {
+        // --- CASO ACTUALIZAR ---
         return await db.transaction(async (tx) => {
+          // 1. Actualizar Usuario
           const [u] = await tx
             .update(usuario)
-            .set({ username, password })
+            .set({ username, password }) // *Nota: Asegúrate de encriptar el password si cambió
             .where(eq(usuario.id, id))
             .returning({ personaId: usuario.personaId });
 
           if (!u) throw new Error("Usuario no encontrado");
-          return await tx
+
+          // 2. Actualizar Persona
+          await tx
             .update(persona)
             .set(dataPersona)
             .where(eq(persona.id, u.personaId));
+
+          // 3. Gestionar Rol (Wipe & Replace)
+          if (rolId) {
+            // Borramos cualquier rol que tuviera antes
+            await tx
+              .delete(usuariosRoles)
+              .where(eq(usuariosRoles.usuarioId, id));
+            // Insertamos el nuevo rol único
+            await tx.insert(usuariosRoles).values({
+              usuarioId: id,
+              rolId: Number(rolId),
+            });
+          }
+
+          return id;
         });
-      } else
+      } else {
+        // --- CASO CREAR ---
         return await db.transaction(async (tx) => {
-          const [u] = await tx
+          // 1. Crear Persona
+          const [p] = await tx
             .insert(persona)
             .values(dataPersona)
             .returning({ id: persona.id });
 
-          if (!u) throw new Error("No se pudo completar la accion");
-          return await tx
+          if (!p)
+            throw new Error("No se pudo completar la creación de la persona");
+
+          // 2. Crear Usuario (Necesitamos capturar su ID retornado)
+          const [newUser] = await tx
             .insert(usuario)
-            .values({ username, password, personaId: u.id });
+            .values({ username, password, personaId: p.id })
+            .returning({ id: usuario.id }); // ¡Añadimos esto para saber qué ID se generó!
+
+          if (!newUser) throw new Error("No se pudo crear el usuario");
+
+          // 3. Asignar el Rol en la tabla intermedia
+          if (rolId) {
+            await tx.insert(usuariosRoles).values({
+              usuarioId: newUser.id,
+              rolId: Number(rolId),
+            });
+          }
+
+          return newUser.id;
         });
+      }
     },
     onSuccess: (_, variables) => {
       setLoading(false);

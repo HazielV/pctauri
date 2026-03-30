@@ -1,5 +1,5 @@
 import { endOfMonth, format, startOfMonth } from "date-fns";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { db } from "@/db/client";
 import { clasePractica, claseTeorica, inscripcion, pago } from "@/db/schema";
 import { and, count, eq, gte, lte, sum } from "drizzle-orm";

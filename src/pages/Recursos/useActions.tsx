@@ -12,6 +12,17 @@ export const useActions = () => {
   const queryClient = useQueryClient();
   const { setLoading, show, close } = useModalStore();
   const { showAlert } = useAlertStore();
+  const getPermisosActivos = async () => {
+    return await db.query.permiso.findMany({
+      columns: {
+        id: true,
+        descripcion: true,
+        valor: true,
+        nombre: true,
+      },
+      where: (permisos, { eq }) => eq(permisos.estado, "activo"),
+    });
+  };
   const getData = async (page: number, perPage: number) => {
     try {
       const [totalResult] = await db.select({ value: count() }).from(recurso);
@@ -19,11 +30,7 @@ export const useActions = () => {
       const skip = (page - 1) * perPage;
       const data = await db.query.recurso.findMany({
         with: {
-          menus: {
-            columns: {
-              nombre: true,
-            },
-          },
+          menu: true,
           rolesRecursos: {
             columns: {
               recursoId: true,
@@ -71,77 +78,101 @@ export const useActions = () => {
       queryKey: ["recursos-list", page, perPage], // Si esto cambia, se refetchea
       queryFn: () => getData(page, perPage),
     });
-
+  const useGetPermisos = () =>
+    useQuery({
+      queryKey: ["permisos-activos"],
+      queryFn: () => getPermisosActivos(),
+    });
   // --- MUTACIONES ---
   const upsertMutation = useMutation({
     mutationFn: async ({ id, values }: { id?: number; values: any }) => {
       setLoading(true);
-      const {
-        nombre,
-        menuId,
-        roles,
-        permisos,
-        ruta,
-      }: {
-        nombre: string;
-        menuId: string;
-        roles: String[];
-        permisos: String[];
-        ruta: string;
-      } = values;
-      const permisosCount = permisos.reduce((prev, act) => {
-        return prev + Number(act);
-      }, 0);
+
+      const { nombre, menuId, ruta, permisosRol } = values;
+
       if (id) {
-        return await db.transaction(async (tx) => {
-          const [u] = await tx
-            .update(recurso)
-            .set({ nombre })
-            .where(eq(recurso.id, id))
-            .returning({ recursoId: recurso.id });
+        // --- UPDATE CASE ---
 
-          if (!u) throw new Error("Recurso no encontrado");
-          await tx
+        // 1. Update the resource
+        const [u] = await db
+          .update(recurso)
+          .set({ nombre, ruta })
+          .where(eq(recurso.id, id))
+          .returning({ recursoId: recurso.id });
+
+        if (!u) throw new Error("Recurso no encontrado");
+
+        // 2. Link to Menu
+        if (menuId) {
+          await db
             .update(menu)
             .set({ recursoId: u.recursoId })
-            .where(eq(menu.id, u.recursoId));
+            .where(eq(menu.id, Number(menuId)));
+        }
 
-          await tx
-            .delete(rolesRecursos)
-            .where(eq(rolesRecursos.recursoId, u.recursoId));
+        // 3. Clear previous relations (Wipe)
+        await db
+          .delete(rolesRecursos)
+          .where(eq(rolesRecursos.recursoId, u.recursoId));
 
-          // Insertamos las nuevas relaciones con el bitmask calculado
-          if (roles && roles.length > 0) {
-            await tx.insert(rolesRecursos).values(
-              roles.map((e) => ({
-                recursoId: u.recursoId,
-                rolId: Number(e),
-                permisos: permisosCount,
-              })),
+        // 4. Insert new relations (Replace) with individual bitmask calculation
+        if (permisosRol && permisosRol.length > 0) {
+          const relacionesAInsertar = permisosRol.map((pr: any) => {
+            const permisosMask = pr.permisos.reduce(
+              (sum: number, p: string) => sum + Number(p),
+              0,
             );
-          }
-        });
-      } else
-        return await db.transaction(async (tx) => {
-          const [u] = await tx
-            .insert(recurso)
-            .values({ nombre, ruta })
-            .returning({ recursoId: recurso.id });
 
-          if (!u) throw new Error("Recurso no encontrado");
-          await tx
+            return {
+              recursoId: u.recursoId,
+              rolId: pr.rolid,
+              permisos: permisosMask,
+            };
+          });
+
+          await db.insert(rolesRecursos).values(relacionesAInsertar);
+        }
+
+        return u.recursoId;
+      } else {
+        // --- CREATE CASE ---
+
+        // 1. Insert the resource
+        const [u] = await db
+          .insert(recurso)
+          .values({ nombre, ruta })
+          .returning({ recursoId: recurso.id });
+
+        if (!u) throw new Error("No se pudo crear el recurso");
+
+        // 2. Link to Menu
+        if (menuId) {
+          await db
             .update(menu)
             .set({ recursoId: u.recursoId })
-            .where(eq(menu.id, u.recursoId));
+            .where(eq(menu.id, Number(menuId)));
+        }
 
-          await tx.insert(rolesRecursos).values(
-            roles.map((e) => ({
+        // 3. Insert relations with individual bitmask calculation
+        if (permisosRol && permisosRol.length > 0) {
+          const relacionesAInsertar = permisosRol.map((pr: any) => {
+            const permisosMask = pr.permisos.reduce(
+              (sum: number, p: string) => sum + Number(p),
+              0,
+            );
+
+            return {
               recursoId: u.recursoId,
-              rolId: Number(e),
-              permisos: permisosCount,
-            })),
-          );
-        });
+              rolId: pr.rolid,
+              permisos: permisosMask,
+            };
+          });
+
+          await db.insert(rolesRecursos).values(relacionesAInsertar);
+        }
+
+        return u.recursoId;
+      }
     },
     onSuccess: (_, variables) => {
       setLoading(false);
@@ -150,7 +181,7 @@ export const useActions = () => {
         queryClient.invalidateQueries({
           queryKey: ["recurso_data", variables.id],
         });
-      toast.success(variables.id ? "Usuario actualizado" : "Usuario creado");
+      toast.success(variables.id ? "Recurso actualizado" : "Recurso creado");
       close();
     },
     onError: () => {
@@ -206,6 +237,7 @@ export const useActions = () => {
   };
 
   return {
+    useGetPermisos,
     useGetData,
     upsertMutation,
     handleCreate,

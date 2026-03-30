@@ -1,13 +1,62 @@
 // Roles/useRoles.ts
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/db/client";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { useLocation } from "wouter";
+import { permiso, recurso, rolesRecursos, usuariosRoles } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export const useActions = () => {
+  const queryClient = useQueryClient();
   const setAuth = useAuthStore((state) => state.setAuth);
-  const [location, navigate] = useLocation();
+  const [_, navigate] = useLocation();
+  async function construirPermisosUsuario(
+    usuarioId: number,
+  ): Promise<Record<string, string[]>> {
+    // 1. Obtener el diccionario dinámico de bits desde la tabla Permiso
+    // Esto retorna ej: [{ nombre: "leer", valor: 1 }, { nombre: "escribir", valor: 2 }, ...]
+    const catalogoPermisos = await db.select().from(permiso);
+
+    // 2. Obtener los recursos y las máscaras de bits asignadas al usuario
+    const recursosUsuario = await db
+      .select({
+        ruta: recurso.ruta,
+        mascaraBits: rolesRecursos.permisos,
+      })
+      .from(usuariosRoles)
+      .innerJoin(rolesRecursos, eq(usuariosRoles.rolId, rolesRecursos.rolId))
+      .innerJoin(recurso, eq(rolesRecursos.recursoId, recurso.id))
+      .where(eq(usuariosRoles.usuarioId, usuarioId));
+
+    // 3. Agrupar y combinar máscaras de bits (por si 2 roles dan acceso a la misma ruta)
+    const mapaBitsCombinados: Record<string, number> = {};
+    for (const fila of recursosUsuario) {
+      if (!mapaBitsCombinados[fila.ruta]) {
+        mapaBitsCombinados[fila.ruta] = 0;
+      }
+      // Usamos OR (|) para combinar los permisos de múltiples roles
+      mapaBitsCombinados[fila.ruta] |= fila.mascaraBits;
+    }
+
+    // 4. Traducir los bits combinados a arrays de strings
+    const permisosRutas: Record<string, string[]> = {};
+
+    for (const [ruta, mascaraTotal] of Object.entries(mapaBitsCombinados)) {
+      const permisosTexto: string[] = [];
+
+      for (const p of catalogoPermisos) {
+        // Operación Bitwise AND (&) para verificar si el permiso está incluido en la máscara
+        if ((mascaraTotal & p.valor) === p.valor) {
+          permisosTexto.push(p.nombre); // ej: "leer"
+        }
+      }
+
+      permisosRutas[ruta] = permisosTexto;
+    }
+
+    return permisosRutas; // Retorna: { "/admin/usuarios": ["leer", "escribir", ...], ... }
+  }
 
   // --- MUTACIONES ---
   const loginMutation = useMutation({
@@ -24,35 +73,32 @@ export const useActions = () => {
           },
         },
       });
-      // 2. Validaciones básicas antes de seguir
+
       if (!usuarioLogin) {
         throw new Error("Usuario no encontrado");
       }
+      const permisosRutas = await construirPermisosUsuario(usuarioLogin.id);
 
-      // 3. Verificación de password (asumiendo que usas bcrypt o similar en el futuro)
-      // Por ahora una comparación directa, pero ¡ojo con la seguridad de la tesis!
-      /* if (usuarioLogin.password !== values.password) {
-      throw new Error("Credenciales invalidas");
-    } */
-
-      // 4. IMPORTANTE: Lo que retornes aquí es lo que llega a 'onSuccess'
-      return usuarioLogin;
+      return {
+        usuario: usuarioLogin,
+        permisosRutas,
+      };
     },
     onSuccess: (data) => {
-      setAuth({
-        id: data.id,
-        username: data.username,
-        roles: data.usuariosRoles,
-      });
-      navigate("/admin/usuarios", { replace: true });
-      // 'data' ahora contiene lo que retornamos en mutationFn (el usuarioLogin)
-      console.log("Datos del usuario recibidos:", data);
+      setAuth(
+        {
+          id: data.usuario.id,
+          username: data.usuario.username,
+          roles: data.usuario.usuariosRoles,
+        },
+        data.permisosRutas, // El diccionario generado
+      );
+      queryClient.clear();
 
-      // Aquí es donde guardarías en tu estado global (Zustand, Context, etc.)
-      // setAuthUser(data);
+      console.log("Permisos generados:", data.permisosRutas);
+      toast.success(`Bienvenido de nuevo, ${data.usuario.username}`);
 
-      toast.success(`Bienvenido de nuevo, ${data.username}`);
-
+      navigate("/admin/", { replace: true });
       // Aquí podrías redirigir:
       // setLocation("/admin/dashboard");
     },

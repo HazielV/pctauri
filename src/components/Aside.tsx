@@ -5,6 +5,8 @@ import { db } from "@/db/client";
 import { useQuery } from "@tanstack/react-query";
 import { DynamicIcon, IconName } from "lucide-react/dynamic";
 import { useAuthStore } from "@/store/authStore";
+import { eq, inArray } from "drizzle-orm";
+import { menu, rolesMenus } from "@/db/schema";
 const menus = [
   {
     id: 1,
@@ -20,12 +22,20 @@ const toKebabCase = (str: string): IconName => {
     .join("-") // Une con guiones: "A-Arrow-Up"
     .toLowerCase() as IconName; // "a-arrow-up"
 };
-const getMenusData = async () => {
+const getMenusData = async ({ rolId }: { rolId: number }) => {
   try {
-    const data = await db.query.menu.findMany();
-    return {
-      data,
-    };
+    const data = await db.query.menu.findMany({
+      where: inArray(
+        menu.id,
+        // Subconsulta: Obtenemos solo los IDs de los menús que pertenecen a este rol
+        db
+          .select({ menuId: rolesMenus.menuId })
+          .from(rolesMenus)
+          .where(eq(rolesMenus.rolId, rolId)),
+      ),
+    });
+
+    return { data };
   } catch (error) {
     console.error("Error obteniendo menus de SQLite:", error);
 
@@ -35,10 +45,10 @@ const getMenusData = async () => {
   }
 };
 export default function Aside() {
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["menus-aside"],
-    queryFn: () => getMenusData(),
+    queryFn: () => getMenusData({ rolId: user ? user.roles[0].rolId : 1 }),
   });
   if (isLoading) return <div>Cargando...</div>;
   if (isError || !data) return <div>Error o sin datos</div>;

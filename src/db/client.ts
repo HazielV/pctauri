@@ -4,7 +4,6 @@ import * as schema from "./schema";
 import * as relations from "./relations";
 
 let instance: Database | null = null;
-
 async function getDb() {
   if (!instance) {
     const dbName = import.meta.env.VITE_DB_NAME || "proyecto4.db";
