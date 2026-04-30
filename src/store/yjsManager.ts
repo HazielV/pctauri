@@ -1,7 +1,14 @@
 import * as Y from "yjs";
 
 import { getDb } from "@/db/client";
-
+export function uint8ArrayToBase64(array: Uint8Array): string {
+  let binary = "";
+  const len = array.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(array[i]);
+  }
+  return window.btoa(binary);
+}
 // 🔧 Utilidades para texto <-> uint8array (sin usar blobs)
 export function encodeStateToText(doc: Y.Doc): string {
   const updateBytes = Y.encodeStateAsUpdate(doc);

@@ -1,39 +1,84 @@
 import * as Y from "yjs";
+import { decodeTextToState, uint8ArrayToBase64 } from "./yjsManager";
+import {
+  applyRemoteSync,
+  getLocalDirtyDocs,
+  markDocsAsSynced,
+  getAllLocalDocs,
+} from "./ysjSync";
 
-export function createUpdate(
-  tableName: string,
-  data: { params: Record<string, any>; timestamp: number },
-) {
+let isSyncingGlobal = false;
+
+export async function syncWithBackend() {
+  if (isSyncingGlobal) return;
+
+  isSyncingGlobal = true;
   try {
-    const paramsObject = data.params;
+    // --- ⬆️ PASO 1: SUBIR CAMBIOS LOCALES ---
+    const dirtyDocs = await getLocalDirtyDocs();
 
-    // 1. Validamos que el objeto no esté vacío
-    if (!paramsObject || Object.keys(paramsObject).length === 0) return null;
+    if (dirtyDocs.length > 0) {
+      console.log(`Subiendo ${dirtyDocs.length} cambios a la web...`);
 
-    const doc = new Y.Doc();
-    const ymap = doc.getMap(tableName);
+      const response = await fetch("http://localhost:3001/api/sync/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ docs: dirtyDocs }),
+      });
 
-    // 2. Extraemos el ID directamente del objeto (gracias a que ahora es un diccionario)
-    const id = paramsObject["id"] || paramsObject["Id"] || paramsObject["ID"];
-
-    if (!id) {
-      console.warn(
-        "⚠️ No se encontró ID en el objeto mapeado para la tabla:",
-        tableName,
-        paramsObject,
-      );
-      return null;
+      if (response.ok) {
+        const docIds = dirtyDocs.map((d) => d.doc_id);
+        await markDocsAsSynced(docIds);
+        console.log("✅ Cambios locales sincronizados");
+      }
     }
 
-    // 3. Guardamos el objeto entero en la propiedad 'v'
-    ymap.set(String(id), {
-      v: paramsObject,
-      t: data.timestamp,
-    });
+    // --- ⬇️ PASO 2: DESCARGAR DIFERENCIAS (Vector de Estado) ---
+    console.log("Preparando vectores de estado...");
+    const localDocs = await getAllLocalDocs();
+    const payload = [];
 
-    return Y.encodeStateAsUpdate(doc);
+    for (const row of localDocs) {
+      const doc = new Y.Doc();
+
+      if (row.state) {
+        Y.applyUpdate(doc, decodeTextToState(row.state));
+      }
+
+      // Generamos el vector binario
+      const stateVectorBytes = Y.encodeStateVector(doc);
+
+      payload.push({
+        doc_id: row.doc_id,
+        table_name: row.table_name,
+        // ✅ USAMOS LA FUNCIÓN NATIVA PARA BASE64
+        stateVector: uint8ArrayToBase64(stateVectorBytes),
+      });
+    }
+
+    const pullResponse = await fetch(
+      "http://localhost:3001/api/sync/download",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ localVectors: payload }),
+      },
+    );
+
+    const remoteData = await pullResponse.json();
+
+    if (remoteData.docs && remoteData.docs.length > 0) {
+      console.log(
+        `Descargando ${remoteData.docs.length} deltas del servidor...`,
+      );
+      await applyRemoteSync(remoteData.docs);
+      console.log("✅ Base de datos local actualizada");
+    } else {
+      console.log("✅ Todo al día");
+    }
   } catch (error) {
-    console.error("❌ Error interno en Yjs Manager:", error);
-    return null;
+    console.error("❌ Error de sincronización:", error);
+  } finally {
+    isSyncingGlobal = false;
   }
 }

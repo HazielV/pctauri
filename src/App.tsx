@@ -25,31 +25,35 @@ import Inscripciones from "./pages/Inscripciones";
 import Archivo from "./pages/Inscripciones/archivo";
 import Asistencia from "./pages/asistencia";
 import Cronograma from "./pages/cronograma";
-import { useEffect } from "react";
-import { fullSync, syncWithBackend } from "./store/syncService";
+import { useEffect, useRef } from "react";
+import { syncWithBackend } from "./store/syncManager";
 
 function App() {
-  /* useEffect(() => {
-    // Sincronización inicial al abrir la app
-    fullSync();
-
-    // Escuchar cada vez que SQLite guarde algo en PendingSync
-    const handleLocalChange = () => {
-      syncWithBackend();
+  useEffect(() => {
+    const triggerSync = async () => {
+      try {
+        await syncWithBackend();
+      } catch (error) {
+        console.error("Error en el ciclo de sincronización:", error);
+      }
     };
 
-    window.addEventListener("onLocalDbChange", handleLocalChange);
+    // 1. Sincronización inicial al abrir la app
+    triggerSync();
 
-    // Intervalo de seguridad (cada 1 minuto por si falla la red temporalmente)
+    // 2. Escuchar cada vez que SQLite guarde algo en Yjs (tu CustomEvent)
+    window.addEventListener("onLocalDbChange", triggerSync);
+
     const interval = setInterval(() => {
-      fullSync();
+      triggerSync();
     }, 60000);
 
+    // Limpieza al desmontar (por si cambias de vista)
     return () => {
-      window.removeEventListener("onLocalDbChange", handleLocalChange);
+      window.removeEventListener("onLocalDbChange", triggerSync);
       clearInterval(interval);
     };
-  }, []); */
+  }, []);
 
   const queryClient = new QueryClient();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

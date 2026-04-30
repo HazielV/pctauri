@@ -12,6 +12,8 @@ export async function getDb() {
   if (!instance) {
     const dbName = import.meta.env.VITE_DB_NAME || "proyecto5.db";
     instance = await Database.load(`sqlite:${dbName}`);
+    await instance.execute("PRAGMA busy_timeout = 5000;");
+    await instance.execute("PRAGMA journal_mode = WAL;");
   }
   return instance;
 }
