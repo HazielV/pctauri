@@ -7,7 +7,7 @@ import { useModalStore } from "@/store/modalState";
 import { useAlertStore } from "@/store/AlertState";
 import { toast } from "sonner";
 import { LoaderForm } from "./loaderForm";
-
+import { v4 as uuidv4 } from "uuid";
 export const useActions = () => {
   const queryClient = useQueryClient();
   const { setLoading, show, close } = useModalStore();
@@ -64,74 +64,94 @@ export const useActions = () => {
 
   // --- MUTACIONES ---
   const upsertMutation = useMutation({
-    mutationFn: async ({ id, values }: { id?: number; values: any }) => {
+    mutationFn: async ({ id, values }: { id?: string; values: any }) => {
       setLoading(true);
+      console.log("Valores recibidos:", values);
       const { username, password, rolId, ...dataPersona } = values;
-      if (id) {
-        // --- CASO ACTUALIZAR ---
-        return await db.transaction(async (tx) => {
-          // 1. Actualizar Usuario
-          const [u] = await tx
+
+      try {
+        if (id) {
+          // ---------------------------------------------------------
+          // CASO ACTUALIZAR
+          // ---------------------------------------------------------
+
+          // 1. Buscamos el usuario primero para saber su personaId (Evitamos .returning)
+          const userRecord = await db.query.usuario.findFirst({
+            where: eq(usuario.id, id),
+          });
+
+          if (!userRecord) throw new Error("Usuario no encontrado");
+
+          // 2. Actualizamos Usuario
+          await db
             .update(usuario)
-            .set({ username, password }) // *Nota: Asegúrate de encriptar el password si cambió
-            .where(eq(usuario.id, id))
-            .returning({ personaId: usuario.personaId });
+            .set({ username, password })
+            .where(eq(usuario.id, id));
 
-          if (!u) throw new Error("Usuario no encontrado");
-
-          // 2. Actualizar Persona
-          await tx
+          // 3. Actualizamos Persona
+          await db
             .update(persona)
             .set(dataPersona)
-            .where(eq(persona.id, u.personaId));
+            .where(eq(persona.id, userRecord.personaId));
 
-          // 3. Gestionar Rol (Wipe & Replace)
+          // 4. Gestionamos el Rol (Wipe & Replace)
           if (rolId) {
-            // Borramos cualquier rol que tuviera antes
-            await tx
+            await db
               .delete(usuariosRoles)
               .where(eq(usuariosRoles.usuarioId, id));
-            // Insertamos el nuevo rol único
-            await tx.insert(usuariosRoles).values({
+
+            await db.insert(usuariosRoles).values({
+              // id: uuidv4(), // Descomenta si tu tabla UsuariosRoles tiene ID propio
               usuarioId: id,
-              rolId: Number(rolId),
+              rolId: String(rolId),
+              asignadoEl: new Date().toISOString(), // Usamos JS puro por seguridad con SQLite
             });
           }
 
           return id;
-        });
-      } else {
-        // --- CASO CREAR ---
-        return await db.transaction(async (tx) => {
-          // 1. Crear Persona
-          const [p] = await tx
-            .insert(persona)
-            .values(dataPersona)
-            .returning({ id: persona.id });
+        } else {
+          // ---------------------------------------------------------
+          // CASO CREAR
+          // ---------------------------------------------------------
 
-          if (!p)
-            throw new Error("No se pudo completar la creación de la persona");
+          // 1. Generamos los IDs aquí mismo para no depender de la DB ni de .returning()
+          const newPersonaId = uuidv4();
+          const newUsuarioId = uuidv4();
 
-          // 2. Crear Usuario (Necesitamos capturar su ID retornado)
-          const [newUser] = await tx
-            .insert(usuario)
-            .values({ username, password, personaId: p.id })
-            .returning({ id: usuario.id }); // ¡Añadimos esto para saber qué ID se generó!
+          // 2. Crear Persona
+          await db.insert(persona).values({
+            ...dataPersona,
+            id: newPersonaId, // Inyectamos el ID generado
+          });
 
-          if (!newUser) throw new Error("No se pudo crear el usuario");
+          // 3. Crear Usuario
+          await db.insert(usuario).values({
+            id: newUsuarioId, // Inyectamos el ID generado
+            username,
+            password,
+            personaId: newPersonaId, // Ya lo conocemos, no necesitamos .returning()
+          });
 
-          // 3. Asignar el Rol en la tabla intermedia
+          // 4. Asignar el Rol
           if (rolId) {
-            await tx.insert(usuariosRoles).values({
-              usuarioId: newUser.id,
-              rolId: Number(rolId),
+            await db.insert(usuariosRoles).values({
+              // id: uuidv4(), // Descomenta si tu tabla UsuariosRoles tiene ID propio
+              usuarioId: newUsuarioId,
+              rolId: String(rolId),
+              asignadoEl: new Date().toISOString(),
             });
           }
 
-          return newUser.id;
-        });
+          return newUsuarioId;
+        }
+      } catch (error) {
+        console.error("Error en la mutación:", error);
+        throw error;
+      } finally {
+        setLoading(false);
       }
     },
+
     onSuccess: (_, variables) => {
       setLoading(false);
       queryClient.invalidateQueries({ queryKey: ["usuarios-list"] });
@@ -153,7 +173,7 @@ export const useActions = () => {
       id,
       estado,
     }: {
-      id: number;
+      id: string;
       estado: "activo" | "inactivo";
     }) => {
       // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
@@ -169,14 +189,14 @@ export const useActions = () => {
       formId: "usuario-formulario-create",
     });
   };
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     show(<LoaderForm id={id} />, {
       title: "Crear nuevo usuario",
       formId: "usuario-formulario-edit",
     });
   };
 
-  const handleToggleStatus = (id: number, currentStatus: string) => {
+  const handleToggleStatus = (id: string, currentStatus: string) => {
     const isInactive = currentStatus === "inactivo";
     showAlert({
       title: isInactive ? "¿Activar Usuario?" : "¿Deshabilitar Usuario?",

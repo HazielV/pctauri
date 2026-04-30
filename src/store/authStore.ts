@@ -2,9 +2,9 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface User {
-  id: number;
+  id: string;
   username: string;
-  roles: { rolId: number }[];
+  roles: { rolId: string }[];
 }
 
 interface AuthState {
@@ -16,7 +16,7 @@ interface AuthState {
   logout: () => void;
 }
 
-const defaultUser = { id: 0, username: "default", roles: [{ rolId: 0 }] };
+const defaultUser = { id: "0", username: "default", roles: [{ rolId: "0" }] };
 
 export const useAuthStore = create<AuthState>()(
   persist(

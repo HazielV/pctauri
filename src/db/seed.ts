@@ -7,7 +7,7 @@ import path from "path";
 
 // Localización de la base de datos en Windows (AppData)
 const appData = process.env.APPDATA;
-const dbPath = path.join(appData!, "com.autov1.app", "proyecto4.db");
+const dbPath = path.join(appData!, "com.autov1.app", "proyecto5.db");
 const sqlite = new Database(dbPath);
 const db = drizzle(sqlite, { schema });
 

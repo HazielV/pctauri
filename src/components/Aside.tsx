@@ -22,19 +22,23 @@ const toKebabCase = (str: string): IconName => {
     .join("-") // Une con guiones: "A-Arrow-Up"
     .toLowerCase() as IconName; // "a-arrow-up"
 };
-const getMenusData = async ({ rolId }: { rolId: number }) => {
+const getMenusData = async ({ rolId }: { rolId: string }) => {
+  console.log(rolId);
   try {
     const data = await db.query.menu.findMany({
-      where: inArray(
+      /* where: inArray(
         menu.id,
         // Subconsulta: Obtenemos solo los IDs de los menús que pertenecen a este rol
         db
           .select({ menuId: rolesMenus.menuId })
           .from(rolesMenus)
           .where(eq(rolesMenus.rolId, rolId)),
-      ),
+      ), */
     });
-
+    console.log(
+      "data aside",
+      await db.select({ rolId: rolesMenus.rolId }).from(rolesMenus),
+    );
     return { data };
   } catch (error) {
     console.error("Error obteniendo menus de SQLite:", error);
@@ -48,7 +52,7 @@ export default function Aside() {
   const { logout, user } = useAuthStore();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["menus-aside"],
-    queryFn: () => getMenusData({ rolId: user ? user.roles[0].rolId : 1 }),
+    queryFn: () => getMenusData({ rolId: user ? user.roles[0].rolId : "0" }),
   });
   if (isLoading) return <div>Cargando...</div>;
   if (isError || !data) return <div>Error o sin datos</div>;

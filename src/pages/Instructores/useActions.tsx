@@ -59,35 +59,51 @@ export const useActions = () => {
 
   // --- MUTACIONES ---
   const upsertMutation = useMutation({
-    mutationFn: async ({ id, values }: { id?: number; values: any }) => {
+    mutationFn: async ({ id, values }: { id?: string; values: any }) => {
       setLoading(true);
       const { nroLicencia, ...dataPersona } = values;
-      if (id) {
-        return await db.transaction(async (tx) => {
-          const [u] = await tx
+
+      try {
+        if (id) {
+          // --- LÓGICA DE UPDATE ---
+
+          // 1. Actualizar Instructor (obtenemos el personaId para el siguiente paso)
+          const [u] = await db
             .update(instructor)
             .set({ nroLicencia })
             .where(eq(instructor.id, id))
             .returning({ personaId: instructor.personaId });
 
           if (!u) throw new Error("Instructor no encontrado");
-          return await tx
+
+          // 2. Actualizar Persona asociada
+          return await db
             .update(persona)
             .set(dataPersona)
             .where(eq(persona.id, u.personaId));
-        });
-      } else
-        return await db.transaction(async (tx) => {
-          const [u] = await tx
+        } else {
+          // --- LÓGICA DE INSERT ---
+
+          // 1. Insertar primero la Persona
+          const [u] = await db
             .insert(persona)
             .values(dataPersona)
             .returning({ id: persona.id });
 
-          if (!u) throw new Error("No se pudo completar la accion");
-          return await tx
-            .insert(instructor)
-            .values({ nroLicencia, personaId: u.id });
-        });
+          if (!u) throw new Error("No se pudo completar la acción");
+
+          // 2. Insertar el Instructor usando el ID de la persona recién creada
+          return await db.insert(instructor).values({
+            nroLicencia,
+            personaId: u.id,
+          });
+        }
+      } catch (error) {
+        console.error("Error en mutationFn:", error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
     },
     onSuccess: (_, variables) => {
       setLoading(false);
@@ -112,7 +128,7 @@ export const useActions = () => {
       id,
       estado,
     }: {
-      id: number;
+      id: string;
       estado: "activo" | "inactivo";
     }) => {
       // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
@@ -138,7 +154,7 @@ export const useActions = () => {
     });
   };
 
-  const handleToggleStatus = (id: number, currentStatus: string) => {
+  const handleToggleStatus = (id: string, currentStatus: string) => {
     const isInactive = currentStatus === "inactivo";
     showAlert({
       title: isInactive ? "¿Activar Instructor?" : "¿Deshabilitar Instructor?",

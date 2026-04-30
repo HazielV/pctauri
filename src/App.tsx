@@ -25,8 +25,32 @@ import Inscripciones from "./pages/Inscripciones";
 import Archivo from "./pages/Inscripciones/archivo";
 import Asistencia from "./pages/asistencia";
 import Cronograma from "./pages/cronograma";
+import { useEffect } from "react";
+import { fullSync, syncWithBackend } from "./store/syncService";
 
 function App() {
+  /* useEffect(() => {
+    // Sincronización inicial al abrir la app
+    fullSync();
+
+    // Escuchar cada vez que SQLite guarde algo en PendingSync
+    const handleLocalChange = () => {
+      syncWithBackend();
+    };
+
+    window.addEventListener("onLocalDbChange", handleLocalChange);
+
+    // Intervalo de seguridad (cada 1 minuto por si falla la red temporalmente)
+    const interval = setInterval(() => {
+      fullSync();
+    }, 60000);
+
+    return () => {
+      window.removeEventListener("onLocalDbChange", handleLocalChange);
+      clearInterval(interval);
+    };
+  }, []); */
+
   const queryClient = new QueryClient();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 

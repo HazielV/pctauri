@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "75681c69-68ff-4b80-9741-550159a06c2e",
-  "prevId": "401cc050-7047-4c12-acd3-0dac5f79778c",
+  "id": "1192e05d-813e-465a-b409-73734f57f06a",
+  "prevId": "0cdf6ee8-ac27-4272-9d4b-99ab827c537d",
   "tables": {
     "AsistenciaGeneral": {
       "name": "AsistenciaGeneral",
@@ -133,7 +133,7 @@
         },
         "capacidad": {
           "name": "capacidad",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -564,19 +564,17 @@
         },
         "horasTeoricasReq": {
           "name": "horasTeoricasReq",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": 0
+          "autoincrement": false
         },
         "horasPracticasReq": {
           "name": "horasPracticasReq",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": 0
+          "autoincrement": false
         },
         "gestionId": {
           "name": "gestionId",
@@ -1422,13 +1420,20 @@
         },
         "recursoId": {
           "name": "recursoId",
-          "type": "text",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         }
       },
       "indexes": {
+        "Menu_recursoId_unique": {
+          "name": "Menu_recursoId_unique",
+          "columns": [
+            "recursoId"
+          ],
+          "isUnique": true
+        },
         "Menu_ruta_key": {
           "name": "Menu_ruta_key",
           "columns": [
@@ -1579,7 +1584,7 @@
         },
         "update_payload": {
           "name": "update_payload",
-          "type": "text",
+          "type": "blob",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1618,7 +1623,7 @@
         },
         "valor": {
           "name": "valor",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1709,14 +1714,14 @@
         },
         "nroDocumento": {
           "name": "nroDocumento",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "nroCelular": {
           "name": "nroCelular",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1915,13 +1920,6 @@
     "RolesMenus": {
       "name": "RolesMenus",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
         "rolId": {
           "name": "rolId",
           "type": "text",
@@ -1953,16 +1951,7 @@
           "default": "'activo'"
         }
       },
-      "indexes": {
-        "RolesMenus_key": {
-          "name": "RolesMenus_key",
-          "columns": [
-            "rolId",
-            "menuId"
-          ],
-          "isUnique": true
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "RolesMenus_rolId_fkey": {
           "name": "RolesMenus_rolId_fkey",
@@ -1991,20 +1980,21 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "RolesMenus_pkey": {
+          "columns": [
+            "rolId",
+            "menuId"
+          ],
+          "name": "RolesMenus_pkey"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
     "RolesRecursos": {
       "name": "RolesRecursos",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
         "rolId": {
           "name": "rolId",
           "type": "text",
@@ -2028,16 +2018,7 @@
           "default": 1
         }
       },
-      "indexes": {
-        "RolesRecursos_key": {
-          "name": "RolesRecursos_key",
-          "columns": [
-            "recursoId",
-            "rolId"
-          ],
-          "isUnique": true
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "RolesRecursos_rolId_fkey": {
           "name": "RolesRecursos_rolId_fkey",
@@ -2066,7 +2047,15 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "RolesRecursos_pkey": {
+          "columns": [
+            "rolId",
+            "recursoId"
+          ],
+          "name": "RolesRecursos_pkey"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
@@ -2287,13 +2276,6 @@
     "UsuariosRoles": {
       "name": "UsuariosRoles",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
         "usuarioId": {
           "name": "usuarioId",
           "type": "text",
@@ -2312,7 +2294,7 @@
           "name": "asignadoEl",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
@@ -2325,16 +2307,7 @@
           "default": "'activo'"
         }
       },
-      "indexes": {
-        "UsuariosRoles_usuarioId_rolId_key": {
-          "name": "UsuariosRoles_usuarioId_rolId_key",
-          "columns": [
-            "usuarioId",
-            "rolId"
-          ],
-          "isUnique": true
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "UsuariosRoles_usuarioId_fkey": {
           "name": "UsuariosRoles_usuarioId_fkey",
@@ -2363,7 +2336,15 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "UsuariosRoles_pkey": {
+          "columns": [
+            "usuarioId",
+            "rolId"
+          ],
+          "name": "UsuariosRoles_pkey"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },

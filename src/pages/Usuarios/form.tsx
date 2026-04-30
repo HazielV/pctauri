@@ -23,7 +23,7 @@ import {
 
 export type NewData =
   | {
-      id: number;
+      id: string;
       createdAt: string;
       updatedAt: string;
       estado: "activo" | "inactivo" | "pendiente";
@@ -36,7 +36,7 @@ export type NewData =
         };
       }[];
       persona: {
-        id: number;
+        id: string;
         nombres: string;
         primerApellido: string;
         segundoApellido: string | null;
@@ -55,7 +55,7 @@ export type NewData =
   | undefined;
 type roles =
   | {
-      id: number;
+      id: string;
       estado: "activo" | "inactivo" | "pendiente";
       nombre: string;
       descripcion: string | null;

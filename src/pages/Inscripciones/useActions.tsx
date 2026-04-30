@@ -200,8 +200,9 @@ export const useActions = () => {
       };
     }
   };
-  const getHorariosCurso = async (idCurso: number) => {
+  const getHorariosCurso = async (idCurso: string) => {
     try {
+      console.log("idCurso", idCurso);
       const horarios = await db.query.horarioPlantilla.findMany({
         where: eq(horarioPlantilla.cursoId, idCurso),
       });
@@ -217,11 +218,10 @@ export const useActions = () => {
       queryKey: ["inscripciones-list", page, perPage], // Si esto cambia, se refetchea
       queryFn: () => getData(page, perPage),
     });
-  const useGetHorariosCurso = (id: number) =>
+  const useGetHorariosCurso = (id: string) =>
     useQuery({
       queryKey: ["horarios-x-curso", id], // Si esto cambia, se refetchea
       queryFn: () => getHorariosCurso(id),
-      enabled: id > 0,
     });
 
   // --- MUTACIONES ---
@@ -238,10 +238,10 @@ export const useActions = () => {
       setLoading(true);
 
       const {
-        cursoId: cId,
-        gestionId: gId,
+        cursoId,
+        gestionId,
         precioPactado: pPactado,
-        horarioPlantillaId: hPId,
+        horarioPlantillaId,
         fechaInicio,
         fechaFin,
         diaSemanaPractico,
@@ -252,9 +252,6 @@ export const useActions = () => {
         ...dataPersona
       } = values;
 
-      const cursoId = Number(cId);
-      const gestionId = Number(gId);
-      const horarioPlantillaId = Number(hPId);
       const precioPactado = Number(pPactado);
 
       let currentEstudianteId: number | null = null;

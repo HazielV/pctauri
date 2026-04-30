@@ -1,22 +1,22 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "057c8dad-1bff-4667-8056-2d47590ecf59",
-  "prevId": "fe58a6ac-4594-4785-b098-092913886151",
+  "id": "7683ae34-a885-4d80-b2f2-1386f0b36141",
+  "prevId": "75681c69-68ff-4b80-9741-550159a06c2e",
   "tables": {
     "AsistenciaGeneral": {
       "name": "AsistenciaGeneral",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "inscripcionId": {
           "name": "inscripcionId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -119,10 +119,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "nombre": {
           "name": "nombre",
@@ -140,7 +140,7 @@
         },
         "sucursalId": {
           "name": "sucursalId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -190,19 +190,105 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "AvanceClase": {
+      "name": "AvanceClase",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "temaId": {
+          "name": "temaId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "claseTeoricaId": {
+          "name": "claseTeoricaId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "clasePracticaId": {
+          "name": "clasePracticaId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "AvanceClase_temaId_Tema_id_fk": {
+          "name": "AvanceClase_temaId_Tema_id_fk",
+          "tableFrom": "AvanceClase",
+          "tableTo": "Tema",
+          "columnsFrom": [
+            "temaId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "AvanceClase_claseTeoricaId_ClaseTeorica_id_fk": {
+          "name": "AvanceClase_claseTeoricaId_ClaseTeorica_id_fk",
+          "tableFrom": "AvanceClase",
+          "tableTo": "ClaseTeorica",
+          "columnsFrom": [
+            "claseTeoricaId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "AvanceClase_clasePracticaId_ClasePractica_id_fk": {
+          "name": "AvanceClase_clasePracticaId_ClasePractica_id_fk",
+          "tableFrom": "AvanceClase",
+          "tableTo": "ClasePractica",
+          "columnsFrom": [
+            "clasePracticaId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "ClasePractica": {
       "name": "ClasePractica",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "inscripcionId": {
           "name": "inscripcionId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -326,10 +412,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "horarioPlantillaId": {
           "name": "horarioPlantillaId",
@@ -340,14 +426,14 @@
         },
         "aulaId": {
           "name": "aulaId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "cursoId": {
           "name": "cursoId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -457,10 +543,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "nombreCurso": {
           "name": "nombreCurso",
@@ -494,14 +580,14 @@
         },
         "gestionId": {
           "name": "gestionId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "sucursalId": {
           "name": "sucursalId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -569,10 +655,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "personaId": {
           "name": "personaId",
@@ -648,15 +734,187 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "EvaluacionEstudiante": {
+      "name": "EvaluacionEstudiante",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "examenProgramadoId": {
+          "name": "examenProgramadoId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "inscripcionId": {
+          "name": "inscripcionId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nota": {
+          "name": "nota",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "EstadoAsistencia": {
+          "name": "EstadoAsistencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'PRESENTE'"
+        },
+        "fechaCalificacion": {
+          "name": "fechaCalificacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
+        }
+      },
+      "indexes": {
+        "Evaluacion_Unica_key": {
+          "name": "Evaluacion_Unica_key",
+          "columns": [
+            "examenProgramadoId",
+            "inscripcionId"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "EvaluacionEstudiante_examenProgramadoId_ExamenProgramado_id_fk": {
+          "name": "EvaluacionEstudiante_examenProgramadoId_ExamenProgramado_id_fk",
+          "tableFrom": "EvaluacionEstudiante",
+          "tableTo": "ExamenProgramado",
+          "columnsFrom": [
+            "examenProgramadoId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "EvaluacionEstudiante_inscripcionId_Inscripcion_id_fk": {
+          "name": "EvaluacionEstudiante_inscripcionId_Inscripcion_id_fk",
+          "tableFrom": "EvaluacionEstudiante",
+          "tableTo": "Inscripcion",
+          "columnsFrom": [
+            "inscripcionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "ExamenProgramado": {
+      "name": "ExamenProgramado",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cursoId": {
+          "name": "cursoId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "TipoExamen": {
+          "name": "TipoExamen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fechaExacta": {
+          "name": "fechaExacta",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "Estado": {
+          "name": "Estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'PROGRAMADO'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ExamenProgramado_cursoId_Curso_id_fk": {
+          "name": "ExamenProgramado_cursoId_Curso_id_fk",
+          "tableFrom": "ExamenProgramado",
+          "tableTo": "Curso",
+          "columnsFrom": [
+            "cursoId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "Gestion": {
       "name": "Gestion",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "nombre": {
           "name": "nombre",
@@ -723,10 +981,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "nombre": {
           "name": "nombre",
@@ -779,7 +1037,7 @@
         },
         "cursoId": {
           "name": "cursoId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -860,28 +1118,28 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "estudianteId": {
           "name": "estudianteId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "cursoId": {
           "name": "cursoId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "gestionId": {
           "name": "gestionId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -930,7 +1188,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'ACTIVA'"
+          "default": "'pendiente'"
         },
         "createdAt": {
           "name": "createdAt",
@@ -1021,10 +1279,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "personaId": {
           "name": "personaId",
@@ -1113,10 +1371,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "nombre": {
           "name": "nombre",
@@ -1164,9 +1422,9 @@
         },
         "recursoId": {
           "name": "recursoId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         }
       },
@@ -1216,14 +1474,14 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "inscripcionId": {
           "name": "inscripcionId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1295,15 +1553,61 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "PendingSync": {
+      "name": "PendingSync",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tabla": {
+          "name": "tabla",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "metodo": {
+          "name": "metodo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "update_payload": {
+          "name": "update_payload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "Permiso": {
       "name": "Permiso",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "nombre": {
           "name": "nombre",
@@ -1377,10 +1681,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "nombres": {
           "name": "nombres",
@@ -1503,10 +1807,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "nombre": {
           "name": "nombre",
@@ -1566,10 +1870,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "nombre": {
           "name": "nombre",
@@ -1611,16 +1915,23 @@
     "RolesMenus": {
       "name": "RolesMenus",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
         "rolId": {
           "name": "rolId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "menuId": {
           "name": "menuId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1642,7 +1953,16 @@
           "default": "'activo'"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "RolesMenus_key": {
+          "name": "RolesMenus_key",
+          "columns": [
+            "rolId",
+            "menuId"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "RolesMenus_rolId_fkey": {
           "name": "RolesMenus_rolId_fkey",
@@ -1671,31 +1991,30 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {
-        "RolesMenus_pkey": {
-          "columns": [
-            "rolId",
-            "menuId"
-          ],
-          "name": "RolesMenus_pkey"
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
     "RolesRecursos": {
       "name": "RolesRecursos",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
         "rolId": {
           "name": "rolId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "recursoId": {
           "name": "recursoId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1709,7 +2028,16 @@
           "default": 1
         }
       },
-      "indexes": {},
+      "indexes": {
+        "RolesRecursos_key": {
+          "name": "RolesRecursos_key",
+          "columns": [
+            "recursoId",
+            "rolId"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "RolesRecursos_rolId_fkey": {
           "name": "RolesRecursos_rolId_fkey",
@@ -1738,15 +2066,7 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {
-        "RolesRecursos_pkey": {
-          "columns": [
-            "rolId",
-            "recursoId"
-          ],
-          "name": "RolesRecursos_pkey"
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
@@ -1755,10 +2075,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "nombre": {
           "name": "nombre",
@@ -1805,15 +2125,83 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "Tema": {
+      "name": "Tema",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cursoId": {
+          "name": "cursoId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "TipoTema": {
+          "name": "TipoTema",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "orden": {
+          "name": "orden",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "Estado": {
+          "name": "Estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'activo'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Tema_cursoId_Curso_id_fk": {
+          "name": "Tema_cursoId_Curso_id_fk",
+          "tableFrom": "Tema",
+          "tableTo": "Curso",
+          "columnsFrom": [
+            "cursoId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "Usuario": {
       "name": "Usuario",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "username": {
           "name": "username",
@@ -1847,7 +2235,7 @@
         },
         "personaId": {
           "name": "personaId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1899,16 +2287,23 @@
     "UsuariosRoles": {
       "name": "UsuariosRoles",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
         "usuarioId": {
           "name": "usuarioId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "rolId": {
           "name": "rolId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1917,7 +2312,7 @@
           "name": "asignadoEl",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
@@ -1930,7 +2325,16 @@
           "default": "'activo'"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "UsuariosRoles_usuarioId_rolId_key": {
+          "name": "UsuariosRoles_usuarioId_rolId_key",
+          "columns": [
+            "usuarioId",
+            "rolId"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "UsuariosRoles_usuarioId_fkey": {
           "name": "UsuariosRoles_usuarioId_fkey",
@@ -1959,15 +2363,7 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {
-        "UsuariosRoles_pkey": {
-          "columns": [
-            "usuarioId",
-            "rolId"
-          ],
-          "name": "UsuariosRoles_pkey"
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
@@ -1976,10 +2372,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "placa": {
           "name": "placa",
@@ -2037,6 +2433,45 @@
           "isUnique": true
         }
       },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "yjsDocs": {
+      "name": "yjsDocs",
+      "columns": {
+        "doc_id": {
+          "name": "doc_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "table_name": {
+          "name": "table_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dirty": {
+          "name": "dirty",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        }
+      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

@@ -24,7 +24,7 @@ import { Fieldset } from "@base-ui/react";
 
 type cursos =
   | {
-      id: number;
+      id: string;
       createdAt: string;
       updatedAt: string;
       estado: "activo" | "inactivo" | "finalizado" | "en curso" | "programado";
@@ -139,9 +139,7 @@ export function Form({
       nroDocumento: findpersona ? Number(findpersona.nroDocumento) : undefined,
     });
   };
-  const { data: horariosDisponibles } = useGetHorariosCurso(
-    Number(cursoId || 0),
-  );
+  const { data: horariosDisponibles } = useGetHorariosCurso(cursoId);
   return (
     <form id={formId} onSubmit={handleSubmit} className="grid gap-5">
       <FieldSet>
@@ -383,8 +381,7 @@ export function Form({
               placeholder="Precio con descuento"
               name="precioPactado"
               defaultValue={
-                cursos?.find((c) => c.id === Number(cursoId || 0))
-                  ?.precioBase || ""
+                cursos?.find((c) => c.id === cursoId)?.precioBase || ""
               }
               required
             />
@@ -394,9 +391,7 @@ export function Form({
           hidden
           type="text"
           name="gestionId"
-          defaultValue={
-            cursos?.find((c) => c.id === Number(cursoId || 0))?.gestionId || ""
-          }
+          defaultValue={cursos?.find((c) => c.id === cursoId)?.gestionId || ""}
         />
       </FieldGroup>
       <FieldSeparator />

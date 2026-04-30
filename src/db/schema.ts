@@ -6,13 +6,17 @@ import {
   foreignKey,
   primaryKey,
   real,
+  blob,
 } from "drizzle-orm/sqlite-core";
+import { v4 as uuidv4 } from "uuid";
 import { sql } from "drizzle-orm";
 
 export const persona = sqliteTable(
   "Persona",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     nombres: text().notNull(),
     primerApellido: text().notNull(),
     segundoApellido: text(),
@@ -47,7 +51,9 @@ export const persona = sqliteTable(
 export const usuario = sqliteTable(
   "Usuario",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     username: text().notNull(),
     password: text().notNull(),
     createdAt: text()
@@ -56,7 +62,7 @@ export const usuario = sqliteTable(
     updatedAt: text()
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    personaId: integer().notNull(),
+    personaId: text().notNull(),
     estado: text("Estado", {
       enum: ["activo", "inactivo", "pendiente"],
     })
@@ -79,7 +85,9 @@ export const usuario = sqliteTable(
 export const rol = sqliteTable(
   "Rol",
   {
-    id: integer().primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     nombre: text().notNull(),
     descripcion: text(),
     estado: text("Estado", {
@@ -93,7 +101,9 @@ export const rol = sqliteTable(
 export const permiso = sqliteTable(
   "Permiso",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     nombre: text().notNull(),
     valor: integer().notNull(),
     descripcion: text(),
@@ -118,7 +128,9 @@ export const permiso = sqliteTable(
 export const recurso = sqliteTable(
   "Recurso",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     nombre: text().notNull(),
     ruta: text().notNull(),
     createdAt: text()
@@ -139,7 +151,9 @@ export const recurso = sqliteTable(
 export const menu = sqliteTable(
   "Menu",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     nombre: text().notNull(),
     ruta: text().notNull(),
     icono: text(),
@@ -150,7 +164,7 @@ export const menu = sqliteTable(
     })
       .notNull()
       .default("activo"),
-    recursoId: integer().unique(),
+    recursoId: text().notNull(),
   },
   (table) => [
     uniqueIndex("Menu_ruta_key").on(table.ruta),
@@ -174,15 +188,15 @@ export const menu = sqliteTable(
 export const rolesRecursos = sqliteTable(
   "RolesRecursos",
   {
-    rolId: integer().notNull(),
-    recursoId: integer().notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    rolId: text().notNull(),
+    recursoId: text().notNull(),
     permisos: integer().default(1).notNull(),
   },
   (table) => [
-    primaryKey({
-      columns: [table.rolId, table.recursoId],
-      name: "RolesRecursos_pkey",
-    }),
+    uniqueIndex("RolesRecursos_key").on(table.recursoId, table.rolId),
     foreignKey({
       columns: [table.rolId],
       foreignColumns: [rol.id],
@@ -203,8 +217,11 @@ export const rolesRecursos = sqliteTable(
 export const rolesMenus = sqliteTable(
   "RolesMenus",
   {
-    rolId: integer().notNull(),
-    menuId: integer().notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    rolId: text().notNull(),
+    menuId: text().notNull(),
     permisos: integer().default(1).notNull(),
     estado: text("Estado", {
       enum: ["activo", "inactivo", "pendiente"],
@@ -213,10 +230,7 @@ export const rolesMenus = sqliteTable(
       .default("activo"),
   },
   (table) => [
-    primaryKey({
-      columns: [table.rolId, table.menuId],
-      name: "RolesMenus_pkey",
-    }),
+    uniqueIndex("RolesMenus_key").on(table.rolId, table.menuId),
     foreignKey({
       columns: [table.rolId],
       foreignColumns: [rol.id],
@@ -237,11 +251,12 @@ export const rolesMenus = sqliteTable(
 export const usuariosRoles = sqliteTable(
   "UsuariosRoles",
   {
-    usuarioId: integer().notNull(),
-    rolId: integer().notNull(),
-    asignadoEl: text()
-      .default(sql`(CURRENT_TIMESTAMP)`)
-      .notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    usuarioId: text().notNull(),
+    rolId: text().notNull(),
+    asignadoEl: text("asignadoEl").default(sql`(CURRENT_TIMESTAMP)`),
     estado: text("Estado", {
       enum: ["activo", "inactivo", "pendiente"],
     })
@@ -249,10 +264,10 @@ export const usuariosRoles = sqliteTable(
       .default("activo"),
   },
   (table) => [
-    primaryKey({
-      columns: [table.usuarioId, table.rolId],
-      name: "UsuariosRoles_pkey",
-    }),
+    uniqueIndex("UsuariosRoles_usuarioId_rolId_key").on(
+      table.usuarioId,
+      table.rolId,
+    ),
     foreignKey({
       columns: [table.usuarioId],
       foreignColumns: [usuario.id],
@@ -273,7 +288,9 @@ export const usuariosRoles = sqliteTable(
 // NIVEL 1: TIEMPO, UBICACIÓN Y CATÁLOGO
 // ==========================================
 export const gestion = sqliteTable("Gestion", {
-  id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => uuidv4()),
   nombre: text().notNull(), // Ej: "Gestión 2025"
   fechaInicio: text().notNull(),
   fechaFin: text().notNull(),
@@ -292,7 +309,9 @@ export const gestion = sqliteTable("Gestion", {
 });
 
 export const sucursal = sqliteTable("Sucursal", {
-  id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => uuidv4()),
   nombre: text().notNull(),
   direccion: text().notNull(),
   createdAt: text()
@@ -309,13 +328,15 @@ export const sucursal = sqliteTable("Sucursal", {
 export const curso = sqliteTable(
   "Curso",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     nombreCurso: text().notNull(),
     precioBase: real().notNull(),
     horasTeoricasReq: integer().notNull().default(0),
     horasPracticasReq: integer().notNull().default(0),
-    gestionId: integer().notNull(),
-    sucursalId: integer().notNull(),
+    gestionId: text().notNull(),
+    sucursalId: text().notNull(),
     createdAt: text()
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
@@ -345,7 +366,9 @@ export const curso = sqliteTable(
 export const estudiante = sqliteTable(
   "Estudiante",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     personaId: integer("personaId").notNull().unique(),
     codigoInterno: text("codigoInterno").unique(),
     createdAt: text("createdAt")
@@ -372,8 +395,10 @@ export const estudiante = sqliteTable(
 export const instructor = sqliteTable(
   "Instructor",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-    personaId: integer("personaId").notNull().unique(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    personaId: text("personaId").notNull().unique(),
     nroLicencia: text("nroLicencia").notNull().unique(),
     disponibilidadActiva: integer("disponibilidadActiva", { mode: "boolean" })
       .notNull()
@@ -400,7 +425,9 @@ export const instructor = sqliteTable(
 );
 
 export const vehiculo = sqliteTable("Vehiculo", {
-  id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => uuidv4()),
   placa: text().notNull().unique(),
   marca: text().notNull(),
   estadoOperativo: text("EstadoOperativo", {
@@ -422,10 +449,12 @@ export const vehiculo = sqliteTable("Vehiculo", {
 export const aula = sqliteTable(
   "Aula",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     nombre: text().notNull(),
     capacidad: integer().notNull(),
-    sucursalId: integer().notNull(),
+    sucursalId: text().notNull(),
     createdAt: text()
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
@@ -450,10 +479,12 @@ export const aula = sqliteTable(
 export const inscripcion = sqliteTable(
   "Inscripcion",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-    estudianteId: integer().notNull(),
-    cursoId: integer().notNull(),
-    gestionId: integer().notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    estudianteId: text().notNull(),
+    cursoId: text().notNull(),
+    gestionId: text().notNull(),
     precioPactado: real().notNull(),
     fechaInicio: text().notNull().default("2026-01-01"), // Valor temporal
     fechaFin: text().notNull().default("2026-12-31"),
@@ -503,8 +534,10 @@ export const inscripcion = sqliteTable(
 export const pago = sqliteTable(
   "Pago",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-    inscripcionId: integer().notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    inscripcionId: text().notNull(),
     montoPagado: real().notNull(),
     fechaPago: text()
       .default(sql`(CURRENT_TIMESTAMP)`)
@@ -539,7 +572,9 @@ export const pago = sqliteTable(
 export const horarioPlantilla = sqliteTable(
   "HorarioPlantilla",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     nombre: text().notNull(),
     diaSemana: text("diaSemana", {
       enum: [
@@ -559,7 +594,7 @@ export const horarioPlantilla = sqliteTable(
     instructorId: integer(),
     aulaId: integer(),
 
-    cursoId: integer().notNull(), // El curso sí es obligatorio para que el horario exista
+    cursoId: text().notNull(), // El curso sí es obligatorio para que el horario exista
 
     createdAt: text()
       .default(sql`(CURRENT_TIMESTAMP)`)
@@ -598,10 +633,12 @@ export const horarioPlantilla = sqliteTable(
 export const claseTeorica = sqliteTable(
   "ClaseTeorica",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     horarioPlantillaId: integer(),
-    aulaId: integer().notNull(),
-    cursoId: integer().notNull(),
+    aulaId: text().notNull(),
+    cursoId: text().notNull(),
     fechaExacta: text().notNull(),
     horaInicio: text().notNull(), // Ej: "14:00"
     horaFin: text().notNull(), // Ej: "15:00"
@@ -639,9 +676,11 @@ export const claseTeorica = sqliteTable(
 export const clasePractica = sqliteTable(
   "ClasePractica",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
 
-    inscripcionId: integer().notNull(),
+    inscripcionId: text().notNull(),
     instructorId: integer(), // El instructor asignado para esta hora
     vehiculoId: integer(),
     fechaExacta: text().notNull(),
@@ -688,8 +727,10 @@ export const clasePractica = sqliteTable(
 export const asistenciaGeneral = sqliteTable(
   "AsistenciaGeneral",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-    inscripcionId: integer().notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    inscripcionId: text().notNull(),
     claseTeoricaId: integer(), // Null si asiste a práctica
     clasePracticaId: integer(), // Null si asiste a teoría
     estadoAsistencia: text("EstadoAsistencia", {
@@ -731,8 +772,10 @@ export const asistenciaGeneral = sqliteTable(
 export const tema = sqliteTable(
   "Tema",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-    cursoId: integer().notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    cursoId: text().notNull(),
     titulo: text().notNull(), // Ej: "Ley de Tránsito Art. 10", "Parqueo en reversa"
     tipo: text("TipoTema", { enum: ["TEORICO", "PRACTICO"] }).notNull(),
     orden: integer().default(0), // Para saber qué enseñar primero
@@ -750,8 +793,10 @@ export const tema = sqliteTable(
 export const avanceClase = sqliteTable(
   "AvanceClase",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-    temaId: integer().notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    temaId: text().notNull(),
 
     // Si es teoría, se asocia a la clase general (todos avanzan lo mismo)
     claseTeoricaId: integer(),
@@ -781,8 +826,10 @@ export const avanceClase = sqliteTable(
 export const examenProgramado = sqliteTable(
   "ExamenProgramado",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-    cursoId: integer().notNull(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    cursoId: text().notNull(),
     titulo: text().notNull(), // Ej: "Examen Final de Normativa" o "Prueba de Parqueo"
     tipoExamen: text("TipoExamen", {
       enum: ["TEORICO", "PRACTICO"],
@@ -809,9 +856,11 @@ export const examenProgramado = sqliteTable(
 export const evaluacionEstudiante = sqliteTable(
   "EvaluacionEstudiante",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-    examenProgramadoId: integer().notNull(),
-    inscripcionId: integer().notNull(), // Quién dio el examen
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    examenProgramadoId: text().notNull(),
+    inscripcionId: text().notNull(), // Quién dio el examen
 
     nota: real(), // Puede ser NULL hasta que el instructor la llene
     observaciones: text(),
@@ -843,3 +892,16 @@ export const evaluacionEstudiante = sqliteTable(
     }).onDelete("cascade"),
   ],
 );
+export const pendingSync = sqliteTable("PendingSync", {
+  id: text("id").primaryKey(), // UUID
+  tabla: text("tabla").notNull(),
+  metodo: text("metodo").notNull(), // 'run', 'execute', etc.
+  updatePayload: text("update_payload", { mode: "json" }).notNull(),
+  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+export const yjsDocs = sqliteTable("yjsDocs", {
+  doc_id: text("doc_id").primaryKey(), // uuid del registro
+  table_name: text("table_name").notNull(), // "persona", "pedido", etc.
+  state: text("state").notNull(), // Y.Doc serializado en base64
+  dirty: integer("dirty", { mode: "boolean" }).notNull().default(false),
+});

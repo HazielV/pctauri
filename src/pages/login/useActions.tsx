@@ -12,7 +12,7 @@ export const useActions = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
   const [_, navigate] = useLocation();
   async function construirPermisosUsuario(
-    usuarioId: number,
+    usuarioId: string,
   ): Promise<Record<string, string[]>> {
     // 1. Obtener el diccionario dinámico de bits desde la tabla Permiso
     // Esto retorna ej: [{ nombre: "leer", valor: 1 }, { nombre: "escribir", valor: 2 }, ...]
