@@ -1,7 +1,7 @@
 // Roles/useRoles.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/db/client";
-import { menu, permiso, recurso, rolesRecursos } from "@/db/schema";
+import { estado, menu, permiso, recurso, rolesRecursos } from "@/db/schema";
 import { count, eq } from "drizzle-orm";
 import { useModalStore } from "@/store/modalState";
 import { useAlertStore } from "@/store/AlertState";
@@ -13,15 +13,16 @@ export const useActions = () => {
   const { setLoading, show, close } = useModalStore();
   const { showAlert } = useAlertStore();
   const getPermisosActivos = async () => {
-    return await db.query.permiso.findMany({
-      columns: {
-        id: true,
-        descripcion: true,
-        valor: true,
-        nombre: true,
-      },
-      where: (permisos, { eq }) => eq(permisos.estado, "activo"),
-    });
+    return await db
+      .select({
+        id: permiso.id,
+        nombre: permiso.nombre,
+        valor: permiso.valor,
+        descripcion: permiso.descripcion,
+      })
+      .from(permiso)
+      .innerJoin(estado, eq(permiso.estado_id, estado.id))
+      .where(eq(estado.nombre, "ACTIVO"));
   };
   const getData = async (page: number, perPage: number) => {
     try {
@@ -30,10 +31,11 @@ export const useActions = () => {
       const skip = (page - 1) * perPage;
       const data = await db.query.recurso.findMany({
         with: {
+          estado: true,
           menu: true,
           rolesRecursos: {
             columns: {
-              recursoId: true,
+              recurso_id: true,
               permisos: true,
             },
             with: {
@@ -85,11 +87,17 @@ export const useActions = () => {
     });
   // --- MUTACIONES ---
   const upsertMutation = useMutation({
-    mutationFn: async ({ id, values }: { id?: number; values: any }) => {
+    mutationFn: async ({ id, values }: { id?: string; values: any }) => {
       setLoading(true);
 
-      const { nombre, menuId, ruta, permisosRol } = values;
-
+      const { nombre, menu_id, ruta, permisosRol } = values;
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
+      if (!estadoActivo) {
+        throw new Error("Error estados");
+      }
       if (id) {
         // --- UPDATE CASE ---
 
@@ -101,19 +109,17 @@ export const useActions = () => {
           .returning({ recursoId: recurso.id });
 
         if (!u) throw new Error("Recurso no encontrado");
-
         // 2. Link to Menu
-        if (menuId) {
+        if (menu_id) {
           await db
             .update(menu)
-            .set({ recursoId: u.recursoId })
-            .where(eq(menu.id, Number(menuId)));
+            .set({ recurso_id: u.recursoId })
+            .where(eq(menu.id, menu_id));
         }
-
         // 3. Clear previous relations (Wipe)
         await db
           .delete(rolesRecursos)
-          .where(eq(rolesRecursos.recursoId, u.recursoId));
+          .where(eq(rolesRecursos.recurso_id, u.recursoId));
 
         // 4. Insert new relations (Replace) with individual bitmask calculation
         if (permisosRol && permisosRol.length > 0) {
@@ -124,12 +130,12 @@ export const useActions = () => {
             );
 
             return {
-              recursoId: u.recursoId,
-              rolId: pr.rolid,
+              recurso_id: u.recursoId,
+              rol_id: pr.rolid,
               permisos: permisosMask,
+              estado_id: estadoActivo.id,
             };
           });
-
           await db.insert(rolesRecursos).values(relacionesAInsertar);
         }
 
@@ -140,17 +146,21 @@ export const useActions = () => {
         // 1. Insert the resource
         const [u] = await db
           .insert(recurso)
-          .values({ nombre, ruta })
+          .values({
+            nombre,
+            ruta,
+            estado_id: estadoActivo.id,
+          })
           .returning({ recursoId: recurso.id });
 
         if (!u) throw new Error("No se pudo crear el recurso");
 
         // 2. Link to Menu
-        if (menuId) {
+        if (menu_id) {
           await db
             .update(menu)
-            .set({ recursoId: u.recursoId })
-            .where(eq(menu.id, Number(menuId)));
+            .set({ recurso_id: u.recursoId })
+            .where(eq(menu.id, menu_id));
         }
 
         // 3. Insert relations with individual bitmask calculation
@@ -162,12 +172,12 @@ export const useActions = () => {
             );
 
             return {
-              recursoId: u.recursoId,
-              rolId: pr.rolid,
+              recurso_id: u.recursoId,
+              rol_id: pr.rolid,
               permisos: permisosMask,
+              estado_id: estadoActivo.id,
             };
           });
-
           await db.insert(rolesRecursos).values(relacionesAInsertar);
         }
 
@@ -191,15 +201,19 @@ export const useActions = () => {
   });
 
   const statusMutation = useMutation({
-    mutationFn: async ({
-      id,
-      estado,
-    }: {
-      id: number;
-      estado: "activo" | "inactivo";
-    }) => {
-      // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
-      return await db.update(permiso).set({ estado }).where(eq(permiso.id, id));
+    mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
+      const estadonuevo = await db.query.estado.findFirst({
+        where: (t, { eq, and }) =>
+          and(
+            eq(t.nombre, estado === "ACTIVO" ? "INACTIVO" : "ACTIVO"),
+            eq(t.categoria, "SISTEMA"),
+          ),
+      });
+
+      return await db
+        .update(recurso)
+        .set({ estado_id: estadonuevo?.id })
+        .where(eq(recurso.id, id));
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["recursos-list"] }),
@@ -211,15 +225,15 @@ export const useActions = () => {
       formId: "recurso-formulario-create",
     });
   };
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     show(<LoaderForm id={id} />, {
       title: "Editar recurso",
       formId: "recurso-formulario-edit",
     });
   };
 
-  const handleToggleStatus = (id: number, currentStatus: string) => {
-    const isInactive = currentStatus === "inactivo";
+  const handleToggleStatus = (id: string, currentStatus: string) => {
+    const isInactive = currentStatus === "INACTIVO";
     showAlert({
       title: isInactive ? "¿Activar Recurso?" : "¿Deshabilitar Recurso?",
       description: `El Recurso pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
@@ -229,7 +243,7 @@ export const useActions = () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
         await statusMutation.mutateAsync({
           id,
-          estado: isInactive ? "activo" : "inactivo",
+          estado: currentStatus,
         });
         toast.success("Estado actualizado");
       },

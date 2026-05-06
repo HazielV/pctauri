@@ -37,7 +37,7 @@ const obtenerPermisos = (
   bitmask: number,
   permisos:
     | {
-        id: number;
+        id: string;
         nombre: string;
         descripcion: string | null;
         valor: number;
@@ -72,6 +72,7 @@ export default function Page() {
   if (isError || !data) return <div>Error o sin datos</div>;
 
   const { data: roles, meta } = data;
+  console.log(permisos);
   return (
     <Contendor>
       <div className="flex justify-end py-2 pb-4">
@@ -154,10 +155,10 @@ export default function Page() {
                             {obtenerPermisos(
                               Number(elem.permisos),
                               permisos,
-                            ).map((per) => (
+                            ).map((per, idx) => (
                               <div
                                 className="dark:bg-sky-700 text-center py-0.5 rounded-full dark:text-sky-100/90 px-2 text-sky-800 bg-sky-300/25"
-                                key={per}
+                                key={idx}
                               >
                                 {per}
                               </div>
@@ -171,13 +172,13 @@ export default function Page() {
                   <TableCell>
                     <div className="flex ">
                       <div className="text-xs h-full rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 ">
-                        {data.estado}
+                        {data.estado.nombre.toLowerCase()}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      {data.estado === "activo" && (
+                      {data.estado.nombre.toLowerCase() === "activo" && (
                         <button
                           onClick={() => handleEdit(data.id)}
                           className=" flex gap-2 h-auto"
@@ -188,10 +189,10 @@ export default function Page() {
                           />
                         </button>
                       )}
-                      {data.estado === "activo" && (
+                      {data.estado.nombre.toLowerCase() === "activo" && (
                         <button
                           onClick={() =>
-                            handleToggleStatus(data.id, data.estado)
+                            handleToggleStatus(data.id, data.estado.nombre)
                           }
                           className=" flex gap-2 h-auto"
                         >
@@ -201,10 +202,10 @@ export default function Page() {
                           />
                         </button>
                       )}
-                      {data.estado === "inactivo" && (
+                      {data.estado.nombre.toLowerCase() === "inactivo" && (
                         <button
                           onClick={() =>
-                            handleToggleStatus(data.id, data.estado)
+                            handleToggleStatus(data.id, data.estado.nombre)
                           }
                           className=" flex gap-2 h-auto"
                         >

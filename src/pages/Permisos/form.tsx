@@ -6,12 +6,12 @@ import { useActions } from "./useActions";
 
 export type NewData =
   | {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
+      id: string;
       nombre: string;
       descripcion: string | null;
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
       valor: number;
     }
   | undefined;

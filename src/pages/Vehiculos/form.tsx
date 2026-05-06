@@ -6,13 +6,13 @@ import { useActions } from "./useActions";
 
 type NewData =
   | {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
+      id: string;
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
       placa: string;
       marca: string;
-      estadoOperativo: "DISPONIBLE" | "MANTENIMIENTO" | "AVERIADO";
+      estado_operativo_id: string;
     }
   | undefined;
 export function Form({ data }: { data?: NewData | undefined }) {

@@ -174,6 +174,7 @@ export const useActions = () => {
         with: {
           inscripcions: true,
           persona: true,
+          estado: true,
         },
       });
 
@@ -204,7 +205,11 @@ export const useActions = () => {
     try {
       console.log("idCurso", idCurso);
       const horarios = await db.query.horarioPlantilla.findMany({
-        where: eq(horarioPlantilla.cursoId, idCurso),
+        where: eq(horarioPlantilla.curso_id, idCurso),
+        with: {
+          diaSemana: true,
+          tipoClase: true,
+        },
       });
       return horarios;
     } catch (error) {
@@ -407,19 +412,19 @@ export const useActions = () => {
     mutationFn: async (documento: string) => {
       // Aquí llamas a tu función de Drizzle
       const resultado = await db.query.persona.findFirst({
-        where: eq(persona.nroDocumento, Number(documento)),
+        where: eq(persona.nro_documento, Number(documento)),
       });
       return resultado;
     },
     onSuccess: (data) => {
       if (data) {
-        toast.success("Usuario encontrado", {
+        toast.success("Persona encontrada", {
           position: "top-center",
         });
         // Aquí podrías cargar los datos en el formulario
         return data;
       } else {
-        toast.error("El usuario no existe", {
+        toast.error("La Persona no existe", {
           position: "top-center",
         });
         // Opcional: abrir modal de registro

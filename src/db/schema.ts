@@ -4,78 +4,103 @@ import {
   sqliteTable,
   uniqueIndex,
   foreignKey,
-  primaryKey,
   real,
-  blob,
 } from "drizzle-orm/sqlite-core";
 import { v4 as uuidv4 } from "uuid";
 import { sql } from "drizzle-orm";
 
+// ==========================================
+// TABLA CATÁLOGO (Tipos, Métodos, Días, Sexo)
+// ==========================================
+export const catalogo = sqliteTable("catalogo", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => uuidv4()),
+  nombre: text("nombre").notNull(), // Ej: "MASCULINO", "CEDULA", "EFECTIVO"
+  categoria: text("categoria"), // Ej: "SEXO", "TIPO_DOCUMENTO", "METODO_PAGO"
+  descripcion: text("descripcion"),
+});
+
+// ==========================================
+// TABLA ESTADO (Ciclo de vida, Operativos, Académicos)
+// ==========================================
+export const estado = sqliteTable("estado", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => uuidv4()),
+  nombre: text("nombre").notNull(), // Ej: "ACTIVO", "INACTIVO", "PRESENTE"
+  categoria: text("categoria"), // Ej: "SISTEMA", "ESTADO_ACADEMICO"
+  descripcion: text("descripcion"),
+});
+
+// ==========================================
+// SISTEMA Y SEGURIDAD
+// ==========================================
+
 export const persona = sqliteTable(
-  "Persona",
+  "persona",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    nombres: text().notNull(),
-    primerApellido: text().notNull(),
-    segundoApellido: text(),
-    nroDocumento: integer().notNull(),
-    nroCelular: integer().notNull(),
-    email: text().notNull(),
-    sexo: text("sexo", { enum: ["MASCULINO", "FEMENINO", "OTRO"] }).notNull(),
-    fechaNacimiento: text().notNull(),
-    direccion: text(),
-    createdAt: text()
+    nombres: text("nombres").notNull(),
+    primer_apellido: text("primer_apellido").notNull(),
+    segundo_apellido: text("segundo_apellido"),
+    nro_documento: integer("nro_documento").notNull(),
+    nro_celular: integer("nro_celular").notNull(),
+    email: text("email").notNull(),
+    // Referencias a Catálogo
+    sexo_id: text("sexo_id")
+      .notNull()
+      .references(() => catalogo.id),
+    tipo_documento_id: text("tipo_documento_id")
+      .notNull()
+      .references(() => catalogo.id),
+    fecha_nacimiento: text("fecha_nacimiento").notNull(),
+    direccion: text("direccion"),
+    // Referencia a Estado
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    tipoDocumento: text("TipoDocumento", {
-      enum: ["CEDULA", "PASAPORTE", "EXTRANJERO"],
-    }).notNull(),
-    estado: text("Estado", {
-      enum: ["activo", "inactivo", "pendiente"],
-    })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
-    // NUEVA API: Ahora se usa un array directamente
-    uniqueIndex("Persona_email_key").on(table.email),
-    uniqueIndex("Persona_nroDocumento_key").on(table.nroDocumento),
+    uniqueIndex("persona_email_key").on(table.email),
+    uniqueIndex("persona_nro_documento_key").on(table.nro_documento),
   ],
 );
 
 export const usuario = sqliteTable(
-  "Usuario",
+  "usuario",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    username: text().notNull(),
-    password: text().notNull(),
-    createdAt: text()
+    username: text("username").notNull(),
+    password: text("password").notNull(),
+    persona_id: text("persona_id").notNull(),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    personaId: text().notNull(),
-    estado: text("Estado", {
-      enum: ["activo", "inactivo", "pendiente"],
-    })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
-    uniqueIndex("Usuario_personaId_key").on(table.personaId),
-    uniqueIndex("Usuario_username_key").on(table.username),
+    uniqueIndex("usuario_persona_id_key").on(table.persona_id),
+    uniqueIndex("usuario_username_key").on(table.username),
     foreignKey({
-      columns: [table.personaId],
+      columns: [table.persona_id],
       foreignColumns: [persona.id],
-      name: "Usuario_personaId_fkey",
+      name: "usuario_persona_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
@@ -83,102 +108,95 @@ export const usuario = sqliteTable(
 );
 
 export const rol = sqliteTable(
-  "Rol",
+  "rol",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    nombre: text().notNull(),
-    descripcion: text(),
-    estado: text("Estado", {
-      enum: ["activo", "inactivo", "pendiente"],
-    })
+    nombre: text("nombre").notNull(),
+    descripcion: text("descripcion"),
+    estado_id: text("estado_id")
       .notNull()
-      .default("activo"),
+      .references(() => estado.id),
   },
-  (table) => [uniqueIndex("Rol_nombre_key").on(table.nombre)],
+  (table) => [uniqueIndex("rol_nombre_key").on(table.nombre)],
 );
+
 export const permiso = sqliteTable(
-  "Permiso",
+  "permiso",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    nombre: text().notNull(),
-    valor: integer().notNull(),
-    descripcion: text(),
-    createdAt: text()
+    nombre: text("nombre").notNull(),
+    valor: integer("valor").notNull(),
+    descripcion: text("descripcion"),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", {
-      enum: ["activo", "inactivo", "pendiente"],
-    })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
-    uniqueIndex("Permiso_nombre_key").on(table.nombre),
-    uniqueIndex("Permiso_valor_key").on(table.valor),
+    uniqueIndex("permiso_nombre_key").on(table.nombre),
+    uniqueIndex("permiso_valor_key").on(table.valor),
   ],
 );
 
 export const recurso = sqliteTable(
-  "Recurso",
+  "recurso",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    nombre: text().notNull(),
-    ruta: text().notNull(),
-    createdAt: text()
+    nombre: text("nombre").notNull(),
+    ruta: text("ruta").notNull(),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", {
-      enum: ["activo", "inactivo", "pendiente"],
-    })
-      .notNull()
-      .default("activo"),
   },
-  (table) => [uniqueIndex("Recurso_ruta_key").on(table.ruta)],
+  (table) => [uniqueIndex("recurso_ruta_key").on(table.ruta)],
 );
 
 export const menu = sqliteTable(
-  "Menu",
+  "menu",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    nombre: text().notNull(),
-    ruta: text().notNull(),
-    icono: text(),
-    orden: integer().default(0).notNull(),
-    padreId: integer(),
-    estado: text("Estado", {
-      enum: ["activo", "inactivo", "pendiente"],
-    })
+    nombre: text("nombre").notNull(),
+    ruta: text("ruta").notNull(),
+    icono: text("icono"),
+    orden: integer("orden").default(0).notNull(),
+    padre_id: text("padre_id"),
+    recurso_id: text("recurso_id"),
+    estado_id: text("estado_id")
       .notNull()
-      .default("activo"),
-    recursoId: text().notNull(),
+      .references(() => estado.id),
   },
   (table) => [
-    uniqueIndex("Menu_ruta_key").on(table.ruta),
+    uniqueIndex("menu_ruta_key").on(table.ruta),
     foreignKey({
-      columns: [table.padreId],
+      columns: [table.padre_id],
       foreignColumns: [table.id],
-      name: "Menu_padreId_fkey",
+      name: "menu_padre_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
     foreignKey({
-      columns: [table.recursoId],
+      columns: [table.recurso_id],
       foreignColumns: [recurso.id],
-      name: "Menu_recursoId_fkey",
+      name: "menu_recurso_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("set null"),
@@ -186,28 +204,31 @@ export const menu = sqliteTable(
 );
 
 export const rolesRecursos = sqliteTable(
-  "RolesRecursos",
+  "roles_recursos",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    rolId: text().notNull(),
-    recursoId: text().notNull(),
-    permisos: integer().default(1).notNull(),
+    rol_id: text("rol_id").notNull(),
+    recurso_id: text("recurso_id").notNull(),
+    permisos: integer("permisos").default(1).notNull(),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
   },
   (table) => [
-    uniqueIndex("RolesRecursos_key").on(table.recursoId, table.rolId),
+    uniqueIndex("roles_recursos_key").on(table.recurso_id, table.rol_id),
     foreignKey({
-      columns: [table.rolId],
+      columns: [table.rol_id],
       foreignColumns: [rol.id],
-      name: "RolesRecursos_rolId_fkey",
+      name: "roles_recursos_rol_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
     foreignKey({
-      columns: [table.recursoId],
+      columns: [table.recurso_id],
       foreignColumns: [recurso.id],
-      name: "RolesRecursos_recursoId_fkey",
+      name: "roles_recursos_recurso_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
@@ -215,33 +236,31 @@ export const rolesRecursos = sqliteTable(
 );
 
 export const rolesMenus = sqliteTable(
-  "RolesMenus",
+  "roles_menus",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    rolId: text().notNull(),
-    menuId: text().notNull(),
-    permisos: integer().default(1).notNull(),
-    estado: text("Estado", {
-      enum: ["activo", "inactivo", "pendiente"],
-    })
+    rol_id: text("rol_id").notNull(),
+    menu_id: text("menu_id").notNull(),
+    permisos: integer("permisos").default(1).notNull(),
+    estado_id: text("estado_id")
       .notNull()
-      .default("activo"),
+      .references(() => estado.id),
   },
   (table) => [
-    uniqueIndex("RolesMenus_key").on(table.rolId, table.menuId),
+    uniqueIndex("roles_menus_key").on(table.rol_id, table.menu_id),
     foreignKey({
-      columns: [table.rolId],
+      columns: [table.rol_id],
       foreignColumns: [rol.id],
-      name: "RolesMenus_rolId_fkey",
+      name: "roles_menus_rol_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
     foreignKey({
-      columns: [table.menuId],
+      columns: [table.menu_id],
       foreignColumns: [menu.id],
-      name: "RolesMenus_menuId_fkey",
+      name: "roles_menus_menu_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
@@ -249,111 +268,109 @@ export const rolesMenus = sqliteTable(
 );
 
 export const usuariosRoles = sqliteTable(
-  "UsuariosRoles",
+  "usuarios_roles",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    usuarioId: text().notNull(),
-    rolId: text().notNull(),
-    asignadoEl: text("asignadoEl").default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", {
-      enum: ["activo", "inactivo", "pendiente"],
-    })
+    usuario_id: text("usuario_id").notNull(),
+    rol_id: text("rol_id").notNull(),
+    asignado_el: text("asignado_el").default(sql`(CURRENT_TIMESTAMP)`),
+    estado_id: text("estado_id")
       .notNull()
-      .default("activo"),
+      .references(() => estado.id),
   },
   (table) => [
-    uniqueIndex("UsuariosRoles_usuarioId_rolId_key").on(
-      table.usuarioId,
-      table.rolId,
+    uniqueIndex("usuarios_roles_usuario_id_rol_id_key").on(
+      table.usuario_id,
+      table.rol_id,
     ),
     foreignKey({
-      columns: [table.usuarioId],
+      columns: [table.usuario_id],
       foreignColumns: [usuario.id],
-      name: "UsuariosRoles_usuarioId_fkey",
+      name: "usuarios_roles_usuario_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
     foreignKey({
-      columns: [table.rolId],
+      columns: [table.rol_id],
       foreignColumns: [rol.id],
-      name: "UsuariosRoles_rolId_fkey",
+      name: "usuarios_roles_rol_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
   ],
 );
+
 // ==========================================
 // NIVEL 1: TIEMPO, UBICACIÓN Y CATÁLOGO
 // ==========================================
-export const gestion = sqliteTable("Gestion", {
+
+export const gestion = sqliteTable("gestion", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
-  nombre: text().notNull(), // Ej: "Gestión 2025"
-  fechaInicio: text().notNull(),
-  fechaFin: text().notNull(),
-  estadoGestion: text("EstadoGestion", { enum: ["ACTIVA", "CERRADA"] })
+  nombre: text("nombre").notNull(),
+  fecha_inicio: text("fecha_inicio").notNull(),
+  fecha_fin: text("fecha_fin").notNull(),
+  estado_gestion_id: text("estado_gestion_id")
     .notNull()
-    .default("ACTIVA"),
-  createdAt: text()
+    .references(() => estado.id),
+  estado_id: text("estado_id")
+    .notNull()
+    .references(() => estado.id),
+  created_at: text("created_at")
     .default(sql`(CURRENT_TIMESTAMP)`)
     .notNull(),
-  updatedAt: text()
+  updated_at: text("updated_at")
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),
-  estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
-    .notNull()
-    .default("activo"),
 });
 
-export const sucursal = sqliteTable("Sucursal", {
+export const sucursal = sqliteTable("sucursal", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
-  nombre: text().notNull(),
-  direccion: text().notNull(),
-  createdAt: text()
+  nombre: text("nombre").notNull(),
+  direccion: text("direccion").notNull(),
+  estado_id: text("estado_id")
+    .notNull()
+    .references(() => estado.id),
+  created_at: text("created_at")
     .default(sql`(CURRENT_TIMESTAMP)`)
     .notNull(),
-  updatedAt: text()
+  updated_at: text("updated_at")
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),
-  estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
-    .notNull()
-    .default("activo"),
 });
 
 export const curso = sqliteTable(
-  "Curso",
+  "curso",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    nombreCurso: text().notNull(),
-    precioBase: real().notNull(),
-    horasTeoricasReq: integer().notNull().default(0),
-    horasPracticasReq: integer().notNull().default(0),
-    gestionId: text().notNull(),
-    sucursalId: text().notNull(),
-    createdAt: text()
+    nombre_curso: text("nombre_curso").notNull(),
+    precio_base: real("precio_base").notNull(),
+    horas_teoricas_req: integer("horas_teoricas_req").notNull().default(0),
+    horas_practicas_req: integer("horas_practicas_req").notNull().default(0),
+    gestion_id: text("gestion_id").notNull(),
+    sucursal_id: text("sucursal_id").notNull(),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", {
-      enum: ["activo", "inactivo", "finalizado", "en curso", "programado"],
-    })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
-    foreignKey({ columns: [table.gestionId], foreignColumns: [gestion.id] })
+    foreignKey({ columns: [table.gestion_id], foreignColumns: [gestion.id] })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    foreignKey({ columns: [table.sucursalId], foreignColumns: [sucursal.id] })
+    foreignKey({ columns: [table.sucursal_id], foreignColumns: [sucursal.id] })
       .onUpdate("cascade")
       .onDelete("restrict"),
   ],
@@ -364,28 +381,28 @@ export const curso = sqliteTable(
 // ==========================================
 
 export const estudiante = sqliteTable(
-  "Estudiante",
+  "estudiante",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    personaId: integer("personaId").notNull().unique(),
-    codigoInterno: text("codigoInterno").unique(),
-    createdAt: text("createdAt")
+    persona_id: text("persona_id").notNull().unique(),
+    codigo_interno: text("codigo_interno").unique(),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text("updatedAt")
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
     foreignKey({
-      columns: [table.personaId],
+      columns: [table.persona_id],
       foreignColumns: [persona.id],
-      name: "Estudiante_personaId_fkey",
+      name: "estudiante_persona_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
@@ -393,80 +410,78 @@ export const estudiante = sqliteTable(
 );
 
 export const instructor = sqliteTable(
-  "Instructor",
+  "instructor",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    personaId: text("personaId").notNull().unique(),
-    nroLicencia: text("nroLicencia").notNull().unique(),
-    disponibilidadActiva: integer("disponibilidadActiva", { mode: "boolean" })
+    persona_id: text("persona_id").notNull().unique(),
+    nro_licencia: text("nro_licencia").notNull().unique(),
+    disponibilidad_activa: integer("disponibilidad_activa", { mode: "boolean" })
       .notNull()
       .default(true),
-    createdAt: text("createdAt")
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text("updatedAt")
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
     foreignKey({
-      columns: [table.personaId],
+      columns: [table.persona_id],
       foreignColumns: [persona.id],
-      name: "Instructor_personaId_fkey",
+      name: "instructor_persona_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
   ],
 );
 
-export const vehiculo = sqliteTable("Vehiculo", {
+export const vehiculo = sqliteTable("vehiculo", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
-  placa: text().notNull().unique(),
-  marca: text().notNull(),
-  estadoOperativo: text("EstadoOperativo", {
-    enum: ["DISPONIBLE", "MANTENIMIENTO", "AVERIADO"],
-  })
+  placa: text("placa").notNull().unique(),
+  marca: text("marca").notNull(),
+  estado_operativo_id: text("estado_operativo_id")
     .notNull()
-    .default("DISPONIBLE"),
-  createdAt: text()
+    .references(() => estado.id),
+  estado_id: text("estado_id")
+    .notNull()
+    .references(() => estado.id),
+  created_at: text("created_at")
     .default(sql`(CURRENT_TIMESTAMP)`)
     .notNull(),
-  updatedAt: text()
+  updated_at: text("updated_at")
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),
-  estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
-    .notNull()
-    .default("activo"),
 });
 
 export const aula = sqliteTable(
-  "Aula",
+  "aula",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    nombre: text().notNull(),
-    capacidad: integer().notNull(),
-    sucursalId: text().notNull(),
-    createdAt: text()
+    nombre: text("nombre").notNull(),
+    capacidad: integer("capacidad").notNull(),
+    sucursal_id: text("sucursal_id").notNull(),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
-    foreignKey({ columns: [table.sucursalId], foreignColumns: [sucursal.id] })
+    foreignKey({ columns: [table.sucursal_id], foreignColumns: [sucursal.id] })
       .onUpdate("cascade")
       .onDelete("restrict"),
   ],
@@ -477,53 +492,49 @@ export const aula = sqliteTable(
 // ==========================================
 
 export const inscripcion = sqliteTable(
-  "Inscripcion",
+  "inscripcion",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    estudianteId: text().notNull(),
-    cursoId: text().notNull(),
-    gestionId: text().notNull(),
-    precioPactado: real().notNull(),
-    fechaInicio: text().notNull().default("2026-01-01"), // Valor temporal
-    fechaFin: text().notNull().default("2026-12-31"),
-    horarioPlantillaId: integer("horarioPlantillaId").notNull(),
-    fechaInscripcion: text()
+    estudiante_id: text("estudiante_id").notNull(),
+    curso_id: text("curso_id").notNull(),
+    gestion_id: text("gestion_id").notNull(),
+    precio_pactado: real("precio_pactado").notNull(),
+    fecha_inicio: text("fecha_inicio").notNull().default("2026-01-01"),
+    fecha_fin: text("fecha_fin").notNull().default("2026-12-31"),
+    horario_plantilla_id: text("horario_plantilla_id").notNull(),
+    fecha_inscripcion: text("fecha_inscripcion")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    estadoInscripcion: text("EstadoInscripcion", {
-      enum: ["pendiente", "reprobado", "aprobado"],
-    })
+    estado_inscripcion_id: text("estado_inscripcion_id")
       .notNull()
-      .default("pendiente"),
-    createdAt: text()
+      .references(() => estado.id),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", {
-      enum: ["activo", "inactivo", "pendiente", "finalizada", "abandonada"],
-    })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
     foreignKey({
-      columns: [table.estudianteId],
+      columns: [table.estudiante_id],
       foreignColumns: [estudiante.id],
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    foreignKey({ columns: [table.cursoId], foreignColumns: [curso.id] })
+    foreignKey({ columns: [table.curso_id], foreignColumns: [curso.id] })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    foreignKey({ columns: [table.gestionId], foreignColumns: [gestion.id] })
+    foreignKey({ columns: [table.gestion_id], foreignColumns: [gestion.id] })
       .onUpdate("cascade")
       .onDelete("restrict"),
     foreignKey({
-      columns: [table.horarioPlantillaId],
+      columns: [table.horario_plantilla_id],
       foreignColumns: [horarioPlantilla.id],
     })
       .onUpdate("cascade")
@@ -532,32 +543,33 @@ export const inscripcion = sqliteTable(
 );
 
 export const pago = sqliteTable(
-  "Pago",
+  "pago",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    inscripcionId: text().notNull(),
-    montoPagado: real().notNull(),
-    fechaPago: text()
+    inscripcion_id: text("inscripcion_id").notNull(),
+    monto_pagado: real("monto_pagado").notNull(),
+    fecha_pago: text("fecha_pago")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    metodoPago: text("MetodoPago", {
-      enum: ["EFECTIVO", "TARJETA", "TRANSFERENCIA"],
-    }).notNull(),
-    createdAt: text()
+    // Referencia a Catálogo (Método de Pago)
+    metodo_pago_id: text("metodo_pago_id")
+      .notNull()
+      .references(() => catalogo.id),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
     foreignKey({
-      columns: [table.inscripcionId],
+      columns: [table.inscripcion_id],
       foreignColumns: [inscripcion.id],
     })
       .onUpdate("cascade")
@@ -570,59 +582,49 @@ export const pago = sqliteTable(
 // ==========================================
 
 export const horarioPlantilla = sqliteTable(
-  "HorarioPlantilla",
+  "horario_plantilla",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    nombre: text().notNull(),
-    diaSemana: text("diaSemana", {
-      enum: [
-        "LUNES",
-        "MARTES",
-        "MIERCOLES",
-        "JUEVES",
-        "VIERNES",
-        "SABADO",
-        "DOMINGO",
-      ],
-    }).notNull(),
-    horaInicio: text().notNull(),
-    horaFin: text().notNull(),
-    tipo: text("TipoClase", { enum: ["TEORICO", "PRACTICO"] }).notNull(),
-
-    instructorId: integer(),
-    aulaId: integer(),
-
-    cursoId: text().notNull(), // El curso sí es obligatorio para que el horario exista
-
-    createdAt: text()
+    nombre: text("nombre").notNull(),
+    // Referencias a Catálogo
+    dia_semana_id: text("dia_semana_id")
+      .notNull()
+      .references(() => catalogo.id),
+    tipo_clase_id: text("tipo_clase_id")
+      .notNull()
+      .references(() => catalogo.id),
+    hora_inicio: text("hora_inicio").notNull(),
+    hora_fin: text("hora_fin").notNull(),
+    instructor_id: text("instructor_id"),
+    aula_id: text("aula_id"),
+    curso_id: text("curso_id").notNull(),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
     foreignKey({
-      columns: [table.instructorId],
+      columns: [table.instructor_id],
       foreignColumns: [instructor.id],
     })
       .onUpdate("cascade")
-      .onDelete("set null"), // Importante: set null si se borra el instructor
-
+      .onDelete("set null"),
     foreignKey({
-      columns: [table.aulaId],
+      columns: [table.aula_id],
       foreignColumns: [aula.id],
     })
       .onUpdate("cascade")
       .onDelete("set null"),
-
     foreignKey({
-      columns: [table.cursoId],
+      columns: [table.curso_id],
       foreignColumns: [curso.id],
     })
       .onUpdate("cascade")
@@ -631,90 +633,87 @@ export const horarioPlantilla = sqliteTable(
 );
 
 export const claseTeorica = sqliteTable(
-  "ClaseTeorica",
+  "clase_teorica",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    horarioPlantillaId: integer(),
-    aulaId: text().notNull(),
-    cursoId: text().notNull(),
-    fechaExacta: text().notNull(),
-    horaInicio: text().notNull(), // Ej: "14:00"
-    horaFin: text().notNull(), // Ej: "15:00"
-    estadoClase: text("EstadoClase", {
-      enum: ["PROGRAMADA", "DICTADA", "CANCELADA"],
-    })
+    horario_plantilla_id: text("horario_plantilla_id"),
+    aula_id: text("aula_id").notNull(),
+    curso_id: text("curso_id").notNull(),
+    fecha_exacta: text("fecha_exacta").notNull(),
+    hora_inicio: text("hora_inicio").notNull(),
+    hora_fin: text("hora_fin").notNull(),
+    // Unificado a estado_academico_id
+    estado_academico_id: text("estado_academico_id")
       .notNull()
-      .default("PROGRAMADA"),
-    createdAt: text()
+      .references(() => estado.id),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
-    foreignKey({ columns: [table.cursoId], foreignColumns: [curso.id] })
+    foreignKey({ columns: [table.curso_id], foreignColumns: [curso.id] })
       .onUpdate("cascade")
       .onDelete("restrict"),
     foreignKey({
-      columns: [table.horarioPlantillaId],
+      columns: [table.horario_plantilla_id],
       foreignColumns: [horarioPlantilla.id],
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    foreignKey({ columns: [table.aulaId], foreignColumns: [aula.id] })
+    foreignKey({ columns: [table.aula_id], foreignColumns: [aula.id] })
       .onUpdate("cascade")
       .onDelete("restrict"),
   ],
 );
 
 export const clasePractica = sqliteTable(
-  "ClasePractica",
+  "clase_practica",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-
-    inscripcionId: text().notNull(),
-    instructorId: integer(), // El instructor asignado para esta hora
-    vehiculoId: integer(),
-    fechaExacta: text().notNull(),
-    horaInicio: text().notNull(), // Ej: "14:00"
-    horaFin: text().notNull(), // Ej: "15:00"
-    estadoClase: text("EstadoClase", {
-      enum: ["PROGRAMADA", "COMPLETADA", "CANCELADA"],
-    })
+    inscripcion_id: text("inscripcion_id").notNull(),
+    instructor_id: text("instructor_id"),
+    vehiculo_id: text("vehiculo_id"),
+    fecha_exacta: text("fecha_exacta").notNull(),
+    hora_inicio: text("hora_inicio").notNull(),
+    hora_fin: text("hora_fin").notNull(),
+    // Unificado a estado_academico_id
+    estado_academico_id: text("estado_academico_id")
       .notNull()
-      .default("PROGRAMADA"),
-    createdAt: text()
+      .references(() => estado.id),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    estado: text("Estado", { enum: ["activo", "inactivo", "pendiente"] })
-      .notNull()
-      .default("activo"),
   },
   (table) => [
     foreignKey({
-      columns: [table.inscripcionId],
+      columns: [table.inscripcion_id],
       foreignColumns: [inscripcion.id],
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
     foreignKey({
-      columns: [table.instructorId],
+      columns: [table.instructor_id],
       foreignColumns: [instructor.id],
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    foreignKey({ columns: [table.vehiculoId], foreignColumns: [vehiculo.id] })
+    foreignKey({ columns: [table.vehiculo_id], foreignColumns: [vehiculo.id] })
       .onUpdate("cascade")
       .onDelete("restrict"),
   ],
@@ -725,183 +724,179 @@ export const clasePractica = sqliteTable(
 // ==========================================
 
 export const asistenciaGeneral = sqliteTable(
-  "AsistenciaGeneral",
+  "asistencia_general",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    inscripcionId: text().notNull(),
-    claseTeoricaId: integer(), // Null si asiste a práctica
-    clasePracticaId: integer(), // Null si asiste a teoría
-    estadoAsistencia: text("EstadoAsistencia", {
-      enum: ["PROGRAMADA", "PRESENTE", "FALTA", "REPROGRAMADA"],
-    })
+    inscripcion_id: text("inscripcion_id").notNull(),
+    clase_teorica_id: text("clase_teorica_id"),
+    clase_practica_id: text("clase_practica_id"),
+    estado_id: text("estado_id")
       .notNull()
-      .default("PROGRAMADA"),
-    esReprogramado: integer({ mode: "boolean" }).notNull().default(false), // True si proviene de un cambio
-    createdAt: text()
+      .references(() => estado.id),
+    // Unificado a estado_academico_id
+    estado_academico_id: text("estado_academico_id")
+      .notNull()
+      .references(() => estado.id),
+    es_reprogramado: integer("es_reprogramado", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
-    updatedAt: text()
+    updated_at: text("updated_at")
       .notNull()
       .default(sql`(CURRENT_TIMESTAMP)`),
-    // Al ser una tabla N:N puramente transaccional/operativa, NO lleva "estado" (soft delete).
-    // Si se cancela, su "estadoAsistencia" cambia a REPROGRAMADA u otro estado lógico.
   },
   (table) => [
     foreignKey({
-      columns: [table.inscripcionId],
+      columns: [table.inscripcion_id],
       foreignColumns: [inscripcion.id],
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
     foreignKey({
-      columns: [table.claseTeoricaId],
+      columns: [table.clase_teorica_id],
       foreignColumns: [claseTeorica.id],
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
     foreignKey({
-      columns: [table.clasePracticaId],
+      columns: [table.clase_practica_id],
       foreignColumns: [clasePractica.id],
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
   ],
 );
+
 export const tema = sqliteTable(
-  "Tema",
+  "tema",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    cursoId: text().notNull(),
-    titulo: text().notNull(), // Ej: "Ley de Tránsito Art. 10", "Parqueo en reversa"
-    tipo: text("TipoTema", { enum: ["TEORICO", "PRACTICO"] }).notNull(),
-    orden: integer().default(0), // Para saber qué enseñar primero
-    estado: text("Estado", { enum: ["activo", "inactivo"] })
-      .default("activo")
-      .notNull(),
+    curso_id: text("curso_id").notNull(),
+    titulo: text("titulo").notNull(),
+
+    // Referencia a Catálogo
+    tipo_tema_id: text("tipo_tema_id")
+      .notNull()
+      .references(() => catalogo.id),
+    orden: integer("orden").default(0),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
   },
   (table) => [
     foreignKey({
-      columns: [table.cursoId],
+      columns: [table.curso_id],
       foreignColumns: [curso.id],
     }).onDelete("cascade"),
   ],
 );
+
 export const avanceClase = sqliteTable(
-  "AvanceClase",
+  "avance_clase",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    temaId: text().notNull(),
-
-    // Si es teoría, se asocia a la clase general (todos avanzan lo mismo)
-    claseTeoricaId: integer(),
-
-    // Si es práctica, se asocia a la clase individual del alumno
-    clasePracticaId: integer(),
-
-    createdAt: text()
+    tema_id: text("tema_id").notNull(),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    clase_teorica_id: text("clase_teorica_id"),
+    clase_practica_id: text("clase_practica_id"),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
   },
   (table) => [
-    foreignKey({ columns: [table.temaId], foreignColumns: [tema.id] }).onDelete(
-      "cascade",
-    ),
     foreignKey({
-      columns: [table.claseTeoricaId],
+      columns: [table.tema_id],
+      foreignColumns: [tema.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.clase_teorica_id],
       foreignColumns: [claseTeorica.id],
     }).onDelete("cascade"),
     foreignKey({
-      columns: [table.clasePracticaId],
+      columns: [table.clase_practica_id],
       foreignColumns: [clasePractica.id],
     }).onDelete("cascade"),
   ],
 );
-// 1. EL EVENTO (Lo que crea el administrador o instructor)
+
 export const examenProgramado = sqliteTable(
-  "ExamenProgramado",
+  "examen_programado",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    cursoId: text().notNull(),
-    titulo: text().notNull(), // Ej: "Examen Final de Normativa" o "Prueba de Parqueo"
-    tipoExamen: text("TipoExamen", {
-      enum: ["TEORICO", "PRACTICO"],
-    }).notNull(),
-    fechaExacta: text().notNull(), // Cuándo se tomará
-    estado: text("Estado", {
-      enum: ["PROGRAMADO", "COMPLETADO", "CANCELADO"],
-    })
-      .default("PROGRAMADO")
-      .notNull(),
-    createdAt: text()
+    curso_id: text("curso_id").notNull(),
+    titulo: text("titulo").notNull(),
+    // Referencia a Catálogo
+    tipo_examen_id: text("tipo_examen_id")
+      .notNull()
+      .references(() => catalogo.id),
+    fecha_exacta: text("fecha_exacta").notNull(),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    created_at: text("created_at")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
   },
   (table) => [
     foreignKey({
-      columns: [table.cursoId],
+      columns: [table.curso_id],
       foreignColumns: [curso.id],
     }).onDelete("cascade"),
   ],
 );
 
-// 2. EL RESULTADO (La nota de cada alumno)
 export const evaluacionEstudiante = sqliteTable(
-  "EvaluacionEstudiante",
+  "evaluacion_estudiante",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    examenProgramadoId: text().notNull(),
-    inscripcionId: text().notNull(), // Quién dio el examen
-
-    nota: real(), // Puede ser NULL hasta que el instructor la llene
-    observaciones: text(),
-
-    estadoAsistencia: text("EstadoAsistencia", {
-      enum: ["PRESENTE", "FALTA"],
-    })
-      .default("PRESENTE")
-      .notNull(),
-
-    fechaCalificacion: text()
+    examen_programado_id: text("examen_programado_id").notNull(),
+    inscripcion_id: text("inscripcion_id").notNull(),
+    nota: real("nota"),
+    observaciones: text("observaciones"),
+    estado_id: text("estado_id")
+      .notNull()
+      .references(() => estado.id),
+    // Unificado a estado_academico_id
+    estado_academico_id: text("estado_academico_id")
+      .notNull()
+      .references(() => estado.id),
+    fecha_calificacion: text("fecha_calificacion")
       .default(sql`(CURRENT_TIMESTAMP)`)
       .notNull(),
   },
   (table) => [
-    // Clave única: Un alumno no puede tener dos notas para el mismo examen exacto
-    uniqueIndex("Evaluacion_Unica_key").on(
-      table.examenProgramadoId,
-      table.inscripcionId,
+    uniqueIndex("evaluacion_unica_key").on(
+      table.examen_programado_id,
+      table.inscripcion_id,
     ),
-
     foreignKey({
-      columns: [table.examenProgramadoId],
+      columns: [table.examen_programado_id],
       foreignColumns: [examenProgramado.id],
     }).onDelete("cascade"),
     foreignKey({
-      columns: [table.inscripcionId],
+      columns: [table.inscripcion_id],
       foreignColumns: [inscripcion.id],
     }).onDelete("cascade"),
   ],
 );
-export const pendingSync = sqliteTable("PendingSync", {
-  id: text("id").primaryKey(), // UUID
-  tabla: text("tabla").notNull(),
-  metodo: text("metodo").notNull(), // 'run', 'execute', etc.
-  updatePayload: text("update_payload", { mode: "json" }).notNull(),
-  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
-});
-export const yjsDocs = sqliteTable("yjsDocs", {
-  doc_id: text("doc_id").primaryKey(), // uuid del registro
-  table_name: text("table_name").notNull(), // "persona", "pedido", etc.
-  state: text("state").notNull(), // Y.Doc serializado en base64
+
+export const yjsDocs = sqliteTable("yjs_docs", {
+  doc_id: text("doc_id").primaryKey(),
+  table_name: text("table_name").notNull(),
+  state: text("state").notNull(),
   dirty: integer("dirty", { mode: "boolean" }).notNull().default(false),
 });

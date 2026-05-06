@@ -1,11 +1,11 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "1192e05d-813e-465a-b409-73734f57f06a",
-  "prevId": "0cdf6ee8-ac27-4272-9d4b-99ab827c537d",
+  "id": "2b69aba7-f084-4c1f-bdb6-64c4a959f25f",
+  "prevId": "01063f12-a9f5-4640-bd35-861b4ef23558",
   "tables": {
-    "AsistenciaGeneral": {
-      "name": "AsistenciaGeneral",
+    "asistencia_general": {
+      "name": "asistencia_general",
       "columns": {
         "id": {
           "name": "id",
@@ -14,53 +14,59 @@
           "notNull": true,
           "autoincrement": false
         },
-        "inscripcionId": {
-          "name": "inscripcionId",
+        "inscripcion_id": {
+          "name": "inscripcion_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "claseTeoricaId": {
-          "name": "claseTeoricaId",
-          "type": "integer",
+        "clase_teorica_id": {
+          "name": "clase_teorica_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "clasePracticaId": {
-          "name": "clasePracticaId",
-          "type": "integer",
+        "clase_practica_id": {
+          "name": "clase_practica_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "EstadoAsistencia": {
-          "name": "EstadoAsistencia",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'PROGRAMADA'"
+          "autoincrement": false
         },
-        "esReprogramado": {
-          "name": "esReprogramado",
+        "estado_academico_id": {
+          "name": "estado_academico_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "es_reprogramado": {
+          "name": "es_reprogramado",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -70,12 +76,38 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "AsistenciaGeneral_inscripcionId_Inscripcion_id_fk": {
-          "name": "AsistenciaGeneral_inscripcionId_Inscripcion_id_fk",
-          "tableFrom": "AsistenciaGeneral",
-          "tableTo": "Inscripcion",
+        "asistencia_general_estado_id_estado_id_fk": {
+          "name": "asistencia_general_estado_id_estado_id_fk",
+          "tableFrom": "asistencia_general",
+          "tableTo": "estado",
           "columnsFrom": [
-            "inscripcionId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "asistencia_general_estado_academico_id_estado_id_fk": {
+          "name": "asistencia_general_estado_academico_id_estado_id_fk",
+          "tableFrom": "asistencia_general",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_academico_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "asistencia_general_inscripcion_id_inscripcion_id_fk": {
+          "name": "asistencia_general_inscripcion_id_inscripcion_id_fk",
+          "tableFrom": "asistencia_general",
+          "tableTo": "inscripcion",
+          "columnsFrom": [
+            "inscripcion_id"
           ],
           "columnsTo": [
             "id"
@@ -83,12 +115,12 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "AsistenciaGeneral_claseTeoricaId_ClaseTeorica_id_fk": {
-          "name": "AsistenciaGeneral_claseTeoricaId_ClaseTeorica_id_fk",
-          "tableFrom": "AsistenciaGeneral",
-          "tableTo": "ClaseTeorica",
+        "asistencia_general_clase_teorica_id_clase_teorica_id_fk": {
+          "name": "asistencia_general_clase_teorica_id_clase_teorica_id_fk",
+          "tableFrom": "asistencia_general",
+          "tableTo": "clase_teorica",
           "columnsFrom": [
-            "claseTeoricaId"
+            "clase_teorica_id"
           ],
           "columnsTo": [
             "id"
@@ -96,12 +128,12 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "AsistenciaGeneral_clasePracticaId_ClasePractica_id_fk": {
-          "name": "AsistenciaGeneral_clasePracticaId_ClasePractica_id_fk",
-          "tableFrom": "AsistenciaGeneral",
-          "tableTo": "ClasePractica",
+        "asistencia_general_clase_practica_id_clase_practica_id_fk": {
+          "name": "asistencia_general_clase_practica_id_clase_practica_id_fk",
+          "tableFrom": "asistencia_general",
+          "tableTo": "clase_practica",
           "columnsFrom": [
-            "clasePracticaId"
+            "clase_practica_id"
           ],
           "columnsTo": [
             "id"
@@ -114,8 +146,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Aula": {
-      "name": "Aula",
+    "aula": {
+      "name": "aula",
       "columns": {
         "id": {
           "name": "id",
@@ -133,51 +165,63 @@
         },
         "capacidad": {
           "name": "capacidad",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sucursal_id": {
+          "name": "sucursal_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "sucursalId": {
-          "name": "sucursalId",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "Aula_sucursalId_Sucursal_id_fk": {
-          "name": "Aula_sucursalId_Sucursal_id_fk",
-          "tableFrom": "Aula",
-          "tableTo": "Sucursal",
+        "aula_estado_id_estado_id_fk": {
+          "name": "aula_estado_id_estado_id_fk",
+          "tableFrom": "aula",
+          "tableTo": "estado",
           "columnsFrom": [
-            "sucursalId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "aula_sucursal_id_sucursal_id_fk": {
+          "name": "aula_sucursal_id_sucursal_id_fk",
+          "tableFrom": "aula",
+          "tableTo": "sucursal",
+          "columnsFrom": [
+            "sucursal_id"
           ],
           "columnsTo": [
             "id"
@@ -190,8 +234,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "AvanceClase": {
-      "name": "AvanceClase",
+    "avance_clase": {
+      "name": "avance_clase",
       "columns": {
         "id": {
           "name": "id",
@@ -200,29 +244,36 @@
           "notNull": true,
           "autoincrement": false
         },
-        "temaId": {
-          "name": "temaId",
+        "tema_id": {
+          "name": "tema_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "claseTeoricaId": {
-          "name": "claseTeoricaId",
-          "type": "integer",
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "clase_teorica_id": {
+          "name": "clase_teorica_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "clasePracticaId": {
-          "name": "clasePracticaId",
-          "type": "integer",
+        "clase_practica_id": {
+          "name": "clase_practica_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -232,12 +283,25 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "AvanceClase_temaId_Tema_id_fk": {
-          "name": "AvanceClase_temaId_Tema_id_fk",
-          "tableFrom": "AvanceClase",
-          "tableTo": "Tema",
+        "avance_clase_estado_id_estado_id_fk": {
+          "name": "avance_clase_estado_id_estado_id_fk",
+          "tableFrom": "avance_clase",
+          "tableTo": "estado",
           "columnsFrom": [
-            "temaId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "avance_clase_tema_id_tema_id_fk": {
+          "name": "avance_clase_tema_id_tema_id_fk",
+          "tableFrom": "avance_clase",
+          "tableTo": "tema",
+          "columnsFrom": [
+            "tema_id"
           ],
           "columnsTo": [
             "id"
@@ -245,12 +309,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "AvanceClase_claseTeoricaId_ClaseTeorica_id_fk": {
-          "name": "AvanceClase_claseTeoricaId_ClaseTeorica_id_fk",
-          "tableFrom": "AvanceClase",
-          "tableTo": "ClaseTeorica",
+        "avance_clase_clase_teorica_id_clase_teorica_id_fk": {
+          "name": "avance_clase_clase_teorica_id_clase_teorica_id_fk",
+          "tableFrom": "avance_clase",
+          "tableTo": "clase_teorica",
           "columnsFrom": [
-            "claseTeoricaId"
+            "clase_teorica_id"
           ],
           "columnsTo": [
             "id"
@@ -258,12 +322,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "AvanceClase_clasePracticaId_ClasePractica_id_fk": {
-          "name": "AvanceClase_clasePracticaId_ClasePractica_id_fk",
-          "tableFrom": "AvanceClase",
-          "tableTo": "ClasePractica",
+        "avance_clase_clase_practica_id_clase_practica_id_fk": {
+          "name": "avance_clase_clase_practica_id_clase_practica_id_fk",
+          "tableFrom": "avance_clase",
+          "tableTo": "clase_practica",
           "columnsFrom": [
-            "clasePracticaId"
+            "clase_practica_id"
           ],
           "columnsTo": [
             "id"
@@ -276,8 +340,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "ClasePractica": {
-      "name": "ClasePractica",
+    "catalogo": {
+      "name": "catalogo",
       "columns": {
         "id": {
           "name": "id",
@@ -286,89 +350,151 @@
           "notNull": true,
           "autoincrement": false
         },
-        "inscripcionId": {
-          "name": "inscripcionId",
+        "nombre": {
+          "name": "nombre",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "instructorId": {
-          "name": "instructorId",
-          "type": "integer",
+        "categoria": {
+          "name": "categoria",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "vehiculoId": {
-          "name": "vehiculoId",
-          "type": "integer",
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "clase_practica": {
+      "name": "clase_practica",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "inscripcion_id": {
+          "name": "inscripcion_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "instructor_id": {
+          "name": "instructor_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "fechaExacta": {
-          "name": "fechaExacta",
+        "vehiculo_id": {
+          "name": "vehiculo_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "fecha_exacta": {
+          "name": "fecha_exacta",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "horaInicio": {
-          "name": "horaInicio",
+        "hora_inicio": {
+          "name": "hora_inicio",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "horaFin": {
-          "name": "horaFin",
+        "hora_fin": {
+          "name": "hora_fin",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "EstadoClase": {
-          "name": "EstadoClase",
+        "estado_academico_id": {
+          "name": "estado_academico_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'PROGRAMADA'"
+          "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "ClasePractica_inscripcionId_Inscripcion_id_fk": {
-          "name": "ClasePractica_inscripcionId_Inscripcion_id_fk",
-          "tableFrom": "ClasePractica",
-          "tableTo": "Inscripcion",
+        "clase_practica_estado_academico_id_estado_id_fk": {
+          "name": "clase_practica_estado_academico_id_estado_id_fk",
+          "tableFrom": "clase_practica",
+          "tableTo": "estado",
           "columnsFrom": [
-            "inscripcionId"
+            "estado_academico_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "clase_practica_estado_id_estado_id_fk": {
+          "name": "clase_practica_estado_id_estado_id_fk",
+          "tableFrom": "clase_practica",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "clase_practica_inscripcion_id_inscripcion_id_fk": {
+          "name": "clase_practica_inscripcion_id_inscripcion_id_fk",
+          "tableFrom": "clase_practica",
+          "tableTo": "inscripcion",
+          "columnsFrom": [
+            "inscripcion_id"
           ],
           "columnsTo": [
             "id"
@@ -376,12 +502,12 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "ClasePractica_instructorId_Instructor_id_fk": {
-          "name": "ClasePractica_instructorId_Instructor_id_fk",
-          "tableFrom": "ClasePractica",
-          "tableTo": "Instructor",
+        "clase_practica_instructor_id_instructor_id_fk": {
+          "name": "clase_practica_instructor_id_instructor_id_fk",
+          "tableFrom": "clase_practica",
+          "tableTo": "instructor",
           "columnsFrom": [
-            "instructorId"
+            "instructor_id"
           ],
           "columnsTo": [
             "id"
@@ -389,12 +515,12 @@
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
-        "ClasePractica_vehiculoId_Vehiculo_id_fk": {
-          "name": "ClasePractica_vehiculoId_Vehiculo_id_fk",
-          "tableFrom": "ClasePractica",
-          "tableTo": "Vehiculo",
+        "clase_practica_vehiculo_id_vehiculo_id_fk": {
+          "name": "clase_practica_vehiculo_id_vehiculo_id_fk",
+          "tableFrom": "clase_practica",
+          "tableTo": "vehiculo",
           "columnsFrom": [
-            "vehiculoId"
+            "vehiculo_id"
           ],
           "columnsTo": [
             "id"
@@ -407,8 +533,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "ClaseTeorica": {
-      "name": "ClaseTeorica",
+    "clase_teorica": {
+      "name": "clase_teorica",
       "columns": {
         "id": {
           "name": "id",
@@ -417,89 +543,113 @@
           "notNull": true,
           "autoincrement": false
         },
-        "horarioPlantillaId": {
-          "name": "horarioPlantillaId",
-          "type": "integer",
+        "horario_plantilla_id": {
+          "name": "horario_plantilla_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "aulaId": {
-          "name": "aulaId",
+        "aula_id": {
+          "name": "aula_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "cursoId": {
-          "name": "cursoId",
+        "curso_id": {
+          "name": "curso_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "fechaExacta": {
-          "name": "fechaExacta",
+        "fecha_exacta": {
+          "name": "fecha_exacta",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "horaInicio": {
-          "name": "horaInicio",
+        "hora_inicio": {
+          "name": "hora_inicio",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "horaFin": {
-          "name": "horaFin",
+        "hora_fin": {
+          "name": "hora_fin",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "EstadoClase": {
-          "name": "EstadoClase",
+        "estado_academico_id": {
+          "name": "estado_academico_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'PROGRAMADA'"
+          "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "autoincrement": false
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "Estado": {
-          "name": "Estado",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'activo'"
+          "default": "(CURRENT_TIMESTAMP)"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "ClaseTeorica_cursoId_Curso_id_fk": {
-          "name": "ClaseTeorica_cursoId_Curso_id_fk",
-          "tableFrom": "ClaseTeorica",
-          "tableTo": "Curso",
+        "clase_teorica_estado_academico_id_estado_id_fk": {
+          "name": "clase_teorica_estado_academico_id_estado_id_fk",
+          "tableFrom": "clase_teorica",
+          "tableTo": "estado",
           "columnsFrom": [
-            "cursoId"
+            "estado_academico_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "clase_teorica_estado_id_estado_id_fk": {
+          "name": "clase_teorica_estado_id_estado_id_fk",
+          "tableFrom": "clase_teorica",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "clase_teorica_curso_id_curso_id_fk": {
+          "name": "clase_teorica_curso_id_curso_id_fk",
+          "tableFrom": "clase_teorica",
+          "tableTo": "curso",
+          "columnsFrom": [
+            "curso_id"
           ],
           "columnsTo": [
             "id"
@@ -507,12 +657,12 @@
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
-        "ClaseTeorica_horarioPlantillaId_HorarioPlantilla_id_fk": {
-          "name": "ClaseTeorica_horarioPlantillaId_HorarioPlantilla_id_fk",
-          "tableFrom": "ClaseTeorica",
-          "tableTo": "HorarioPlantilla",
+        "clase_teorica_horario_plantilla_id_horario_plantilla_id_fk": {
+          "name": "clase_teorica_horario_plantilla_id_horario_plantilla_id_fk",
+          "tableFrom": "clase_teorica",
+          "tableTo": "horario_plantilla",
           "columnsFrom": [
-            "horarioPlantillaId"
+            "horario_plantilla_id"
           ],
           "columnsTo": [
             "id"
@@ -520,12 +670,12 @@
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
-        "ClaseTeorica_aulaId_Aula_id_fk": {
-          "name": "ClaseTeorica_aulaId_Aula_id_fk",
-          "tableFrom": "ClaseTeorica",
-          "tableTo": "Aula",
+        "clase_teorica_aula_id_aula_id_fk": {
+          "name": "clase_teorica_aula_id_aula_id_fk",
+          "tableFrom": "clase_teorica",
+          "tableTo": "aula",
           "columnsFrom": [
-            "aulaId"
+            "aula_id"
           ],
           "columnsTo": [
             "id"
@@ -538,8 +688,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Curso": {
-      "name": "Curso",
+    "curso": {
+      "name": "curso",
       "columns": {
         "id": {
           "name": "id",
@@ -548,81 +698,95 @@
           "notNull": true,
           "autoincrement": false
         },
-        "nombreCurso": {
-          "name": "nombreCurso",
+        "nombre_curso": {
+          "name": "nombre_curso",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "precioBase": {
-          "name": "precioBase",
+        "precio_base": {
+          "name": "precio_base",
           "type": "real",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "horasTeoricasReq": {
-          "name": "horasTeoricasReq",
+        "horas_teoricas_req": {
+          "name": "horas_teoricas_req",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "horas_practicas_req": {
+          "name": "horas_practicas_req",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "gestion_id": {
+          "name": "gestion_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "horasPracticasReq": {
-          "name": "horasPracticasReq",
+        "sucursal_id": {
+          "name": "sucursal_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "gestionId": {
-          "name": "gestionId",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "sucursalId": {
-          "name": "sucursalId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "Curso_gestionId_Gestion_id_fk": {
-          "name": "Curso_gestionId_Gestion_id_fk",
-          "tableFrom": "Curso",
-          "tableTo": "Gestion",
+        "curso_estado_id_estado_id_fk": {
+          "name": "curso_estado_id_estado_id_fk",
+          "tableFrom": "curso",
+          "tableTo": "estado",
           "columnsFrom": [
-            "gestionId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "curso_gestion_id_gestion_id_fk": {
+          "name": "curso_gestion_id_gestion_id_fk",
+          "tableFrom": "curso",
+          "tableTo": "gestion",
+          "columnsFrom": [
+            "gestion_id"
           ],
           "columnsTo": [
             "id"
@@ -630,12 +794,12 @@
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
-        "Curso_sucursalId_Sucursal_id_fk": {
-          "name": "Curso_sucursalId_Sucursal_id_fk",
-          "tableFrom": "Curso",
-          "tableTo": "Sucursal",
+        "curso_sucursal_id_sucursal_id_fk": {
+          "name": "curso_sucursal_id_sucursal_id_fk",
+          "tableFrom": "curso",
+          "tableTo": "sucursal",
           "columnsFrom": [
-            "sucursalId"
+            "sucursal_id"
           ],
           "columnsTo": [
             "id"
@@ -648,8 +812,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Estudiante": {
-      "name": "Estudiante",
+    "estado": {
+      "name": "estado",
       "columns": {
         "id": {
           "name": "id",
@@ -658,68 +822,118 @@
           "notNull": true,
           "autoincrement": false
         },
-        "personaId": {
-          "name": "personaId",
-          "type": "integer",
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "codigoInterno": {
-          "name": "codigoInterno",
+        "categoria": {
+          "name": "categoria",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "estudiante": {
+      "name": "estudiante",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "persona_id": {
+          "name": "persona_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "codigo_interno": {
+          "name": "codigo_interno",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {
-        "Estudiante_personaId_unique": {
-          "name": "Estudiante_personaId_unique",
+        "estudiante_persona_id_unique": {
+          "name": "estudiante_persona_id_unique",
           "columns": [
-            "personaId"
+            "persona_id"
           ],
           "isUnique": true
         },
-        "Estudiante_codigoInterno_unique": {
-          "name": "Estudiante_codigoInterno_unique",
+        "estudiante_codigo_interno_unique": {
+          "name": "estudiante_codigo_interno_unique",
           "columns": [
-            "codigoInterno"
+            "codigo_interno"
           ],
           "isUnique": true
         }
       },
       "foreignKeys": {
-        "Estudiante_personaId_fkey": {
-          "name": "Estudiante_personaId_fkey",
-          "tableFrom": "Estudiante",
-          "tableTo": "Persona",
+        "estudiante_estado_id_estado_id_fk": {
+          "name": "estudiante_estado_id_estado_id_fk",
+          "tableFrom": "estudiante",
+          "tableTo": "estado",
           "columnsFrom": [
-            "personaId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "estudiante_persona_id_fkey": {
+          "name": "estudiante_persona_id_fkey",
+          "tableFrom": "estudiante",
+          "tableTo": "persona",
+          "columnsFrom": [
+            "persona_id"
           ],
           "columnsTo": [
             "id"
@@ -732,8 +946,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "EvaluacionEstudiante": {
-      "name": "EvaluacionEstudiante",
+    "evaluacion_estudiante": {
+      "name": "evaluacion_estudiante",
       "columns": {
         "id": {
           "name": "id",
@@ -742,15 +956,15 @@
           "notNull": true,
           "autoincrement": false
         },
-        "examenProgramadoId": {
-          "name": "examenProgramadoId",
+        "examen_programado_id": {
+          "name": "examen_programado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "inscripcionId": {
-          "name": "inscripcionId",
+        "inscripcion_id": {
+          "name": "inscripcion_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -770,16 +984,22 @@
           "notNull": false,
           "autoincrement": false
         },
-        "EstadoAsistencia": {
-          "name": "EstadoAsistencia",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'PRESENTE'"
+          "autoincrement": false
         },
-        "fechaCalificacion": {
-          "name": "fechaCalificacion",
+        "estado_academico_id": {
+          "name": "estado_academico_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fecha_calificacion": {
+          "name": "fecha_calificacion",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -788,22 +1008,48 @@
         }
       },
       "indexes": {
-        "Evaluacion_Unica_key": {
-          "name": "Evaluacion_Unica_key",
+        "evaluacion_unica_key": {
+          "name": "evaluacion_unica_key",
           "columns": [
-            "examenProgramadoId",
-            "inscripcionId"
+            "examen_programado_id",
+            "inscripcion_id"
           ],
           "isUnique": true
         }
       },
       "foreignKeys": {
-        "EvaluacionEstudiante_examenProgramadoId_ExamenProgramado_id_fk": {
-          "name": "EvaluacionEstudiante_examenProgramadoId_ExamenProgramado_id_fk",
-          "tableFrom": "EvaluacionEstudiante",
-          "tableTo": "ExamenProgramado",
+        "evaluacion_estudiante_estado_id_estado_id_fk": {
+          "name": "evaluacion_estudiante_estado_id_estado_id_fk",
+          "tableFrom": "evaluacion_estudiante",
+          "tableTo": "estado",
           "columnsFrom": [
-            "examenProgramadoId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "evaluacion_estudiante_estado_academico_id_estado_id_fk": {
+          "name": "evaluacion_estudiante_estado_academico_id_estado_id_fk",
+          "tableFrom": "evaluacion_estudiante",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_academico_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "evaluacion_estudiante_examen_programado_id_examen_programado_id_fk": {
+          "name": "evaluacion_estudiante_examen_programado_id_examen_programado_id_fk",
+          "tableFrom": "evaluacion_estudiante",
+          "tableTo": "examen_programado",
+          "columnsFrom": [
+            "examen_programado_id"
           ],
           "columnsTo": [
             "id"
@@ -811,12 +1057,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "EvaluacionEstudiante_inscripcionId_Inscripcion_id_fk": {
-          "name": "EvaluacionEstudiante_inscripcionId_Inscripcion_id_fk",
-          "tableFrom": "EvaluacionEstudiante",
-          "tableTo": "Inscripcion",
+        "evaluacion_estudiante_inscripcion_id_inscripcion_id_fk": {
+          "name": "evaluacion_estudiante_inscripcion_id_inscripcion_id_fk",
+          "tableFrom": "evaluacion_estudiante",
+          "tableTo": "inscripcion",
           "columnsFrom": [
-            "inscripcionId"
+            "inscripcion_id"
           ],
           "columnsTo": [
             "id"
@@ -829,8 +1075,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "ExamenProgramado": {
-      "name": "ExamenProgramado",
+    "examen_programado": {
+      "name": "examen_programado",
       "columns": {
         "id": {
           "name": "id",
@@ -839,8 +1085,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "cursoId": {
-          "name": "cursoId",
+        "curso_id": {
+          "name": "curso_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -853,30 +1099,29 @@
           "notNull": true,
           "autoincrement": false
         },
-        "TipoExamen": {
-          "name": "TipoExamen",
+        "tipo_examen_id": {
+          "name": "tipo_examen_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "fechaExacta": {
-          "name": "fechaExacta",
+        "fecha_exacta": {
+          "name": "fecha_exacta",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "Estado": {
-          "name": "Estado",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'PROGRAMADO'"
+          "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -886,12 +1131,38 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "ExamenProgramado_cursoId_Curso_id_fk": {
-          "name": "ExamenProgramado_cursoId_Curso_id_fk",
-          "tableFrom": "ExamenProgramado",
-          "tableTo": "Curso",
+        "examen_programado_tipo_examen_id_catalogo_id_fk": {
+          "name": "examen_programado_tipo_examen_id_catalogo_id_fk",
+          "tableFrom": "examen_programado",
+          "tableTo": "catalogo",
           "columnsFrom": [
-            "cursoId"
+            "tipo_examen_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "examen_programado_estado_id_estado_id_fk": {
+          "name": "examen_programado_estado_id_estado_id_fk",
+          "tableFrom": "examen_programado",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "examen_programado_curso_id_curso_id_fk": {
+          "name": "examen_programado_curso_id_curso_id_fk",
+          "tableFrom": "examen_programado",
+          "tableTo": "curso",
+          "columnsFrom": [
+            "curso_id"
           ],
           "columnsTo": [
             "id"
@@ -904,8 +1175,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Gestion": {
-      "name": "Gestion",
+    "gestion": {
+      "name": "gestion",
       "columns": {
         "id": {
           "name": "id",
@@ -921,158 +1192,221 @@
           "notNull": true,
           "autoincrement": false
         },
-        "fechaInicio": {
-          "name": "fechaInicio",
+        "fecha_inicio": {
+          "name": "fecha_inicio",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "fechaFin": {
-          "name": "fechaFin",
+        "fecha_fin": {
+          "name": "fecha_fin",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "EstadoGestion": {
-          "name": "EstadoGestion",
+        "estado_gestion_id": {
+          "name": "estado_gestion_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'ACTIVA'"
+          "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "autoincrement": false
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "HorarioPlantilla": {
-      "name": "HorarioPlantilla",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "nombre": {
-          "name": "nombre",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "diaSemana": {
-          "name": "diaSemana",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "horaInicio": {
-          "name": "horaInicio",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "horaFin": {
-          "name": "horaFin",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "TipoClase": {
-          "name": "TipoClase",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "instructorId": {
-          "name": "instructorId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "aulaId": {
-          "name": "aulaId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "cursoId": {
-          "name": "cursoId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "createdAt": {
-          "name": "createdAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "HorarioPlantilla_instructorId_Instructor_id_fk": {
-          "name": "HorarioPlantilla_instructorId_Instructor_id_fk",
-          "tableFrom": "HorarioPlantilla",
-          "tableTo": "Instructor",
+        "gestion_estado_gestion_id_estado_id_fk": {
+          "name": "gestion_estado_gestion_id_estado_id_fk",
+          "tableFrom": "gestion",
+          "tableTo": "estado",
           "columnsFrom": [
-            "instructorId"
+            "estado_gestion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "gestion_estado_id_estado_id_fk": {
+          "name": "gestion_estado_id_estado_id_fk",
+          "tableFrom": "gestion",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "horario_plantilla": {
+      "name": "horario_plantilla",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dia_semana_id": {
+          "name": "dia_semana_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tipo_clase_id": {
+          "name": "tipo_clase_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "hora_inicio": {
+          "name": "hora_inicio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "hora_fin": {
+          "name": "hora_fin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "instructor_id": {
+          "name": "instructor_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "aula_id": {
+          "name": "aula_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "curso_id": {
+          "name": "curso_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "horario_plantilla_dia_semana_id_catalogo_id_fk": {
+          "name": "horario_plantilla_dia_semana_id_catalogo_id_fk",
+          "tableFrom": "horario_plantilla",
+          "tableTo": "catalogo",
+          "columnsFrom": [
+            "dia_semana_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "horario_plantilla_tipo_clase_id_catalogo_id_fk": {
+          "name": "horario_plantilla_tipo_clase_id_catalogo_id_fk",
+          "tableFrom": "horario_plantilla",
+          "tableTo": "catalogo",
+          "columnsFrom": [
+            "tipo_clase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "horario_plantilla_estado_id_estado_id_fk": {
+          "name": "horario_plantilla_estado_id_estado_id_fk",
+          "tableFrom": "horario_plantilla",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "horario_plantilla_instructor_id_instructor_id_fk": {
+          "name": "horario_plantilla_instructor_id_instructor_id_fk",
+          "tableFrom": "horario_plantilla",
+          "tableTo": "instructor",
+          "columnsFrom": [
+            "instructor_id"
           ],
           "columnsTo": [
             "id"
@@ -1080,12 +1414,12 @@
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
-        "HorarioPlantilla_aulaId_Aula_id_fk": {
-          "name": "HorarioPlantilla_aulaId_Aula_id_fk",
-          "tableFrom": "HorarioPlantilla",
-          "tableTo": "Aula",
+        "horario_plantilla_aula_id_aula_id_fk": {
+          "name": "horario_plantilla_aula_id_aula_id_fk",
+          "tableFrom": "horario_plantilla",
+          "tableTo": "aula",
           "columnsFrom": [
-            "aulaId"
+            "aula_id"
           ],
           "columnsTo": [
             "id"
@@ -1093,12 +1427,12 @@
           "onDelete": "set null",
           "onUpdate": "cascade"
         },
-        "HorarioPlantilla_cursoId_Curso_id_fk": {
-          "name": "HorarioPlantilla_cursoId_Curso_id_fk",
-          "tableFrom": "HorarioPlantilla",
-          "tableTo": "Curso",
+        "horario_plantilla_curso_id_curso_id_fk": {
+          "name": "horario_plantilla_curso_id_curso_id_fk",
+          "tableFrom": "horario_plantilla",
+          "tableTo": "curso",
           "columnsFrom": [
-            "cursoId"
+            "curso_id"
           ],
           "columnsTo": [
             "id"
@@ -1111,8 +1445,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Inscripcion": {
-      "name": "Inscripcion",
+    "inscripcion": {
+      "name": "inscripcion",
       "columns": {
         "id": {
           "name": "id",
@@ -1121,106 +1455,130 @@
           "notNull": true,
           "autoincrement": false
         },
-        "estudianteId": {
-          "name": "estudianteId",
+        "estudiante_id": {
+          "name": "estudiante_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "cursoId": {
-          "name": "cursoId",
+        "curso_id": {
+          "name": "curso_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "gestionId": {
-          "name": "gestionId",
+        "gestion_id": {
+          "name": "gestion_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "precioPactado": {
-          "name": "precioPactado",
+        "precio_pactado": {
+          "name": "precio_pactado",
           "type": "real",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "fechaInicio": {
-          "name": "fechaInicio",
+        "fecha_inicio": {
+          "name": "fecha_inicio",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "'2026-01-01'"
         },
-        "fechaFin": {
-          "name": "fechaFin",
+        "fecha_fin": {
+          "name": "fecha_fin",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "'2026-12-31'"
         },
-        "horarioPlantillaId": {
-          "name": "horarioPlantillaId",
-          "type": "integer",
+        "horario_plantilla_id": {
+          "name": "horario_plantilla_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "fechaInscripcion": {
-          "name": "fechaInscripcion",
+        "fecha_inscripcion": {
+          "name": "fecha_inscripcion",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "EstadoInscripcion": {
-          "name": "EstadoInscripcion",
+        "estado_inscripcion_id": {
+          "name": "estado_inscripcion_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'pendiente'"
+          "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "Inscripcion_estudianteId_Estudiante_id_fk": {
-          "name": "Inscripcion_estudianteId_Estudiante_id_fk",
-          "tableFrom": "Inscripcion",
-          "tableTo": "Estudiante",
+        "inscripcion_estado_inscripcion_id_estado_id_fk": {
+          "name": "inscripcion_estado_inscripcion_id_estado_id_fk",
+          "tableFrom": "inscripcion",
+          "tableTo": "estado",
           "columnsFrom": [
-            "estudianteId"
+            "estado_inscripcion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "inscripcion_estado_id_estado_id_fk": {
+          "name": "inscripcion_estado_id_estado_id_fk",
+          "tableFrom": "inscripcion",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "inscripcion_estudiante_id_estudiante_id_fk": {
+          "name": "inscripcion_estudiante_id_estudiante_id_fk",
+          "tableFrom": "inscripcion",
+          "tableTo": "estudiante",
+          "columnsFrom": [
+            "estudiante_id"
           ],
           "columnsTo": [
             "id"
@@ -1228,12 +1586,12 @@
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
-        "Inscripcion_cursoId_Curso_id_fk": {
-          "name": "Inscripcion_cursoId_Curso_id_fk",
-          "tableFrom": "Inscripcion",
-          "tableTo": "Curso",
+        "inscripcion_curso_id_curso_id_fk": {
+          "name": "inscripcion_curso_id_curso_id_fk",
+          "tableFrom": "inscripcion",
+          "tableTo": "curso",
           "columnsFrom": [
-            "cursoId"
+            "curso_id"
           ],
           "columnsTo": [
             "id"
@@ -1241,12 +1599,12 @@
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
-        "Inscripcion_gestionId_Gestion_id_fk": {
-          "name": "Inscripcion_gestionId_Gestion_id_fk",
-          "tableFrom": "Inscripcion",
-          "tableTo": "Gestion",
+        "inscripcion_gestion_id_gestion_id_fk": {
+          "name": "inscripcion_gestion_id_gestion_id_fk",
+          "tableFrom": "inscripcion",
+          "tableTo": "gestion",
           "columnsFrom": [
-            "gestionId"
+            "gestion_id"
           ],
           "columnsTo": [
             "id"
@@ -1254,12 +1612,12 @@
           "onDelete": "restrict",
           "onUpdate": "cascade"
         },
-        "Inscripcion_horarioPlantillaId_HorarioPlantilla_id_fk": {
-          "name": "Inscripcion_horarioPlantillaId_HorarioPlantilla_id_fk",
-          "tableFrom": "Inscripcion",
-          "tableTo": "HorarioPlantilla",
+        "inscripcion_horario_plantilla_id_horario_plantilla_id_fk": {
+          "name": "inscripcion_horario_plantilla_id_horario_plantilla_id_fk",
+          "tableFrom": "inscripcion",
+          "tableTo": "horario_plantilla",
           "columnsFrom": [
-            "horarioPlantillaId"
+            "horario_plantilla_id"
           ],
           "columnsTo": [
             "id"
@@ -1272,8 +1630,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Instructor": {
-      "name": "Instructor",
+    "instructor": {
+      "name": "instructor",
       "columns": {
         "id": {
           "name": "id",
@@ -1282,76 +1640,88 @@
           "notNull": true,
           "autoincrement": false
         },
-        "personaId": {
-          "name": "personaId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "nroLicencia": {
-          "name": "nroLicencia",
+        "persona_id": {
+          "name": "persona_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "disponibilidadActiva": {
-          "name": "disponibilidadActiva",
+        "nro_licencia": {
+          "name": "nro_licencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "disponibilidad_activa": {
+          "name": "disponibilidad_activa",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": true
         },
-        "createdAt": {
-          "name": "createdAt",
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {
-        "Instructor_personaId_unique": {
-          "name": "Instructor_personaId_unique",
+        "instructor_persona_id_unique": {
+          "name": "instructor_persona_id_unique",
           "columns": [
-            "personaId"
+            "persona_id"
           ],
           "isUnique": true
         },
-        "Instructor_nroLicencia_unique": {
-          "name": "Instructor_nroLicencia_unique",
+        "instructor_nro_licencia_unique": {
+          "name": "instructor_nro_licencia_unique",
           "columns": [
-            "nroLicencia"
+            "nro_licencia"
           ],
           "isUnique": true
         }
       },
       "foreignKeys": {
-        "Instructor_personaId_fkey": {
-          "name": "Instructor_personaId_fkey",
-          "tableFrom": "Instructor",
-          "tableTo": "Persona",
+        "instructor_estado_id_estado_id_fk": {
+          "name": "instructor_estado_id_estado_id_fk",
+          "tableFrom": "instructor",
+          "tableTo": "estado",
           "columnsFrom": [
-            "personaId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "instructor_persona_id_fkey": {
+          "name": "instructor_persona_id_fkey",
+          "tableFrom": "instructor",
+          "tableTo": "persona",
+          "columnsFrom": [
+            "persona_id"
           ],
           "columnsTo": [
             "id"
@@ -1364,8 +1734,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Menu": {
-      "name": "Menu",
+    "menu": {
+      "name": "menu",
       "columns": {
         "id": {
           "name": "id",
@@ -1403,39 +1773,31 @@
           "autoincrement": false,
           "default": 0
         },
-        "padreId": {
-          "name": "padreId",
-          "type": "integer",
+        "padre_id": {
+          "name": "padre_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "Estado": {
-          "name": "Estado",
+        "recurso_id": {
+          "name": "recurso_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
-        },
-        "recursoId": {
-          "name": "recursoId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         }
       },
       "indexes": {
-        "Menu_recursoId_unique": {
-          "name": "Menu_recursoId_unique",
-          "columns": [
-            "recursoId"
-          ],
-          "isUnique": true
-        },
-        "Menu_ruta_key": {
-          "name": "Menu_ruta_key",
+        "menu_ruta_key": {
+          "name": "menu_ruta_key",
           "columns": [
             "ruta"
           ],
@@ -1443,12 +1805,25 @@
         }
       },
       "foreignKeys": {
-        "Menu_padreId_fkey": {
-          "name": "Menu_padreId_fkey",
-          "tableFrom": "Menu",
-          "tableTo": "Menu",
+        "menu_estado_id_estado_id_fk": {
+          "name": "menu_estado_id_estado_id_fk",
+          "tableFrom": "menu",
+          "tableTo": "estado",
           "columnsFrom": [
-            "padreId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "menu_padre_id_fkey": {
+          "name": "menu_padre_id_fkey",
+          "tableFrom": "menu",
+          "tableTo": "menu",
+          "columnsFrom": [
+            "padre_id"
           ],
           "columnsTo": [
             "id"
@@ -1456,12 +1831,12 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "Menu_recursoId_fkey": {
-          "name": "Menu_recursoId_fkey",
-          "tableFrom": "Menu",
-          "tableTo": "Recurso",
+        "menu_recurso_id_fkey": {
+          "name": "menu_recurso_id_fkey",
+          "tableFrom": "menu",
+          "tableTo": "recurso",
           "columnsFrom": [
-            "recursoId"
+            "recurso_id"
           ],
           "columnsTo": [
             "id"
@@ -1474,8 +1849,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Pago": {
-      "name": "Pago",
+    "pago": {
+      "name": "pago",
       "columns": {
         "id": {
           "name": "id",
@@ -1484,68 +1859,93 @@
           "notNull": true,
           "autoincrement": false
         },
-        "inscripcionId": {
-          "name": "inscripcionId",
+        "inscripcion_id": {
+          "name": "inscripcion_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "montoPagado": {
-          "name": "montoPagado",
+        "monto_pagado": {
+          "name": "monto_pagado",
           "type": "real",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "fechaPago": {
-          "name": "fechaPago",
+        "fecha_pago": {
+          "name": "fecha_pago",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "MetodoPago": {
-          "name": "MetodoPago",
+        "metodo_pago_id": {
+          "name": "metodo_pago_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "Pago_inscripcionId_Inscripcion_id_fk": {
-          "name": "Pago_inscripcionId_Inscripcion_id_fk",
-          "tableFrom": "Pago",
-          "tableTo": "Inscripcion",
+        "pago_metodo_pago_id_catalogo_id_fk": {
+          "name": "pago_metodo_pago_id_catalogo_id_fk",
+          "tableFrom": "pago",
+          "tableTo": "catalogo",
           "columnsFrom": [
-            "inscripcionId"
+            "metodo_pago_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pago_estado_id_estado_id_fk": {
+          "name": "pago_estado_id_estado_id_fk",
+          "tableFrom": "pago",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pago_inscripcion_id_inscripcion_id_fk": {
+          "name": "pago_inscripcion_id_inscripcion_id_fk",
+          "tableFrom": "pago",
+          "tableTo": "inscripcion",
+          "columnsFrom": [
+            "inscripcion_id"
           ],
           "columnsTo": [
             "id"
@@ -1558,54 +1958,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "PendingSync": {
-      "name": "PendingSync",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "tabla": {
-          "name": "tabla",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "metodo": {
-          "name": "metodo",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "update_payload": {
-          "name": "update_payload",
-          "type": "blob",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "Permiso": {
-      "name": "Permiso",
+    "permiso": {
+      "name": "permiso",
       "columns": {
         "id": {
           "name": "id",
@@ -1623,7 +1977,7 @@
         },
         "valor": {
           "name": "valor",
-          "type": "text",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1635,54 +1989,67 @@
           "notNull": false,
           "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {
-        "Permiso_nombre_key": {
-          "name": "Permiso_nombre_key",
+        "permiso_nombre_key": {
+          "name": "permiso_nombre_key",
           "columns": [
             "nombre"
           ],
           "isUnique": true
         },
-        "Permiso_valor_key": {
-          "name": "Permiso_valor_key",
+        "permiso_valor_key": {
+          "name": "permiso_valor_key",
           "columns": [
             "valor"
           ],
           "isUnique": true
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "permiso_estado_id_estado_id_fk": {
+          "name": "permiso_estado_id_estado_id_fk",
+          "tableFrom": "permiso",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Persona": {
-      "name": "Persona",
+    "persona": {
+      "name": "persona",
       "columns": {
         "id": {
           "name": "id",
@@ -1698,30 +2065,30 @@
           "notNull": true,
           "autoincrement": false
         },
-        "primerApellido": {
-          "name": "primerApellido",
+        "primer_apellido": {
+          "name": "primer_apellido",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "segundoApellido": {
-          "name": "segundoApellido",
+        "segundo_apellido": {
+          "name": "segundo_apellido",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "nroDocumento": {
-          "name": "nroDocumento",
-          "type": "text",
+        "nro_documento": {
+          "name": "nro_documento",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "nroCelular": {
-          "name": "nroCelular",
-          "type": "text",
+        "nro_celular": {
+          "name": "nro_celular",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1733,15 +2100,22 @@
           "notNull": true,
           "autoincrement": false
         },
-        "sexo": {
-          "name": "sexo",
+        "sexo_id": {
+          "name": "sexo_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "fechaNacimiento": {
-          "name": "fechaNacimiento",
+        "tipo_documento_id": {
+          "name": "tipo_documento_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fecha_nacimiento": {
+          "name": "fecha_nacimiento",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1754,61 +2128,93 @@
           "notNull": false,
           "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
-        },
-        "TipoDocumento": {
-          "name": "TipoDocumento",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "Estado": {
-          "name": "Estado",
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'activo'"
+          "default": "(CURRENT_TIMESTAMP)"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
         }
       },
       "indexes": {
-        "Persona_email_key": {
-          "name": "Persona_email_key",
+        "persona_email_key": {
+          "name": "persona_email_key",
           "columns": [
             "email"
           ],
           "isUnique": true
         },
-        "Persona_nroDocumento_key": {
-          "name": "Persona_nroDocumento_key",
+        "persona_nro_documento_key": {
+          "name": "persona_nro_documento_key",
           "columns": [
-            "nroDocumento"
+            "nro_documento"
           ],
           "isUnique": true
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "persona_sexo_id_catalogo_id_fk": {
+          "name": "persona_sexo_id_catalogo_id_fk",
+          "tableFrom": "persona",
+          "tableTo": "catalogo",
+          "columnsFrom": [
+            "sexo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "persona_tipo_documento_id_catalogo_id_fk": {
+          "name": "persona_tipo_documento_id_catalogo_id_fk",
+          "tableFrom": "persona",
+          "tableTo": "catalogo",
+          "columnsFrom": [
+            "tipo_documento_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "persona_estado_id_estado_id_fk": {
+          "name": "persona_estado_id_estado_id_fk",
+          "tableFrom": "persona",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Recurso": {
-      "name": "Recurso",
+    "recurso": {
+      "name": "recurso",
       "columns": {
         "id": {
           "name": "id",
@@ -1831,47 +2237,60 @@
           "notNull": true,
           "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {
-        "Recurso_ruta_key": {
-          "name": "Recurso_ruta_key",
+        "recurso_ruta_key": {
+          "name": "recurso_ruta_key",
           "columns": [
             "ruta"
           ],
           "isUnique": true
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "recurso_estado_id_estado_id_fk": {
+          "name": "recurso_estado_id_estado_id_fk",
+          "tableFrom": "recurso",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Rol": {
-      "name": "Rol",
+    "rol": {
+      "name": "rol",
       "columns": {
         "id": {
           "name": "id",
@@ -1894,41 +2313,61 @@
           "notNull": false,
           "autoincrement": false
         },
-        "Estado": {
-          "name": "Estado",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
+          "autoincrement": false
         }
       },
       "indexes": {
-        "Rol_nombre_key": {
-          "name": "Rol_nombre_key",
+        "rol_nombre_key": {
+          "name": "rol_nombre_key",
           "columns": [
             "nombre"
           ],
           "isUnique": true
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "rol_estado_id_estado_id_fk": {
+          "name": "rol_estado_id_estado_id_fk",
+          "tableFrom": "rol",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "RolesMenus": {
-      "name": "RolesMenus",
+    "roles_menus": {
+      "name": "roles_menus",
       "columns": {
-        "rolId": {
-          "name": "rolId",
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rol_id": {
+          "name": "rol_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "menuId": {
-          "name": "menuId",
+        "menu_id": {
+          "name": "menu_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1942,23 +2381,44 @@
           "autoincrement": false,
           "default": 1
         },
-        "Estado": {
-          "name": "Estado",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "roles_menus_key": {
+          "name": "roles_menus_key",
+          "columns": [
+            "rol_id",
+            "menu_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "RolesMenus_rolId_fkey": {
-          "name": "RolesMenus_rolId_fkey",
-          "tableFrom": "RolesMenus",
-          "tableTo": "Rol",
+        "roles_menus_estado_id_estado_id_fk": {
+          "name": "roles_menus_estado_id_estado_id_fk",
+          "tableFrom": "roles_menus",
+          "tableTo": "estado",
           "columnsFrom": [
-            "rolId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "roles_menus_rol_id_fkey": {
+          "name": "roles_menus_rol_id_fkey",
+          "tableFrom": "roles_menus",
+          "tableTo": "rol",
+          "columnsFrom": [
+            "rol_id"
           ],
           "columnsTo": [
             "id"
@@ -1966,12 +2426,12 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "RolesMenus_menuId_fkey": {
-          "name": "RolesMenus_menuId_fkey",
-          "tableFrom": "RolesMenus",
-          "tableTo": "Menu",
+        "roles_menus_menu_id_fkey": {
+          "name": "roles_menus_menu_id_fkey",
+          "tableFrom": "roles_menus",
+          "tableTo": "menu",
           "columnsFrom": [
-            "menuId"
+            "menu_id"
           ],
           "columnsTo": [
             "id"
@@ -1980,30 +2440,29 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {
-        "RolesMenus_pkey": {
-          "columns": [
-            "rolId",
-            "menuId"
-          ],
-          "name": "RolesMenus_pkey"
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "RolesRecursos": {
-      "name": "RolesRecursos",
+    "roles_recursos": {
+      "name": "roles_recursos",
       "columns": {
-        "rolId": {
-          "name": "rolId",
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rol_id": {
+          "name": "rol_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "recursoId": {
-          "name": "recursoId",
+        "recurso_id": {
+          "name": "recurso_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -2016,16 +2475,45 @@
           "notNull": true,
           "autoincrement": false,
           "default": 1
+        },
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "roles_recursos_key": {
+          "name": "roles_recursos_key",
+          "columns": [
+            "recurso_id",
+            "rol_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "RolesRecursos_rolId_fkey": {
-          "name": "RolesRecursos_rolId_fkey",
-          "tableFrom": "RolesRecursos",
-          "tableTo": "Rol",
+        "roles_recursos_estado_id_estado_id_fk": {
+          "name": "roles_recursos_estado_id_estado_id_fk",
+          "tableFrom": "roles_recursos",
+          "tableTo": "estado",
           "columnsFrom": [
-            "rolId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "roles_recursos_rol_id_fkey": {
+          "name": "roles_recursos_rol_id_fkey",
+          "tableFrom": "roles_recursos",
+          "tableTo": "rol",
+          "columnsFrom": [
+            "rol_id"
           ],
           "columnsTo": [
             "id"
@@ -2033,12 +2521,12 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "RolesRecursos_recursoId_fkey": {
-          "name": "RolesRecursos_recursoId_fkey",
-          "tableFrom": "RolesRecursos",
-          "tableTo": "Recurso",
+        "roles_recursos_recurso_id_fkey": {
+          "name": "roles_recursos_recurso_id_fkey",
+          "tableFrom": "roles_recursos",
+          "tableTo": "recurso",
           "columnsFrom": [
-            "recursoId"
+            "recurso_id"
           ],
           "columnsTo": [
             "id"
@@ -2047,20 +2535,12 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {
-        "RolesRecursos_pkey": {
-          "columns": [
-            "rolId",
-            "recursoId"
-          ],
-          "name": "RolesRecursos_pkey"
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Sucursal": {
-      "name": "Sucursal",
+    "sucursal": {
+      "name": "sucursal",
       "columns": {
         "id": {
           "name": "id",
@@ -2083,39 +2563,52 @@
           "notNull": true,
           "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "sucursal_estado_id_estado_id_fk": {
+          "name": "sucursal_estado_id_estado_id_fk",
+          "tableFrom": "sucursal",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Tema": {
-      "name": "Tema",
+    "tema": {
+      "name": "tema",
       "columns": {
         "id": {
           "name": "id",
@@ -2124,8 +2617,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "cursoId": {
-          "name": "cursoId",
+        "curso_id": {
+          "name": "curso_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -2138,8 +2631,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "TipoTema": {
-          "name": "TipoTema",
+        "tipo_tema_id": {
+          "name": "tipo_tema_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -2153,23 +2646,48 @@
           "autoincrement": false,
           "default": 0
         },
-        "Estado": {
-          "name": "Estado",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
+          "autoincrement": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "Tema_cursoId_Curso_id_fk": {
-          "name": "Tema_cursoId_Curso_id_fk",
-          "tableFrom": "Tema",
-          "tableTo": "Curso",
+        "tema_tipo_tema_id_catalogo_id_fk": {
+          "name": "tema_tipo_tema_id_catalogo_id_fk",
+          "tableFrom": "tema",
+          "tableTo": "catalogo",
           "columnsFrom": [
-            "cursoId"
+            "tipo_tema_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tema_estado_id_estado_id_fk": {
+          "name": "tema_estado_id_estado_id_fk",
+          "tableFrom": "tema",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tema_curso_id_curso_id_fk": {
+          "name": "tema_curso_id_curso_id_fk",
+          "tableFrom": "tema",
+          "tableTo": "curso",
+          "columnsFrom": [
+            "curso_id"
           ],
           "columnsTo": [
             "id"
@@ -2182,8 +2700,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Usuario": {
-      "name": "Usuario",
+    "usuario": {
+      "name": "usuario",
       "columns": {
         "id": {
           "name": "id",
@@ -2206,48 +2724,47 @@
           "notNull": true,
           "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
-        },
-        "personaId": {
-          "name": "personaId",
+        "persona_id": {
+          "name": "persona_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "Estado": {
-          "name": "Estado",
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'activo'"
+          "default": "(CURRENT_TIMESTAMP)"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
         }
       },
       "indexes": {
-        "Usuario_personaId_key": {
-          "name": "Usuario_personaId_key",
+        "usuario_persona_id_key": {
+          "name": "usuario_persona_id_key",
           "columns": [
-            "personaId"
+            "persona_id"
           ],
           "isUnique": true
         },
-        "Usuario_username_key": {
-          "name": "Usuario_username_key",
+        "usuario_username_key": {
+          "name": "usuario_username_key",
           "columns": [
             "username"
           ],
@@ -2255,12 +2772,25 @@
         }
       },
       "foreignKeys": {
-        "Usuario_personaId_fkey": {
-          "name": "Usuario_personaId_fkey",
-          "tableFrom": "Usuario",
-          "tableTo": "Persona",
+        "usuario_estado_id_estado_id_fk": {
+          "name": "usuario_estado_id_estado_id_fk",
+          "tableFrom": "usuario",
+          "tableTo": "estado",
           "columnsFrom": [
-            "personaId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "usuario_persona_id_fkey": {
+          "name": "usuario_persona_id_fkey",
+          "tableFrom": "usuario",
+          "tableTo": "persona",
+          "columnsFrom": [
+            "persona_id"
           ],
           "columnsTo": [
             "id"
@@ -2273,48 +2803,76 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "UsuariosRoles": {
-      "name": "UsuariosRoles",
+    "usuarios_roles": {
+      "name": "usuarios_roles",
       "columns": {
-        "usuarioId": {
-          "name": "usuarioId",
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "usuario_id": {
+          "name": "usuario_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "rolId": {
-          "name": "rolId",
+        "rol_id": {
+          "name": "rol_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "asignadoEl": {
-          "name": "asignadoEl",
+        "asignado_el": {
+          "name": "asignado_el",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "Estado": {
-          "name": "Estado",
+        "estado_id": {
+          "name": "estado_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "usuarios_roles_usuario_id_rol_id_key": {
+          "name": "usuarios_roles_usuario_id_rol_id_key",
+          "columns": [
+            "usuario_id",
+            "rol_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "UsuariosRoles_usuarioId_fkey": {
-          "name": "UsuariosRoles_usuarioId_fkey",
-          "tableFrom": "UsuariosRoles",
-          "tableTo": "Usuario",
+        "usuarios_roles_estado_id_estado_id_fk": {
+          "name": "usuarios_roles_estado_id_estado_id_fk",
+          "tableFrom": "usuarios_roles",
+          "tableTo": "estado",
           "columnsFrom": [
-            "usuarioId"
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "usuarios_roles_usuario_id_fkey": {
+          "name": "usuarios_roles_usuario_id_fkey",
+          "tableFrom": "usuarios_roles",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "usuario_id"
           ],
           "columnsTo": [
             "id"
@@ -2322,12 +2880,12 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "UsuariosRoles_rolId_fkey": {
-          "name": "UsuariosRoles_rolId_fkey",
-          "tableFrom": "UsuariosRoles",
-          "tableTo": "Rol",
+        "usuarios_roles_rol_id_fkey": {
+          "name": "usuarios_roles_rol_id_fkey",
+          "tableFrom": "usuarios_roles",
+          "tableTo": "rol",
           "columnsFrom": [
-            "rolId"
+            "rol_id"
           ],
           "columnsTo": [
             "id"
@@ -2336,20 +2894,12 @@
           "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {
-        "UsuariosRoles_pkey": {
-          "columns": [
-            "usuarioId",
-            "rolId"
-          ],
-          "name": "UsuariosRoles_pkey"
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Vehiculo": {
-      "name": "Vehiculo",
+    "vehiculo": {
+      "name": "vehiculo",
       "columns": {
         "id": {
           "name": "id",
@@ -2372,48 +2922,112 @@
           "notNull": true,
           "autoincrement": false
         },
-        "EstadoOperativo": {
-          "name": "EstadoOperativo",
+        "estado_operativo_id": {
+          "name": "estado_operativo_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'DISPONIBLE'"
+          "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "estado_id": {
+          "name": "estado_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
-        },
-        "Estado": {
-          "name": "Estado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'activo'"
         }
       },
       "indexes": {
-        "Vehiculo_placa_unique": {
-          "name": "Vehiculo_placa_unique",
+        "vehiculo_placa_unique": {
+          "name": "vehiculo_placa_unique",
           "columns": [
             "placa"
           ],
           "isUnique": true
         }
       },
+      "foreignKeys": {
+        "vehiculo_estado_operativo_id_estado_id_fk": {
+          "name": "vehiculo_estado_operativo_id_estado_id_fk",
+          "tableFrom": "vehiculo",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_operativo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "vehiculo_estado_id_estado_id_fk": {
+          "name": "vehiculo_estado_id_estado_id_fk",
+          "tableFrom": "vehiculo",
+          "tableTo": "estado",
+          "columnsFrom": [
+            "estado_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "yjs_docs": {
+      "name": "yjs_docs",
+      "columns": {
+        "doc_id": {
+          "name": "doc_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "table_name": {
+          "name": "table_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dirty": {
+          "name": "dirty",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        }
+      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

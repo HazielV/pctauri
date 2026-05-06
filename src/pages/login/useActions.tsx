@@ -25,9 +25,9 @@ export const useActions = () => {
         mascaraBits: rolesRecursos.permisos,
       })
       .from(usuariosRoles)
-      .innerJoin(rolesRecursos, eq(usuariosRoles.rolId, rolesRecursos.rolId))
-      .innerJoin(recurso, eq(rolesRecursos.recursoId, recurso.id))
-      .where(eq(usuariosRoles.usuarioId, usuarioId));
+      .innerJoin(rolesRecursos, eq(usuariosRoles.rol_id, rolesRecursos.rol_id))
+      .innerJoin(recurso, eq(rolesRecursos.recurso_id, recurso.id))
+      .where(eq(usuariosRoles.usuario_id, usuarioId));
 
     // 3. Agrupar y combinar máscaras de bits (por si 2 roles dan acceso a la misma ruta)
     const mapaBitsCombinados: Record<string, number> = {};
@@ -68,7 +68,7 @@ export const useActions = () => {
         with: {
           usuariosRoles: {
             columns: {
-              rolId: true,
+              rol_id: true,
             },
           },
         },

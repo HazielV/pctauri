@@ -7,7 +7,7 @@ import { db } from "@/db/client";
 import { gestion } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-export function LoaderForm({ id }: { id?: number }) {
+export function LoaderForm({ id }: { id?: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ["gestion_data", id],
     queryFn: async () => {

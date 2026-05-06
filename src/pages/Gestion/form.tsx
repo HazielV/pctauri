@@ -6,14 +6,14 @@ import { useActions } from "./useActions";
 
 type NewData =
   | {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
+      id: string;
       nombre: string;
-      fechaInicio: string;
-      fechaFin: string;
-      estadoGestion: "ACTIVA" | "CERRADA";
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
+      fecha_inicio: string;
+      fecha_fin: string;
+      estado_gestion_id: string;
     }
   | undefined;
 
@@ -40,7 +40,7 @@ export function Form({ data }: { data?: NewData | undefined }) {
           </FieldLabel>
           <InputGroup>
             <InputGroupInput
-              id="nombre"
+              id="nombre gestion"
               placeholder="Nombre del menu"
               name="nombre"
               defaultValue={data?.nombre}
@@ -49,32 +49,32 @@ export function Form({ data }: { data?: NewData | undefined }) {
           </InputGroup>
         </Field>
         <Field className="w-full">
-          <FieldLabel htmlFor="Fecha inicio">
+          <FieldLabel htmlFor="fecha_inicio">
             Fecha inicio <span className="text-destructive">*</span>
           </FieldLabel>
           <InputGroup>
             <InputGroupInput
               id="Fecha inicio"
               placeholder="Fecha inicio "
-              name="fechaInicio"
+              name="fecha_inicio"
               type="date"
-              defaultValue={data?.fechaInicio}
+              defaultValue={data?.fecha_inicio}
               required
             />
           </InputGroup>
         </Field>
 
         <Field className="w-full">
-          <FieldLabel htmlFor="Fecha Final">
+          <FieldLabel htmlFor="fecha_fin">
             Fecha Final <span className="text-destructive">*</span>
           </FieldLabel>
           <InputGroup>
             <InputGroupInput
               id="Fecha Final"
               placeholder="Url del menu"
-              name="fechaFin"
+              name="fecha_fin"
               type="date"
-              defaultValue={data?.fechaFin}
+              defaultValue={data?.fecha_fin}
               required
             />
           </InputGroup>

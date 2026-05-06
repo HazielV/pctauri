@@ -5,64 +5,15 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1776225583907,
-      "tag": "0000_tense_solo",
+      "when": 1777869049161,
+      "tag": "0000_opposite_toro",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "6",
-      "when": 1776225788473,
-      "tag": "0001_flashy_white_queen",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1776225926177,
-      "tag": "0002_exotic_shadowcat",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1776231207950,
-      "tag": "0003_sweet_luckman",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1776231344564,
-      "tag": "0004_funny_the_fallen",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1776233508921,
-      "tag": "0005_icy_captain_flint",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1776308160771,
-      "tag": "0006_handy_steel_serpent",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1777505555024,
-      "tag": "0007_overjoyed_shiva",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "6",
-      "when": 1777519924196,
-      "tag": "0008_melodic_mathemanic",
+      "when": 1777987524354,
+      "tag": "0001_real_azazel",
       "breakpoints": true
     }
   ]

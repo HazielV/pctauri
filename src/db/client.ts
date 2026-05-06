@@ -10,7 +10,7 @@ let instance: Database | null = null;
 // Exportamos esta función para poder usar la misma instancia en YjsManager
 export async function getDb() {
   if (!instance) {
-    const dbName = import.meta.env.VITE_DB_NAME || "proyecto5.db";
+    const dbName = import.meta.env.VITE_DB_NAME || "proyecto_v2.db";
     instance = await Database.load(`sqlite:${dbName}`);
     await instance.execute("PRAGMA busy_timeout = 5000;");
     await instance.execute("PRAGMA journal_mode = WAL;");
@@ -43,7 +43,6 @@ export const db = drizzle(
   async (sql, params, method) => {
     const sqlite = await getDb();
     const safeParams = params ?? [];
-    console.log("metodo", method);
     try {
       const sqlClean = sql.trim();
       const queryNormalizada = sql.trim().toUpperCase();

@@ -4,10 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form } from "./form";
 import { db } from "@/db/client";
-import { menu, rol } from "@/db/schema";
+import { estado, rol } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-export function LoaderForm({ id }: { id?: number }) {
+export function LoaderForm({ id }: { id?: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ["rol_data", id],
     queryFn: async () => {
@@ -25,7 +25,19 @@ export function LoaderForm({ id }: { id?: number }) {
     queryKey: ["menus_data", id],
     queryFn: async () => {
       const initialData = await db.query.menu.findMany({
-        where: eq(menu.estado, "activo"),
+        where: (t, { eq, and }) =>
+          eq(
+            t.estado_id,
+            db
+              .select({ id: estado.id })
+              .from(estado)
+              .where(
+                and(
+                  eq(estado.nombre, "ACTIVO"),
+                  eq(estado.categoria, "SISTEMA"),
+                ),
+              ),
+          ),
       });
       return initialData;
     },

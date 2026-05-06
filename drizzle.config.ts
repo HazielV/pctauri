@@ -24,7 +24,7 @@ if (platform === "win32") {
 }
 
 // 3. Unimos la ruta final de la base de datos
-const dbPath = path.join(appDataPath, bundleId, "proyecto5.db");
+const dbPath = path.join(appDataPath, bundleId, "proyecto_v2.db");
 
 export default defineConfig({
   schema: "./src/db/schema.ts",

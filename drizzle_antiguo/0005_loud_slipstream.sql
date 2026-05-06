@@ -1,1 +1,0 @@
-ALTER TABLE `ClaseTeorica` ADD `cursoId` integer NOT NULL REFERENCES Curso(id);

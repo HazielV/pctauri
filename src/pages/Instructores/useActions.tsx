@@ -24,6 +24,7 @@ export const useActions = () => {
         limit: perPage,
         with: {
           persona: true,
+          estado: true,
         },
       });
 
@@ -61,8 +62,15 @@ export const useActions = () => {
   const upsertMutation = useMutation({
     mutationFn: async ({ id, values }: { id?: string; values: any }) => {
       setLoading(true);
-      const { nroLicencia, ...dataPersona } = values;
+      const { nro_licencia, ...dataPersona } = values;
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
 
+      if (!estadoActivo) {
+        throw new Error("Error estados");
+      }
       try {
         if (id) {
           // --- LÓGICA DE UPDATE ---
@@ -70,9 +78,9 @@ export const useActions = () => {
           // 1. Actualizar Instructor (obtenemos el personaId para el siguiente paso)
           const [u] = await db
             .update(instructor)
-            .set({ nroLicencia })
+            .set({ nro_licencia })
             .where(eq(instructor.id, id))
-            .returning({ personaId: instructor.personaId });
+            .returning({ personaId: instructor.persona_id });
 
           if (!u) throw new Error("Instructor no encontrado");
 
@@ -87,15 +95,17 @@ export const useActions = () => {
           // 1. Insertar primero la Persona
           const [u] = await db
             .insert(persona)
-            .values(dataPersona)
+            .values({ ...dataPersona, estado_id: estadoActivo.id })
             .returning({ id: persona.id });
 
           if (!u) throw new Error("No se pudo completar la acción");
 
           // 2. Insertar el Instructor usando el ID de la persona recién creada
           return await db.insert(instructor).values({
-            nroLicencia,
-            personaId: u.id,
+            nro_licencia,
+            persona_id: u.id,
+
+            estado_id: estadoActivo.id,
           });
         }
       } catch (error) {
@@ -124,17 +134,17 @@ export const useActions = () => {
   });
 
   const statusMutation = useMutation({
-    mutationFn: async ({
-      id,
-      estado,
-    }: {
-      id: string;
-      estado: "activo" | "inactivo";
-    }) => {
-      // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
+    mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
+      const estadonuevo = await db.query.estado.findFirst({
+        where: (t, { eq, and }) =>
+          and(
+            eq(t.nombre, estado === "ACTIVO" ? "INACTIVO" : "ACTIVO"),
+            eq(t.categoria, "SISTEMA"),
+          ),
+      });
       return await db
         .update(instructor)
-        .set({ estado })
+        .set({ estado_id: estadonuevo?.id })
         .where(eq(instructor.id, id));
     },
     onSuccess: () =>
@@ -147,7 +157,7 @@ export const useActions = () => {
       formId: "instructor-formulario-create",
     });
   };
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     show(<LoaderForm id={id} />, {
       title: "Editar instructor",
       formId: "instructor-formulario-edit",
@@ -155,7 +165,7 @@ export const useActions = () => {
   };
 
   const handleToggleStatus = (id: string, currentStatus: string) => {
-    const isInactive = currentStatus === "inactivo";
+    const isInactive = currentStatus.toLowerCase() === "inactivo";
     showAlert({
       title: isInactive ? "¿Activar Instructor?" : "¿Deshabilitar Instructor?",
       description: `El Instructor pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
@@ -165,7 +175,7 @@ export const useActions = () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
         await statusMutation.mutateAsync({
           id,
-          estado: isInactive ? "activo" : "inactivo",
+          estado: currentStatus,
         });
         toast.success("Estado actualizado");
       },

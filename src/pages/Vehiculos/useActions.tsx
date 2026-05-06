@@ -20,6 +20,10 @@ export const useActions = () => {
       const data = await db.query.vehiculo.findMany({
         offset: skip,
         limit: perPage,
+        with: {
+          estado: true,
+          estadoOperativo: true,
+        },
       });
 
       return {
@@ -54,14 +58,30 @@ export const useActions = () => {
 
   // --- MUTACIONES ---
   const upsertMutation = useMutation({
-    mutationFn: async ({ id, values }: { id?: number; values: any }) => {
+    mutationFn: async ({ id, values }: { id?: string; values: any }) => {
       setLoading(true);
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
+      const estadoOperativo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "DISPONIBLE"), eq(t.categoria, "ESTADO_OPERATIVO")),
+      });
+      if (!estadoActivo || !estadoOperativo) {
+        throw new Error("Error estados");
+      }
       if (id) {
         await db
           .update(vehiculo)
           .set({ ...values })
           .where(eq(vehiculo.id, id));
-      } else return await db.insert(vehiculo).values(values);
+      } else
+        return await db.insert(vehiculo).values({
+          ...values,
+          estado_id: estadoActivo.id,
+          estado_operativo_id: estadoOperativo.id,
+        });
     },
     onSuccess: (_, variables) => {
       setLoading(false);
@@ -80,17 +100,17 @@ export const useActions = () => {
   });
 
   const statusMutation = useMutation({
-    mutationFn: async ({
-      id,
-      estado,
-    }: {
-      id: number;
-      estado: "activo" | "inactivo";
-    }) => {
-      // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
+    mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
+      const estadonuevo = await db.query.estado.findFirst({
+        where: (t, { eq, and }) =>
+          and(
+            eq(t.nombre, estado === "ACTIVO" ? "INACTIVO" : "ACTIVO"),
+            eq(t.categoria, "SISTEMA"),
+          ),
+      });
       return await db
         .update(vehiculo)
-        .set({ estado })
+        .set({ estado_id: estadonuevo?.id })
         .where(eq(vehiculo.id, id));
     },
     onSuccess: () =>
@@ -103,15 +123,15 @@ export const useActions = () => {
       formId: "vehiculo-formulario-create",
     });
   };
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     show(<LoaderForm id={id} />, {
       title: "Editar vehiculo",
       formId: "vehiculo-formulario-edit",
     });
   };
 
-  const handleToggleStatus = (id: number, currentStatus: string) => {
-    const isInactive = currentStatus === "inactivo";
+  const handleToggleStatus = (id: string, currentStatus: string) => {
+    const isInactive = currentStatus.toLocaleLowerCase() === "inactivo";
     showAlert({
       title: isInactive ? "¿Activar Vehiculo?" : "¿Deshabilitar Vehiculo?",
       description: `El Vehiculo pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
@@ -121,7 +141,7 @@ export const useActions = () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
         await statusMutation.mutateAsync({
           id,
-          estado: isInactive ? "activo" : "inactivo",
+          estado: currentStatus,
         });
         toast.success("Estado actualizado");
       },

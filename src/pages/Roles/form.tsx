@@ -8,28 +8,29 @@ import MultiSelect from "@/components/multiselect";
 import { useMemo, useState } from "react";
 export type NewRol =
   | {
-      id: number;
-      estado: "activo" | "inactivo" | "pendiente";
+      id: string;
       nombre: string;
       descripcion: string | null;
+      estado_id: string;
       rolesMenus: {
-        estado: "activo" | "inactivo" | "pendiente";
-        rolId: number;
+        id: string;
+        estado_id: string;
+        rol_id: string;
         permisos: number;
-        menuId: number;
+        menu_id: string;
       }[];
     }
   | undefined;
 type menus =
   | {
-      id: number;
-      estado: "activo" | "inactivo" | "pendiente";
+      id: string;
       nombre: string;
+      estado_id: string;
       ruta: string;
       icono: string | null;
       orden: number;
-      padreId: number | null;
-      recursoId: number | null;
+      padre_id: string | null;
+      recurso_id: string;
     }[]
   | undefined;
 export function Form({
@@ -102,7 +103,7 @@ export function Form({
           </InputGroup>
         </Field>
         <Field className="w-full md:col-span-2 ">
-          <FieldLabel htmlFor="roles">
+          <FieldLabel htmlFor="menus">
             Menus para el rol <span className="text-destructive">*</span>
           </FieldLabel>
 
@@ -110,7 +111,7 @@ export function Form({
             <MultiSelect
               multiple
               name="menus"
-              defaultData={data?.rolesMenus?.map((e) => String(e.menuId))}
+              defaultData={data?.rolesMenus?.map((e) => String(e.menu_id))}
               setDataSelect={setMenusElegidos}
               data={menusMapeados} // <-- Usamos la variable memorizada
             />

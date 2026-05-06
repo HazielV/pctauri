@@ -114,19 +114,19 @@ export default function Page({ permisos }: { permisos: string[] }) {
                   <TableCell>{data.id}</TableCell>
                   <TableCell>{data.username}</TableCell>
                   <TableCell>{data.persona.nombres}</TableCell>
-                  <TableCell>{data.persona.primerApellido}</TableCell>
-                  <TableCell>{data.persona.segundoApellido}</TableCell>
-                  <TableCell>{data.persona.nroDocumento}</TableCell>
+                  <TableCell>{data.persona.primer_apellido}</TableCell>
+                  <TableCell>{data.persona.segundo_apellido}</TableCell>
+                  <TableCell>{data.persona.nro_documento}</TableCell>
 
                   <TableCell className="flex">
                     <div className="text-xs rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 ">
-                      {data.estado}
+                      {data.estado.nombre.toLowerCase()}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       {permisos.includes("EDITAR") &&
-                        data.estado === "activo" && (
+                        data.estado.nombre.toLowerCase() === "activo" && (
                           <button
                             onClick={() => handleEdit(data.id)}
                             className=" flex gap-2 h-auto"
@@ -138,10 +138,10 @@ export default function Page({ permisos }: { permisos: string[] }) {
                           </button>
                         )}
 
-                      {data.estado === "activo" && (
+                      {data.estado.nombre.toLowerCase() === "activo" && (
                         <button
                           onClick={() =>
-                            handleToggleStatus(data.id, data.estado)
+                            handleToggleStatus(data.id, data.estado_id)
                           }
                           className=" flex gap-2 h-auto"
                         >
@@ -151,10 +151,10 @@ export default function Page({ permisos }: { permisos: string[] }) {
                           />
                         </button>
                       )}
-                      {data.estado === "inactivo" && (
+                      {data.estado.nombre.toLowerCase() === "inactivo" && (
                         <button
                           onClick={() =>
-                            handleToggleStatus(data.id, data.estado)
+                            handleToggleStatus(data.id, data.estado_id)
                           }
                           className=" flex gap-2 h-auto"
                         >

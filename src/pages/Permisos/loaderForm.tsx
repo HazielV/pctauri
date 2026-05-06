@@ -4,21 +4,21 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form } from "./form";
 import { db } from "@/db/client";
-import { rol } from "@/db/schema";
+import { permiso } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-export function LoaderForm({ id }: { id?: number }) {
+export function LoaderForm({ id }: { id?: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ["permiso-data", id],
     queryFn: async () => {
       const initialData = await db.query.permiso.findFirst({
-        where: eq(rol.id, id!),
+        where: eq(permiso.id, id!),
       });
       return initialData;
     },
     enabled: !!id, // Solo ejecuta la query si hay un ID
   });
-  console.log("llega aqui");
+
   if (id && isLoading) {
     return (
       <div className="p-4 space-y-4">

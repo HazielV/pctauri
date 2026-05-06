@@ -7,7 +7,7 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
-
+import { v4 as uuidv4 } from "uuid";
 import { useModalStore } from "@/store/modalState";
 import { useActions } from "./useActions";
 import {
@@ -18,67 +18,79 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { horarioPlantilla } from "@/db/schema";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CalendarPlus, Trash2 } from "lucide-react";
 
 type NewData =
   | {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "finalizado" | "en curso" | "programado";
-      nombreCurso: string;
-      precioBase: number;
-      horasTeoricasReq: number;
-      horasPracticasReq: number;
-      gestionId: number;
-      sucursalId: number;
+      id: string;
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
+      nombre_curso: string;
+      precio_base: number;
+      horas_teoricas_req: number;
+      horas_practicas_req: number;
+      gestion_id: string;
+      sucursal_id: string;
       horarioPlantillas: {
-        id: number;
-        createdAt: string;
-        updatedAt: string;
-        estado: "activo" | "inactivo" | "pendiente";
+        id: string;
         nombre: string;
-        cursoId: number;
-        diaSemana:
-          | "LUNES"
-          | "MARTES"
-          | "MIERCOLES"
-          | "JUEVES"
-          | "VIERNES"
-          | "SABADO"
-          | "DOMINGO";
-        horaInicio: string;
-        horaFin: string;
-        tipo: "TEORICO" | "PRACTICO";
-        instructorId: number | null;
-        aulaId: number | null;
+        estado_id: string;
+        created_at: string;
+        updated_at: string;
+        curso_id: string;
+        dia_semana_id: string;
+        tipo_clase_id: string;
+        hora_inicio: string;
+        hora_fin: string;
+        instructor_id: string | null;
+        aula_id: string | null;
+        diaSemana: {
+          id: string;
+          nombre: string;
+          categoria: string | null;
+          descripcion: string | null;
+        };
+        tipoClase: {
+          id: string;
+          nombre: string;
+          categoria: string | null;
+          descripcion: string | null;
+        };
       }[];
     }
   | undefined;
 
 type sucursales =
   | {
-      id: number;
-      direccion: string;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
+      id: string;
       nombre: string;
+      direccion: string;
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
     }[]
   | undefined;
 type gestiones =
   | {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
+      id: string;
       nombre: string;
-      fechaInicio: string;
-      fechaFin: string;
-      estadoGestion: "ACTIVA" | "CERRADA";
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
+      fecha_inicio: string;
+      fecha_fin: string;
+      estado_gestion_id: string;
+    }[]
+  | undefined;
+type catalogos =
+  | {
+      id: string;
+      nombre: string;
+      categoria: string | null;
+      descripcion: string | null;
     }[]
   | undefined;
 
@@ -86,10 +98,12 @@ export function Form({
   data,
   sucursales,
   gestiones,
+  catalogos,
 }: {
   data?: NewData | undefined;
   sucursales: sucursales;
   gestiones: gestiones;
+  catalogos: catalogos;
 }) {
   const { formId } = useModalStore();
   const { upsertMutation } = useActions();
@@ -97,13 +111,13 @@ export function Form({
   const [horariosCurso, setHorariosCurso] = useState(
     data?.horarioPlantillas.map((h) => ({
       tempId: h.id,
-      diaSemana: h.diaSemana as string,
-      tipo: h.tipo as string,
-      horaInicio: h.horaInicio,
-      horaFin: h.horaFin,
+      diaSemana: h.diaSemana.id as string,
+      tipo: h.tipoClase.id as string,
+      horaInicio: h.hora_inicio,
+      horaFin: h.hora_fin,
     })) || [
       {
-        tempId: Date.now(),
+        tempId: uuidv4(),
         diaSemana: "",
         tipo: "",
         horaInicio: "",
@@ -116,7 +130,7 @@ export function Form({
     setHorariosCurso([
       ...horariosCurso,
       {
-        tempId: Date.now(),
+        tempId: uuidv4(),
         diaSemana: "",
         tipo: "",
         horaInicio: "",
@@ -125,13 +139,13 @@ export function Form({
     ]);
   };
 
-  const eliminarHorario = (id: number) => {
+  const eliminarHorario = (id: string) => {
     // Evitar que se queden sin ningún horario si así lo prefieres
     if (horariosCurso.length === 1) return;
     setHorariosCurso(horariosCurso.filter((h) => h.tempId !== id));
   };
 
-  const actualizarHorario = (id: number, campo: string, valor: string) => {
+  const actualizarHorario = (id: string, campo: string, valor: string) => {
     let valorFinal = valor;
 
     if ((campo === "horaInicio" || campo === "horaFin") && valor) {
@@ -179,43 +193,43 @@ export function Form({
     <form id={formId} onSubmit={handleSubmit} className="grid gap-5">
       <FieldGroup className="grid grid-cols-2 lg:grid-cols-3">
         <Field className="w-full col-span-2">
-          <FieldLabel htmlFor="nombreCurso">
+          <FieldLabel htmlFor="nombre_curso">
             Nombre <span className="text-destructive">*</span>
           </FieldLabel>
           <InputGroup>
             <InputGroupInput
-              id="nombreCurso"
+              id="nombre_curso"
               placeholder="Nombre del curso"
-              name="nombreCurso"
-              defaultValue={data?.nombreCurso}
+              name="nombre_curso"
+              defaultValue={data?.nombre_curso}
               required
             />
           </InputGroup>
         </Field>
         <Field className="w-full">
-          <FieldLabel htmlFor="precioBase">
+          <FieldLabel htmlFor="precio_base">
             Precio inicial <span className="text-destructive">*</span>
           </FieldLabel>
           <InputGroup>
             <InputGroupInput
-              id="precioBase"
+              id="precio_base"
               placeholder="Precio inicial"
-              name="precioBase"
-              defaultValue={data?.precioBase}
+              name="precio_base"
+              defaultValue={data?.precio_base}
               required
             />
           </InputGroup>
         </Field>
         <Field className="w-full">
-          <FieldLabel htmlFor="gestionId">
+          <FieldLabel htmlFor="gestion_id">
             Gestion <span className="text-destructive">*</span>
           </FieldLabel>
 
           <Select
-            name="gestionId"
-            defaultValue={data ? String(data?.gestionId) : undefined}
+            name="gestion_id"
+            defaultValue={data ? String(data?.gestion_id) : undefined}
           >
-            <SelectTrigger id="gestionId">
+            <SelectTrigger id="gestion_id">
               <SelectValue placeholder="Seleccione una gestion" />
             </SelectTrigger>
             <SelectContent>
@@ -230,13 +244,13 @@ export function Form({
           </Select>
         </Field>
         <Field className="w-full">
-          <FieldLabel htmlFor="sucursalId">
+          <FieldLabel htmlFor="sucursal_id">
             Sucursal <span className="text-destructive">*</span>
           </FieldLabel>
 
           <Select
-            name="sucursalId"
-            defaultValue={data ? String(data?.sucursalId) : undefined}
+            name="sucursal_id"
+            defaultValue={data ? String(data?.sucursal_id) : undefined}
           >
             <SelectTrigger id="sucursalId">
               <SelectValue placeholder="Seleccione una sucursal" />
@@ -253,33 +267,33 @@ export function Form({
           </Select>
         </Field>
         <Field className="w-full">
-          <FieldLabel htmlFor="horasTeoricasReq">
+          <FieldLabel htmlFor="horas_teoricas_req">
             Horas teoricas <span className="text-destructive">*</span>
           </FieldLabel>
           <InputGroup>
             <InputGroupInput
-              id="horasTeoricasReq"
+              id="horas_teoricas_req"
               placeholder="Requisito de horas "
-              name="horasTeoricasReq"
+              name="horas_teoricas_req"
               type="number"
               min={0}
-              defaultValue={data?.horasTeoricasReq}
+              defaultValue={data?.horas_teoricas_req}
               required
             />
           </InputGroup>
         </Field>
         <Field className="w-full">
-          <FieldLabel htmlFor="horasPracticasReq">
+          <FieldLabel htmlFor="horas_practicas_req">
             Horas Practicas <span className="text-destructive">*</span>
           </FieldLabel>
           <InputGroup>
             <InputGroupInput
-              id="horasPracticasReq"
+              id="horas_practicas_req"
               placeholder="Requisito de horas "
-              name="horasPracticasReq"
+              name="horas_practicas_req"
               type="number"
               min={1}
-              defaultValue={data?.horasPracticasReq}
+              defaultValue={data?.horas_practicas_req}
               required
             />
           </InputGroup>
@@ -320,11 +334,13 @@ export function Form({
                   <SelectValue placeholder="Seleccione un día" />
                 </SelectTrigger>
                 <SelectContent>
-                  {horarioPlantilla.diaSemana.enumValues.map((val) => (
-                    <SelectItem key={val} value={val}>
-                      {val}
-                    </SelectItem>
-                  ))}
+                  {catalogos
+                    ?.filter((c) => c.categoria === "DIA_SEMANA")
+                    .map((val) => (
+                      <SelectItem key={val.id} value={val.id}>
+                        {val.nombre}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </Field>
@@ -344,11 +360,13 @@ export function Form({
                   <SelectValue placeholder="Teórico/Práctico" />
                 </SelectTrigger>
                 <SelectContent>
-                  {horarioPlantilla.tipo.enumValues.map((val) => (
-                    <SelectItem key={val} value={val}>
-                      {val}
-                    </SelectItem>
-                  ))}
+                  {catalogos
+                    ?.filter((c) => c.categoria === "TIPO_ACADEMICO")
+                    .map((val) => (
+                      <SelectItem key={val.id} value={val.id}>
+                        {val.nombre}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </Field>

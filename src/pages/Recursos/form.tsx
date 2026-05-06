@@ -25,58 +25,60 @@ import { useState } from "react";
 
 export type NewData =
   | {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
-      nombre: string;
       ruta: string;
+      id: string;
+      nombre: string;
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
       menu: {
-        id: number;
-        estado: "activo" | "inactivo" | "pendiente";
-        nombre: string;
         ruta: string;
+        id: string;
+        nombre: string;
+        estado_id: string;
         icono: string | null;
         orden: number;
-        padreId: number | null;
-        recursoId: number | null;
-      } | null;
+        padre_id: string | null;
+        recurso_id: string;
+      };
       rolesRecursos: {
-        recursoId: number;
-        rolId: number;
         permisos: number;
+        id: string;
+        estado_id: string;
+        recurso_id: string;
+        rol_id: string;
         rol: {
-          id: number;
-          estado: "activo" | "inactivo" | "pendiente";
+          id: string;
           nombre: string;
           descripcion: string | null;
+          estado_id: string;
         };
       }[];
     }
   | undefined;
 type roles =
   | {
-      id: number;
-      estado: "activo" | "inactivo" | "pendiente";
+      id: string;
       nombre: string;
       descripcion: string | null;
+      estado_id: string;
     }[]
   | undefined;
 type menus =
   | {
-      id: number;
-      estado: "activo" | "inactivo" | "pendiente";
-      nombre: string;
       ruta: string;
+      id: string;
+      nombre: string;
+      estado_id: string;
       icono: string | null;
       orden: number;
-      padreId: number | null;
-      recursoId: number | null;
+      padre_id: string | null;
+      recurso_id: string;
     }[]
   | undefined;
 type permisos =
   | {
-      id: number;
+      id: string;
       nombre: string;
       descripcion: string | null;
       valor: number;
@@ -112,18 +114,18 @@ export function Form({
   const { formId } = useModalStore();
   const [ruta, setRuta] = useState(data?.menu?.ruta ?? "");
   const [rolesSelect, setRolesSelect] = useState<string[]>(
-    data?.rolesRecursos.map((e) => String(e.rolId)) ?? [],
+    data?.rolesRecursos.map((e) => String(e.rol_id)) ?? [],
   );
   const [permisosRol, setPermisosRol] = useState<
-    { rolid: number; permisos: string[] }[]
+    { rolid: string; permisos: string[] }[]
   >(
     data?.rolesRecursos.map((e) => ({
-      rolid: e.rolId,
+      rolid: e.rol_id,
       permisos: convertirPermiso(permisos, e.permisos),
     })) ?? [],
   );
 
-  const handlePermisosChange = (rolId: number, nuevosPermisos: string[]) => {
+  const handlePermisosChange = (rolId: string, nuevosPermisos: string[]) => {
     // Aseguramos que siempre sea un array
     const permisosArray = Array.isArray(nuevosPermisos)
       ? nuevosPermisos
@@ -151,7 +153,7 @@ export function Form({
       }
     });
   };
-  console.log(permisosRol);
+  /*   console.log(permisosRol); */
   const { upsertMutation } = useActions();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -170,7 +172,7 @@ export function Form({
       }
       values[key].push(value);
     });
-    console.log({ ...values, permisosRol });
+    /*     console.log({ ...values, permisosRol }); */
 
     upsertMutation.mutate({
       id: data?.id,
@@ -194,17 +196,17 @@ export function Form({
           </InputGroup>
         </Field>
         <Field className="w-full">
-          <FieldLabel htmlFor="menuId">
+          <FieldLabel htmlFor="menu_id">
             Menu <span className="text-destructive">*</span>
           </FieldLabel>
 
           <Select
-            name="menuId"
+            name="menu_id"
             defaultValue={String(data?.menu?.id)}
             onValueChange={(e) => {
               if (!menus) return;
 
-              const menu = menus.find((m) => m.id === Number(e));
+              const menu = menus.find((m) => m.id === e);
 
               if (menu && menu.ruta) {
                 setRuta(menu.ruta);
@@ -252,7 +254,7 @@ export function Form({
               setDataSelect={setRolesSelect}
               name="roles"
               defaultData={data?.rolesRecursos.map((rolrec) =>
-                String(rolrec.rolId),
+                String(rolrec.rol_id),
               )}
               data={roles?.map((e) => ({
                 descripcion: e.nombre,
@@ -270,14 +272,14 @@ export function Form({
             rolesSelect.map((rol) => (
               <Field className="w-full gap-2 pl-5 " orientation={"responsive"}>
                 <FieldLabel htmlFor="roles" className="min-w-20">
-                  {roles?.find((e) => e.id === Number(rol))?.nombre}
+                  {roles?.find((e) => e.id === rol)?.nombre}
                 </FieldLabel>
                 {permisos && (
                   <MultiSelect
                     name="permisos"
                     multiple
                     setDataSelect={(seleccionados) =>
-                      handlePermisosChange(Number(rol), seleccionados)
+                      handlePermisosChange(rol, seleccionados)
                     }
                     defaultData={
                       permisosRol.find((e) => String(e.rolid) === rol)?.permisos

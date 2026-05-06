@@ -103,9 +103,9 @@ export default function Page() {
                 >
                   <TableCell>{data.id}</TableCell>
                   <TableCell>{data.persona.nombres}</TableCell>
-                  <TableCell>{data.persona.primerApellido}</TableCell>
-                  <TableCell>{data.persona.segundoApellido}</TableCell>
-                  <TableCell>{data.persona.nroDocumento}</TableCell>
+                  <TableCell>{data.persona.primer_apellido}</TableCell>
+                  <TableCell>{data.persona.segundo_apellido}</TableCell>
+                  <TableCell>{data.persona.nro_documento}</TableCell>
                   <TableCell>
                     <Link href={`/inscripciones/archivo/${data.id}`}>
                       <Button
@@ -120,7 +120,7 @@ export default function Page() {
                   </TableCell>
                   <TableCell className="flex">
                     <div className="text-xs rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 ">
-                      {data.estado}
+                      {data.estado.nombre.toLowerCase()}
                     </div>
                   </TableCell>
                   {/* <TableCell>

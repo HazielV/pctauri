@@ -54,7 +54,7 @@ export default function Page() {
   if (isLoading) return <div>Cargando...</div>;
   if (isError || !data) return <div>Error o sin datos</div>;
 
-  const { data: roles, meta } = data;
+  const { data: cursos, meta } = data;
   return (
     <Contendor>
       <div className="flex justify-end py-2 pb-4">
@@ -114,57 +114,57 @@ export default function Page() {
             </TableHeader>
 
             <TableBody>
-              {roles.map((data, index) => (
+              {cursos.map((data, index) => (
                 <TableRow
                   className="font-medium text-gray-600 border-t border-b last:border-b-0 *:px-5 *:py-3.5 border-gray-200"
                   key={index}
                 >
                   <TableCell>{data.id}</TableCell>
-                  <TableCell>{data.nombreCurso}</TableCell>
+                  <TableCell>{data.nombre_curso}</TableCell>
 
-                  <TableCell>{data.precioBase}</TableCell>
+                  <TableCell>{data.precio_base}</TableCell>
                   <TableCell>{data.gestion.nombre}</TableCell>
                   <TableCell>{data.sucursal.nombre}</TableCell>
                   <TableCell>
                     {data.horarioPlantillas.map((h, index) => (
                       <div key={index} className="grid grid-cols-2 gap-x-2 ">
-                        <span>{h.diaSemana}</span>
-                        <div>{`${h.horaInicio}-${h.horaFin}`}</div>
+                        <span>{h.diaSemana.nombre}</span>
+                        <div>{`${h.hora_inicio}-${h.hora_fin}`}</div>
                       </div>
                     ))}
                   </TableCell>
                   <TableCell className="flex">
-                    {data.estado === "activo" && (
+                    {data.estado.nombre.toLowerCase() === "activo" && (
                       <div className="text-xs rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 ">
-                        {data.estado}
+                        {data.estado.nombre.toLowerCase()}
                       </div>
                     )}
-                    {data.estado === "en curso" && (
+                    {data.estado.nombre.toLowerCase() === "en curso" && (
                       <div className="text-xs rounded-full p-0.75 px-2 bg-indigo-50 text-indigo-700 dark:bg-indigo-800/20 dark:text-indigo-300 text-center border-[0.5px] border-indigo-700/10 cursor-default w-auto min-w-15 ">
-                        {data.estado}
+                        {data.estado.nombre.toLowerCase()}
                       </div>
                     )}
-                    {data.estado === "finalizado" && (
+                    {data.estado.nombre.toLowerCase() === "finalizado" && (
                       <div className="text-xs rounded-full p-0.75 px-2 bg-yellow-50 text-yellow-700 dark:bg-yellow-800/20 dark:text-yellow-300 text-center border-[0.5px] border-yellow-700/10 cursor-default w-auto min-w-15 ">
-                        {data.estado}
+                        {data.estado.nombre.toLowerCase()}
                       </div>
                     )}
-                    {data.estado === "inactivo" && (
+                    {data.estado.nombre.toLowerCase() === "inactivo" && (
                       <div className="text-xs rounded-full p-0.75 px-2 bg-red-50 text-red-700 dark:bg-red-800/20 dark:text-red-300 text-center border-[0.5px] border-red-700/10 cursor-default w-auto min-w-15 ">
-                        {data.estado}
+                        {data.estado.nombre.toLowerCase()}
                       </div>
                     )}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      {(data.estado === "activo" ||
-                        data.estado === "en curso") && (
+                      {(data.estado.nombre.toLowerCase() === "activo" ||
+                        data.estado.nombre.toLowerCase() === "en curso") && (
                         <button
                           onClick={() =>
                             handleTemas({
                               temas: data.temas,
                               cursoId: data.id,
-                              estado: data.estado,
+                              estado: data.estado.nombre,
                             })
                           }
                           className=" flex gap-2 h-auto"
@@ -175,7 +175,7 @@ export default function Page() {
                           />
                         </button>
                       )}
-                      {data.estado === "activo" && (
+                      {data.estado.nombre.toLowerCase() === "activo" && (
                         <button
                           onClick={() => handleComenzarCurso(data.id)}
                           className=" flex gap-2 h-auto"
@@ -186,7 +186,7 @@ export default function Page() {
                           />
                         </button>
                       )}
-                      {data.estado === "activo" && (
+                      {data.estado.nombre.toLowerCase() === "activo" && (
                         <button
                           onClick={() => handleEdit(data.id)}
                           className=" flex gap-2 h-auto"
@@ -198,10 +198,10 @@ export default function Page() {
                         </button>
                       )}
 
-                      {data.estado === "activo" && (
+                      {data.estado.nombre.toLowerCase() === "activo" && (
                         <button
                           onClick={() =>
-                            handleToggleStatus(data.id, data.estado)
+                            handleToggleStatus(data.id, data.estado.nombre)
                           }
                           className=" flex gap-2 h-auto"
                         >
@@ -211,10 +211,10 @@ export default function Page() {
                           />
                         </button>
                       )}
-                      {data.estado === "inactivo" && (
+                      {data.estado.nombre.toLowerCase() === "inactivo" && (
                         <button
                           onClick={() =>
-                            handleToggleStatus(data.id, data.estado)
+                            handleToggleStatus(data.id, data.estado.nombre)
                           }
                           className=" flex gap-2 h-auto"
                         >
@@ -224,7 +224,7 @@ export default function Page() {
                           />
                         </button>
                       )}
-                      {data.estado === "en curso" && (
+                      {data.estado.nombre.toLowerCase() === "en curso" && (
                         <button
                           onClick={() => handleFinalizarCurso(data.id)}
                           className=" flex gap-2 h-auto"

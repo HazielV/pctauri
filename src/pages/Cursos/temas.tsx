@@ -3,14 +3,14 @@ import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useActions } from "./useActions";
 import { useModalStore } from "@/store/modalState";
-
+import { v4 as uuidv4 } from "uuid";
 type TemaType = {
-  id: number;
-  estado: "activo" | "inactivo";
+  id: string;
+  estado_id: string;
   orden: number | null;
-  cursoId: number;
-  tipo: "TEORICO" | "PRACTICO";
+  curso_id: string;
   titulo: string;
+  tipo: string;
 };
 
 export default function Temas({
@@ -18,7 +18,7 @@ export default function Temas({
   cursoId,
 }: {
   temas: TemaType[];
-  cursoId: number;
+  cursoId: string;
 }) {
   const { formId } = useModalStore();
   const { temasUpsertMutation } = useActions();
@@ -38,10 +38,10 @@ export default function Temas({
 
     const nuevoTema: TemaType = {
       // Usamos Date.now() como ID temporal (negativo para saber que es nuevo al guardar)
-      id: -Date.now(),
-      estado: "activo",
+      id: "NEW-" + uuidv4(),
+      estado_id: "activo",
       orden: nuevoOrden,
-      cursoId: cursoId,
+      curso_id: cursoId,
       tipo: tipo,
       titulo: titulo.trim(),
     };
@@ -55,7 +55,7 @@ export default function Temas({
 
   // Función para eliminar un tema
   const handleEliminarTema = (
-    idAEliminar: number,
+    idAEliminar: string,
     tipo: "TEORICO" | "PRACTICO",
   ) => {
     setTemasEstado((prev) => {
@@ -74,7 +74,7 @@ export default function Temas({
   };
 
   // Función para actualizar el título de un tema existente
-  const handleActualizarTitulo = (id: number, nuevoTitulo: string) => {
+  const handleActualizarTitulo = (id: string, nuevoTitulo: string) => {
     setTemasEstado((prev) =>
       prev.map((t) => (t.id === id ? { ...t, titulo: nuevoTitulo } : t)),
     );

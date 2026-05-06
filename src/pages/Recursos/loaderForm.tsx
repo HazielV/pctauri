@@ -2,13 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form } from "./form";
 import { db } from "@/db/client";
+import { estado } from "@/db/schema";
 
-export function LoaderForm({ id }: { id?: number }) {
+export function LoaderForm({ id }: { id?: string }) {
   const { data: roles, isLoading: loadingRoles } = useQuery({
     queryKey: ["roles-activos"],
     queryFn: () =>
       db.query.rol.findMany({
-        where: (rol, { eq }) => eq(rol.estado, "activo"),
+        where: (rol, { eq }) =>
+          eq(rol.estado_id, "677a02b3-38ca-4a24-9281-9e38b2d674e0"),
       }),
   });
   const { data: permisos, isLoading: loadingPermisos } = useQuery({
@@ -21,14 +23,38 @@ export function LoaderForm({ id }: { id?: number }) {
           valor: true,
           nombre: true,
         },
-        where: (permisos, { eq }) => eq(permisos.estado, "activo"),
+        where: (t, { eq, and }) =>
+          eq(
+            t.estado_id,
+            db
+              .select({ id: estado.id })
+              .from(estado)
+              .where(
+                and(
+                  eq(estado.nombre, "ACTIVO"),
+                  eq(estado.categoria, "SISTEMA"),
+                ),
+              ),
+          ),
       }),
   });
   const { data: menus, isLoading: loadingMenus } = useQuery({
     queryKey: ["menus-activos"],
     queryFn: () =>
       db.query.menu.findMany({
-        where: (menu, { eq }) => eq(menu.estado, "activo"),
+        where: (t, { eq, and }) =>
+          eq(
+            t.estado_id,
+            db
+              .select({ id: estado.id })
+              .from(estado)
+              .where(
+                and(
+                  eq(estado.nombre, "ACTIVO"),
+                  eq(estado.categoria, "SISTEMA"),
+                ),
+              ),
+          ),
       }),
   });
 

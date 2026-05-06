@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX `Menu_recursoId_unique` ON `Menu` (`recursoId`);

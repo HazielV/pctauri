@@ -2,12 +2,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/db/client";
 import { persona, usuario, usuariosRoles } from "@/db/schema";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { useModalStore } from "@/store/modalState";
 import { useAlertStore } from "@/store/AlertState";
 import { toast } from "sonner";
 import { LoaderForm } from "./loaderForm";
 import { v4 as uuidv4 } from "uuid";
+
 export const useActions = () => {
   const queryClient = useQueryClient();
   const { setLoading, show, close } = useModalStore();
@@ -20,13 +21,15 @@ export const useActions = () => {
       const data = await db.query.usuario.findMany({
         offset: skip,
         limit: perPage,
+
         with: {
+          estado: true,
           persona: {
             columns: {
               nombres: true,
-              primerApellido: true,
-              segundoApellido: true,
-              nroDocumento: true,
+              primer_apellido: true,
+              segundo_apellido: true,
+              nro_documento: true,
             },
           },
         },
@@ -66,9 +69,13 @@ export const useActions = () => {
   const upsertMutation = useMutation({
     mutationFn: async ({ id, values }: { id?: string; values: any }) => {
       setLoading(true);
-      console.log("Valores recibidos:", values);
-      const { username, password, rolId, ...dataPersona } = values;
-
+      const { username, password, rol_id, ...dataPersona } = values;
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t) => and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
+      if (!estadoActivo) {
+        throw new Error("Error estados");
+      }
       try {
         if (id) {
           // ---------------------------------------------------------
@@ -85,26 +92,27 @@ export const useActions = () => {
           // 2. Actualizamos Usuario
           await db
             .update(usuario)
-            .set({ username, password })
+            .set({ username, password, estado_id: estadoActivo?.id })
             .where(eq(usuario.id, id));
 
           // 3. Actualizamos Persona
           await db
             .update(persona)
             .set(dataPersona)
-            .where(eq(persona.id, userRecord.personaId));
+            .where(eq(persona.id, userRecord.persona_id));
 
           // 4. Gestionamos el Rol (Wipe & Replace)
-          if (rolId) {
+          if (rol_id) {
             await db
               .delete(usuariosRoles)
-              .where(eq(usuariosRoles.usuarioId, id));
+              .where(eq(usuariosRoles.usuario_id, id));
 
             await db.insert(usuariosRoles).values({
               // id: uuidv4(), // Descomenta si tu tabla UsuariosRoles tiene ID propio
-              usuarioId: id,
-              rolId: String(rolId),
-              asignadoEl: new Date().toISOString(), // Usamos JS puro por seguridad con SQLite
+              rol_id: String(rol_id),
+              estado_id: estadoActivo?.id,
+              usuario_id: id,
+              asignado_el: new Date().toISOString(), // Usamos JS puro por seguridad con SQLite
             });
           }
 
@@ -122,6 +130,7 @@ export const useActions = () => {
           await db.insert(persona).values({
             ...dataPersona,
             id: newPersonaId, // Inyectamos el ID generado
+            estado_id: estadoActivo?.id,
           });
 
           // 3. Crear Usuario
@@ -129,16 +138,18 @@ export const useActions = () => {
             id: newUsuarioId, // Inyectamos el ID generado
             username,
             password,
-            personaId: newPersonaId, // Ya lo conocemos, no necesitamos .returning()
+            persona_id: newPersonaId, // Ya lo conocemos, no necesitamos .returning()
+            estado_id: estadoActivo?.id,
           });
 
           // 4. Asignar el Rol
-          if (rolId) {
+          if (rol_id) {
             await db.insert(usuariosRoles).values({
               // id: uuidv4(), // Descomenta si tu tabla UsuariosRoles tiene ID propio
-              usuarioId: newUsuarioId,
-              rolId: String(rolId),
-              asignadoEl: new Date().toISOString(),
+              estado_id: estadoActivo?.id,
+              usuario_id: newUsuarioId,
+              rol_id: String(rol_id),
+              asignado_el: new Date().toISOString(),
             });
           }
 
@@ -169,15 +180,18 @@ export const useActions = () => {
   });
 
   const statusMutation = useMutation({
-    mutationFn: async ({
-      id,
-      estado,
-    }: {
-      id: string;
-      estado: "activo" | "inactivo";
-    }) => {
-      // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
-      return await db.update(usuario).set({ estado }).where(eq(usuario.id, id));
+    mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
+      const estadonuevo = await db.query.estado.findFirst({
+        where: (t, { eq, and }) =>
+          and(
+            eq(t.nombre, estado === "ACTIVO" ? "INACTIVO" : "ACTIVO"),
+            eq(t.categoria, "SISTEMA"),
+          ),
+      });
+      return await db
+        .update(usuario)
+        .set({ estado_id: estadonuevo?.id })
+        .where(eq(usuario.id, id));
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["usuarios-list"] }),
@@ -197,7 +211,7 @@ export const useActions = () => {
   };
 
   const handleToggleStatus = (id: string, currentStatus: string) => {
-    const isInactive = currentStatus === "inactivo";
+    const isInactive = currentStatus.toLowerCase() === "inactivo";
     showAlert({
       title: isInactive ? "¿Activar Usuario?" : "¿Deshabilitar Usuario?",
       description: `El usuario pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
@@ -207,7 +221,7 @@ export const useActions = () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
         await statusMutation.mutateAsync({
           id,
-          estado: isInactive ? "activo" : "inactivo",
+          estado: currentStatus,
         });
         toast.success("Estado actualizado");
       },

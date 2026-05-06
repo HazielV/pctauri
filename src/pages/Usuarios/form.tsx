@@ -7,7 +7,7 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
-import { persona } from "../../db/schema";
+
 import { useModalStore } from "@/store/modalState";
 
 import { useActions } from "./useActions";
@@ -24,49 +24,59 @@ import {
 export type NewData =
   | {
       id: string;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
       username: string;
       password: string;
-      personaId: number;
-      usuariosRoles: {
-        rol: {
-          id: number;
-        };
-      }[];
+      persona_id: string;
       persona: {
         id: string;
         nombres: string;
-        primerApellido: string;
-        segundoApellido: string | null;
-        nroDocumento: number;
-        nroCelular: number;
+        primer_apellido: string;
+        segundo_apellido: string | null;
+        nro_documento: number;
+        nro_celular: number;
         email: string;
-        sexo: "MASCULINO" | "FEMENINO" | "OTRO";
-        fechaNacimiento: string;
+        sexo_id: string;
+        tipo_documento_id: string;
+        fecha_nacimiento: string;
         direccion: string | null;
-        createdAt: string;
-        updatedAt: string;
-        tipoDocumento: "CEDULA" | "PASAPORTE" | "EXTRANJERO";
-        estado: "activo" | "inactivo" | "pendiente";
+        estado_id: string;
+        created_at: string;
+        updated_at: string;
       };
+      usuariosRoles: {
+        rol: {
+          id: string;
+        };
+      }[];
     }
   | undefined;
 type roles =
   | {
       id: string;
-      estado: "activo" | "inactivo" | "pendiente";
       nombre: string;
+      descripcion: string | null;
+      estado_id: string;
+    }[]
+  | undefined;
+type catalogos =
+  | {
+      id: string;
+      nombre: string;
+      categoria: string | null;
       descripcion: string | null;
     }[]
   | undefined;
 export function Form({
   data,
   roles,
+  catalogos,
 }: {
   data?: NewData | undefined;
   roles: roles;
+  catalogos: catalogos;
 }) {
   const { formId } = useModalStore();
   const { upsertMutation } = useActions();
@@ -109,15 +119,15 @@ export function Form({
           </InputGroup>
         </Field>
         <Field className="w-full">
-          <FieldLabel htmlFor="rolId">
+          <FieldLabel htmlFor="rol_id">
             Rol del usuario <span className="text-destructive">*</span>
           </FieldLabel>
 
           <Select
-            name="rolId"
+            name="rol_id"
             defaultValue={String(data?.usuariosRoles?.[0]?.rol?.id) || ""}
           >
-            <SelectTrigger id="rolId">
+            <SelectTrigger id="rol_id">
               <SelectValue placeholder="Seleccione un rol" />
             </SelectTrigger>
             <SelectContent>
@@ -150,40 +160,40 @@ export function Form({
             </InputGroup>
           </Field>
           <Field className="w-full">
-            <FieldLabel htmlFor="primerApellido">
+            <FieldLabel htmlFor="primer_apellido">
               Primer apelldio <span className="text-destructive">*</span>
             </FieldLabel>
             <InputGroup>
               <InputGroupInput
-                id="primerApellido"
+                id="primer_apellido"
                 placeholder="Ingrese su primer apellido"
-                name="primerApellido"
-                defaultValue={data?.persona.primerApellido || undefined}
+                name="primer_apellido"
+                defaultValue={data?.persona.primer_apellido || undefined}
               />
             </InputGroup>
           </Field>
           <Field className="w-full">
-            <FieldLabel htmlFor="segundoApellido">Segundo apelldio</FieldLabel>
+            <FieldLabel htmlFor="segundo_apellido">Segundo apelldio</FieldLabel>
             <InputGroup>
               <InputGroupInput
-                id="segundoApellido"
+                id="segundo_apellido"
                 placeholder="Ingrese su segundo apellido"
-                name="segundoApellido"
-                defaultValue={data?.persona.segundoApellido || undefined}
+                name="segundo_apellido"
+                defaultValue={data?.persona.segundo_apellido || undefined}
               />
             </InputGroup>
           </Field>
           <Field className="w-full">
-            <FieldLabel htmlFor="fechaNacimiento">
+            <FieldLabel htmlFor="fecha_nacimiento">
               Fecha de nacimiento <span className="text-destructive">*</span>
             </FieldLabel>
             <InputGroup>
               <InputGroupInput
-                id="fechaNacimiento"
+                id="fecha_nacimiento"
                 placeholder="Ingrese su correo"
-                name="fechaNacimiento"
+                name="fecha_nacimiento"
                 type="date"
-                defaultValue={data?.persona.fechaNacimiento || undefined}
+                defaultValue={data?.persona.fecha_nacimiento || undefined}
               />
             </InputGroup>
           </Field>
@@ -202,29 +212,30 @@ export function Form({
             </InputGroup>
           </Field>
           <Field className="w-full">
-            <FieldLabel htmlFor="nroDocumento">
+            <FieldLabel htmlFor="nro_documento">
               Nro documento <span className="text-destructive">*</span>
             </FieldLabel>
             <InputGroup>
               <InputGroupInput
-                id="nroDocumento"
+                id="nro_documento"
                 placeholder="Numero de documento"
-                name="nroDocumento"
+                name="nro_documento"
                 type="number"
-                defaultValue={data?.persona.nroDocumento || undefined}
+                defaultValue={data?.persona.nro_documento || undefined}
               />
             </InputGroup>
           </Field>
           <Field className="w-full">
-            <FieldLabel htmlFor="tipoDocumento">
+            <FieldLabel htmlFor="tipo_documento_id">
               Tipo documento <span className="text-destructive">*</span>
             </FieldLabel>
 
             <Select
-              name="tipoDocumento"
+              name="tipo_documento_id"
               defaultValue={
-                data?.persona?.tipoDocumento ||
-                persona.tipoDocumento.enumValues[0]
+                data?.persona?.tipo_documento_id ||
+                catalogos?.filter((c) => c.categoria === "TIPO_DOCUMENTO")?.[0]
+                  .id
               }
             >
               <SelectTrigger id="tipoDocumento">
@@ -232,11 +243,13 @@ export function Form({
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {persona.tipoDocumento.enumValues.map((valor, index) => (
-                    <SelectItem key={index} value={valor}>
-                      {valor}
-                    </SelectItem>
-                  ))}
+                  {catalogos
+                    ?.filter((c) => c.categoria === "TIPO_DOCUMENTO")
+                    .map((valor) => (
+                      <SelectItem key={valor.id} value={valor.id}>
+                        {valor.nombre}
+                      </SelectItem>
+                    ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -253,38 +266,43 @@ export function Form({
             </InputGroup>
           </Field>
           <Field className="w-full">
-            <FieldLabel htmlFor="sexo">
+            <FieldLabel htmlFor="sexo_id">
               Sexo <span className="text-destructive">*</span>
             </FieldLabel>
             <Select
-              name="sexo"
-              defaultValue={data?.persona?.sexo || persona.sexo.enumValues[0]}
+              name="sexo_id"
+              defaultValue={
+                data?.persona?.sexo_id ||
+                catalogos?.filter((c) => c.categoria === "SEXO")?.[0].id
+              }
             >
-              <SelectTrigger id="sexo">
+              <SelectTrigger id="sexo_id">
                 <SelectValue placeholder="Seleccione un sexo" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {persona.sexo.enumValues.map((valor, index) => (
-                    <SelectItem key={index} value={valor}>
-                      {valor}
-                    </SelectItem>
-                  ))}
+                  {catalogos
+                    ?.filter((c) => c.categoria === "SEXO")
+                    .map((valor) => (
+                      <SelectItem key={valor.id} value={valor.id}>
+                        {valor.nombre}
+                      </SelectItem>
+                    ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
           </Field>
           <Field className="w-full">
-            <FieldLabel htmlFor="nroCelular">
+            <FieldLabel htmlFor="nro_celular">
               Nro. Celular <span className="text-destructive">*</span>
             </FieldLabel>
             <InputGroup>
               <InputGroupInput
-                id="nroCelular"
+                id="nro_celular"
                 placeholder="Numero de celular"
-                name="nroCelular"
+                name="nro_celular"
                 type="number"
-                defaultValue={data?.persona.nroCelular || undefined}
+                defaultValue={data?.persona.nro_celular || undefined}
               />
             </InputGroup>
           </Field>

@@ -25,63 +25,73 @@ import { Fieldset } from "@base-ui/react";
 type cursos =
   | {
       id: string;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "finalizado" | "en curso" | "programado";
-      nombreCurso: string;
-      precioBase: number;
-      horasTeoricasReq: number;
-      horasPracticasReq: number;
-      gestionId: number;
-      sucursalId: number;
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
+      nombre_curso: string;
+      precio_base: number;
+      horas_teoricas_req: number;
+      horas_practicas_req: number;
+      gestion_id: string;
+      sucursal_id: string;
     }[]
   | undefined;
 type vehiculos =
   | {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
+      id: string;
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
       placa: string;
       marca: string;
-      estadoOperativo: "DISPONIBLE" | "MANTENIMIENTO" | "AVERIADO";
+      estado_operativo_id: string;
     }[]
   | undefined;
 type instructores =
   | {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
-      personaId: number;
-      nroLicencia: string;
-      disponibilidadActiva: boolean;
+      id: string;
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
+      persona_id: string;
+      nro_licencia: string;
+      disponibilidad_activa: boolean;
       persona: {
-        id: number;
+        id: string;
         nombres: string;
-        primerApellido: string;
-        segundoApellido: string | null;
-        nroDocumento: number;
-        nroCelular: number;
+        primer_apellido: string;
+        segundo_apellido: string | null;
+        nro_documento: number;
+        nro_celular: number;
         email: string;
-        sexo: "MASCULINO" | "FEMENINO" | "OTRO";
-        fechaNacimiento: string;
+        sexo_id: string;
+        tipo_documento_id: string;
+        fecha_nacimiento: string;
         direccion: string | null;
-        createdAt: string;
-        updatedAt: string;
-        tipoDocumento: "CEDULA" | "PASAPORTE" | "EXTRANJERO";
-        estado: "activo" | "inactivo" | "pendiente";
+        estado_id: string;
+        created_at: string;
+        updated_at: string;
       };
+    }[]
+  | undefined;
+type catalogos =
+  | {
+      id: string;
+      nombre: string;
+      categoria: string | null;
+      descripcion: string | null;
     }[]
   | undefined;
 export function Form({
   vehiculos,
   instructores,
   cursos,
+  catalogos,
 }: {
   cursos: cursos;
   instructores: instructores;
   vehiculos: vehiculos;
+  catalogos: catalogos;
 }) {
   const [horarioPractico, setHorarioPractico] = useState({
     tempId: Date.now(),
@@ -94,20 +104,20 @@ export function Form({
   const [cursoId, setCursoId] = useState("");
   const [findpersona, setFindPersona] = useState<
     | {
-        id: number;
+        id: string;
         nombres: string;
-        primerApellido: string;
-        segundoApellido: string | null;
-        nroDocumento: number;
-        nroCelular: number;
+        primer_apellido: string;
+        segundo_apellido: string | null;
+        nro_documento: number;
+        nro_celular: number;
         email: string;
-        sexo: "MASCULINO" | "FEMENINO" | "OTRO";
-        fechaNacimiento: string;
+        sexo_id: string;
+        tipo_documento_id: string;
+        fecha_nacimiento: string;
         direccion: string | null;
-        createdAt: string;
-        updatedAt: string;
-        tipoDocumento: "CEDULA" | "PASAPORTE" | "EXTRANJERO";
-        estado: "activo" | "inactivo" | "pendiente";
+        estado_id: string;
+        created_at: string;
+        updated_at: string;
       }
     | undefined
   >();
@@ -136,7 +146,7 @@ export function Form({
     /* console.log("id", data?.id); */
     upsertMutation.mutate({
       values: formdata,
-      nroDocumento: findpersona ? Number(findpersona.nroDocumento) : undefined,
+      nroDocumento: findpersona ? Number(findpersona.nro_documento) : undefined,
     });
   };
   const { data: horariosDisponibles } = useGetHorariosCurso(cursoId);
@@ -147,42 +157,45 @@ export function Form({
         <FieldGroup className="grid grid-cols-2 lg:grid-cols-3">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 col-span-2 lg:col-span-3 ">
             <Field className="w-full">
-              <FieldLabel htmlFor="tipoDocumento">
+              <FieldLabel htmlFor="tipo_documento_id">
                 Tipo documento <span className="text-destructive">*</span>
               </FieldLabel>
 
               <Select
-                name="tipoDocumento"
+                name="tipo_documento_id"
                 defaultValue={
-                  findpersona?.tipoDocumento ||
-                  persona.tipoDocumento.enumValues[0]
+                  catalogos?.filter(
+                    (c) => c.categoria === "TIPO_DOCUMENTO",
+                  )?.[0].id
                 }
               >
-                <SelectTrigger id="tipoDocumento">
+                <SelectTrigger id="tipo_documento_id">
                   <SelectValue placeholder="Seleccione un tipo" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {persona.tipoDocumento.enumValues.map((valor, index) => (
-                      <SelectItem key={index} value={valor}>
-                        {valor}
-                      </SelectItem>
-                    ))}
+                    {catalogos
+                      ?.filter((c) => c.categoria === "TIPO_DOCUMENTO")
+                      .map((valor) => (
+                        <SelectItem key={valor.id} value={valor.id}>
+                          {valor.nombre}
+                        </SelectItem>
+                      ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
             </Field>
             <Field className="w-full">
-              <FieldLabel htmlFor="nroDocumento">
+              <FieldLabel htmlFor="nro_documento">
                 Nro documento <span className="text-destructive">*</span>
               </FieldLabel>
               <InputGroup>
                 <InputGroupInput
-                  id="nroDocumento"
+                  id="nro_documento"
                   placeholder="Numero de documento"
-                  name="nroDocumento"
+                  name="nro_documento"
                   type="number"
-                  defaultValue={findpersona?.nroDocumento || undefined}
+                  defaultValue={findpersona?.nro_documento || undefined}
                   value={nroDocu}
                   onChange={(e) => setNroDocu(e.target.value)}
                   onBlur={buscarPersonaXci}
@@ -205,42 +218,42 @@ export function Form({
             </InputGroup>
           </Field>
           <Field className="w-full">
-            <FieldLabel htmlFor="primerApellido">
+            <FieldLabel htmlFor="primer_apellido">
               Primer apelldio <span className="text-destructive">*</span>
             </FieldLabel>
             <InputGroup>
               <InputGroupInput
-                id="primerApellido"
+                id="primer_apellido"
                 placeholder="Ingrese su primer apellido"
-                name="primerApellido"
-                defaultValue={findpersona?.primerApellido}
+                name="primer_apellido"
+                defaultValue={findpersona?.primer_apellido}
                 disabled={!!findpersona}
               />
             </InputGroup>
           </Field>
           <Field className="w-full">
-            <FieldLabel htmlFor="segundoApellido">Segundo apelldio</FieldLabel>
+            <FieldLabel htmlFor="segundo_apellido">Segundo apelldio</FieldLabel>
             <InputGroup>
               <InputGroupInput
-                id="segundoApellido"
+                id="segundo_apellido"
                 placeholder="Ingrese su segundo apellido"
-                name="segundoApellido"
-                defaultValue={findpersona?.segundoApellido || undefined}
+                name="segundo_apellido"
+                defaultValue={findpersona?.segundo_apellido || undefined}
                 disabled={!!findpersona}
               />
             </InputGroup>
           </Field>
           <Field className="w-full">
-            <FieldLabel htmlFor="fechaNacimiento">
+            <FieldLabel htmlFor="fecha_nacimiento">
               Fecha de nacimiento <span className="text-destructive">*</span>
             </FieldLabel>
             <InputGroup>
               <InputGroupInput
-                id="fechaNacimiento"
+                id="fecha_nacimiento"
                 placeholder="Ingrese su correo"
-                name="fechaNacimiento"
+                name="fecha_nacimiento"
                 type="date"
-                defaultValue={findpersona?.fechaNacimiento || undefined}
+                defaultValue={findpersona?.fecha_nacimiento || undefined}
                 disabled={!!findpersona}
               />
             </InputGroup>
@@ -279,34 +292,39 @@ export function Form({
             </FieldLabel>
             <Select
               disabled={!!findpersona}
-              name="sexo"
-              defaultValue={findpersona?.sexo || persona.sexo.enumValues[0]}
+              name="sexo_id"
+              defaultValue={
+                findpersona?.sexo_id ||
+                catalogos?.filter((c) => c.categoria === "SEXO")?.[0].id
+              }
             >
               <SelectTrigger id="sexo">
                 <SelectValue placeholder="Seleccione un sexo" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {persona.sexo.enumValues.map((valor, index) => (
-                    <SelectItem key={index} value={valor}>
-                      {valor}
-                    </SelectItem>
-                  ))}
+                  {catalogos
+                    ?.filter((c) => c.categoria === "SEXO")
+                    .map((valor) => (
+                      <SelectItem key={valor.id} value={valor.id}>
+                        {valor.nombre}
+                      </SelectItem>
+                    ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
           </Field>
           <Field className="w-full">
-            <FieldLabel htmlFor="nroCelular">
+            <FieldLabel htmlFor="nro_celular">
               Nro. Celular <span className="text-destructive">*</span>
             </FieldLabel>
             <InputGroup>
               <InputGroupInput
-                id="nroCelular"
+                id="nro_celular"
                 placeholder="Numero de celular"
-                name="nroCelular"
+                name="nro_celular"
                 type="number"
-                defaultValue={findpersona?.nroCelular || undefined}
+                defaultValue={findpersona?.nro_celular || undefined}
                 disabled={!!findpersona}
               />
             </InputGroup>
@@ -344,7 +362,7 @@ export function Form({
               <SelectGroup>
                 {cursos?.map((valor, index) => (
                   <SelectItem key={index} value={String(valor.id)}>
-                    {valor.nombreCurso}
+                    {valor.nombre_curso}
                   </SelectItem>
                 ))}
               </SelectGroup>
@@ -364,7 +382,7 @@ export function Form({
               <SelectGroup>
                 {horariosDisponibles?.map((valor, index) => (
                   <SelectItem key={index} value={String(valor.id)}>
-                    {`${valor.diaSemana} ${valor.horaInicio}-${valor.horaFin}`}
+                    {`${valor.diaSemana.nombre} ${valor.hora_inicio}-${valor.hora_fin}`}
                   </SelectItem>
                 ))}
               </SelectGroup>
@@ -381,7 +399,7 @@ export function Form({
               placeholder="Precio con descuento"
               name="precioPactado"
               defaultValue={
-                cursos?.find((c) => c.id === cursoId)?.precioBase || ""
+                cursos?.find((c) => c.id === cursoId)?.precio_base || ""
               }
               required
             />
@@ -390,8 +408,8 @@ export function Form({
         <input
           hidden
           type="text"
-          name="gestionId"
-          defaultValue={cursos?.find((c) => c.id === cursoId)?.gestionId || ""}
+          name="gestion_id"
+          defaultValue={cursos?.find((c) => c.id === cursoId)?.gestion_id || ""}
         />
       </FieldGroup>
       <FieldSeparator />
@@ -411,11 +429,13 @@ export function Form({
                 <SelectValue placeholder="Seleccione un día" />
               </SelectTrigger>
               <SelectContent>
-                {horarioPlantilla.diaSemana.enumValues.map((val) => (
-                  <SelectItem key={val} value={val}>
-                    {val}
-                  </SelectItem>
-                ))}
+                {catalogos
+                  ?.filter((c) => c.categoria === "DIA_SEMANA")
+                  .map((valor) => (
+                    <SelectItem key={valor.id} value={valor.id}>
+                      {valor.nombre}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </Field>
@@ -461,7 +481,7 @@ export function Form({
                     value={String(val.id)}
                     className="capitalize"
                   >
-                    {`${val.persona.nombres} ${val.persona.primerApellido} ${val.persona.segundoApellido}`}
+                    {`${val.persona.nombres} ${val.persona.primer_apellido} ${val.persona.segundo_apellido}`}
                   </SelectItem>
                 ))}
               </SelectContent>

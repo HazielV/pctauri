@@ -7,7 +7,7 @@ import { db } from "@/db/client";
 import { menu } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-export function LoaderForm({ id }: { id?: number }) {
+export function LoaderForm({ id }: { id?: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ["menu_data", id],
     queryFn: async () => {

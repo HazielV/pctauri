@@ -22,13 +22,22 @@ export const useActions = () => {
         offset: skip,
         limit: perPage,
         with: {
-          temas: true,
+          estado: true,
+          temas: {
+            with: {
+              tipoTema: true,
+            },
+          },
           gestion: {
             columns: {
               nombre: true,
             },
           },
-          horarioPlantillas: true,
+          horarioPlantillas: {
+            with: {
+              diaSemana: true,
+            },
+          },
           sucursal: {
             columns: {
               nombre: true,
@@ -69,42 +78,59 @@ export const useActions = () => {
 
   // --- MUTACIONES ---
   const upsertMutation = useMutation({
-    mutationFn: async ({ id, values }: { id?: number; values: any }) => {
+    mutationFn: async ({ id, values }: { id?: string; values: any }) => {
       setLoading(true);
       const { horarios, ...datosCurso } = values;
-      return await db.transaction(async (tx) => {
-        let cursoId = id;
-
-        if (id) {
-          // 1. UPDATE CURSO
-          await tx
-            .update(curso)
-            .set({ ...datosCurso, updatedAt: new Date().toISOString() })
-            .where(eq(curso.id, id));
-
-          // 2. REFRESCAR HORARIOS (La forma más limpia en un Update es borrar y reinsertar)
-          await tx
-            .delete(horarioPlantilla)
-            .where(eq(horarioPlantilla.cursoId, id));
-        } else {
-          // 1. INSERT CURSO
-          const nuevoCurso = await tx
-            .insert(curso)
-            .values(datosCurso)
-            .returning({ id: curso.id });
-          cursoId = nuevoCurso[0].id;
-        }
-
-        // 3. INSERTAR HORARIOS (Tanto para Create como para Update)
-        if (horarios && horarios.length > 0) {
-          const horariosConId = horarios.map((h: any) => ({
-            ...h,
-            cursoId: cursoId,
-            nombre: `${h.tipo} - ${h.diaSemana}`, // Autogeneramos un nombre si no hay uno
-          }));
-          await tx.insert(horarioPlantilla).values(horariosConId);
-        }
+      console.log(values);
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
       });
+
+      if (!estadoActivo) {
+        throw new Error("Error estados");
+      }
+      let cursoId = id;
+
+      if (id) {
+        // 1. UPDATE CURSO
+        await db
+          .update(curso)
+          .set({ ...datosCurso, updatedAt: new Date().toISOString() })
+          .where(eq(curso.id, id));
+
+        // 2. REFRESCAR HORARIOS (Borrar para reinsertar)
+        await db
+          .delete(horarioPlantilla)
+          .where(eq(horarioPlantilla.curso_id, id));
+
+        cursoId = id;
+      } else {
+        // 1. INSERT CURSO
+        const nuevoCurso = await db
+          .insert(curso)
+          .values({ ...datosCurso, estado_id: estadoActivo.id })
+          .returning({ id: curso.id });
+
+        cursoId = nuevoCurso[0].id;
+      }
+
+      // 3. INSERTAR HORARIOS (Tanto para Create como para Update)
+      if (horarios && horarios.length > 0) {
+        const horariosConId = horarios.map((h: any) => ({
+          dia_semana_id: h.diaSemana,
+          estado_id: estadoActivo.id,
+          tipo_clase_id: h.tipo,
+          curso_id: cursoId,
+          hora_inicio: h.horaInicio,
+          hora_fin: h.horaFin,
+          nombre: `${h.tipo}`,
+        }));
+        console.log(horariosConId);
+        await db.insert(horarioPlantilla).values(horariosConId);
+      }
+
+      return cursoId;
     },
     onSuccess: (_, variables) => {
       setLoading(false);
@@ -123,14 +149,15 @@ export const useActions = () => {
   });
 
   const statusMutation = useMutation({
-    mutationFn: async ({
-      id,
-      estado,
-    }: {
-      id: number;
-      estado: "activo" | "inactivo" | "finalizado" | "en curso" | "programado";
-    }) => {
-      return await db.update(curso).set({ estado }).where(eq(curso.id, id));
+    mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
+      const estadoComenzar = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, estado.toUpperCase()), eq(t.categoria, "SISTEMA")),
+      });
+      return await db
+        .update(curso)
+        .set({ estado_id: estadoComenzar?.id })
+        .where(eq(curso.id, id));
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["cursos-list"] }),
@@ -139,12 +166,26 @@ export const useActions = () => {
     mutationFn: async ({ values }: { values: any }) => {
       const { cursoId, temasCurso, temasAnterior } = values;
 
-      // ==========================================
-      // 1. INACTIVAR los que el usuario quitó
-      // ==========================================
-      // Extraemos los IDs que sobrevivieron en el formulario
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
+      const estadoInactivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "INACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
+      if (!estadoActivo || !estadoInactivo) {
+        throw new Error("Error estados");
+      }
+      const tipoCatalogo = await db.query.catalogo.findMany({
+        where: (t, { and }) => and(eq(t.categoria, "TIPO_ACADEMICO")),
+      });
+      if (!tipoCatalogo) {
+        throw new Error("Error catalogo");
+      }
+
       const idsSobrevivientes = temasCurso
-        .filter((t: any) => t.id > 0)
+        .filter((t: any) => !t.id.startsWith("NEW"))
         .map((t: any) => t.id);
 
       // Encontramos los que estaban en la DB pero ya no están en el formulario
@@ -160,7 +201,7 @@ export const useActions = () => {
         await db
           .update(tema)
           .set({
-            estado: "inactivo",
+            estado_id: estadoInactivo.id,
             orden: 0,
           })
           .where(inArray(tema.id, idsInactivar));
@@ -169,7 +210,9 @@ export const useActions = () => {
       // ==========================================
       // 2. ACTUALIZAR los que se quedaron o modificaron
       // ==========================================
-      const temasParaActualizar = temasCurso.filter((t: any) => t.id > 0);
+      const temasParaActualizar = temasCurso.filter(
+        (t: any) => !t.id.startsWith("NEW"),
+      );
 
       // Hacemos un update uno por uno (es rápido en SQLite local)
       for (const t of temasParaActualizar) {
@@ -178,8 +221,9 @@ export const useActions = () => {
           .set({
             titulo: t.titulo,
             orden: t.orden,
-            tipo: t.tipo,
-            estado: "activo", // Por si acaso revivió
+            tipo_tema_id: tipoCatalogo.find((tipo) => tipo.nombre === t.nombre)
+              ?.id,
+            estado_id: estadoActivo.id, // Por si acaso revivió
           })
           .where(eq(tema.id, t.id));
       }
@@ -188,15 +232,21 @@ export const useActions = () => {
       // 3. INSERTAR los totalmente nuevos
       // ==========================================
       // Son los que creamos con un ID negativo en el frontend
-      const temasNuevos = temasCurso.filter((t: any) => t.id < 0);
+      const temasNuevos = temasCurso
+        .filter((t: any) => t.id.startsWith("NEW"))
+        .map((t: any) => ({
+          ...t,
+          id: t.id.replace(/^NEW-/, ""),
+          tipo_tema_id: tipoCatalogo.find((tipo) => tipo.nombre === t.tipo)?.id,
+        }));
 
       if (temasNuevos.length > 0) {
         const dataAInsertar = temasNuevos.map((t: any) => ({
-          cursoId: cursoId,
+          curso_id: cursoId,
           titulo: t.titulo,
-          tipo: t.tipo,
           orden: t.orden,
-          estado: "activo",
+          tipo_tema_id: tipoCatalogo.find((tipo) => tipo.nombre === t.tipo)?.id,
+          estado_id: estadoActivo.id, // Por si acaso revivió
         }));
 
         await db.insert(tema).values(dataAInsertar);
@@ -229,39 +279,71 @@ export const useActions = () => {
     estado,
   }: {
     temas: {
-      id: number;
-      estado: "activo" | "inactivo";
+      id: string;
+      estado_id: string;
       orden: number | null;
-      cursoId: number;
-      tipo: "TEORICO" | "PRACTICO";
+      curso_id: string;
       titulo: string;
+      tipo_tema_id: string;
+      tipoTema: {
+        id: string;
+        nombre: string;
+        categoria: string | null;
+        descripcion: string | null;
+      };
     }[];
-    cursoId: number;
+    cursoId: string;
     estado: string;
   }) => {
-    if (estado === "en curso") {
-      show(<Temas temas={temas} cursoId={cursoId} />, {
-        title: "Temas del curso",
-        formId: "temas-curso",
-        footer: <></>,
-      });
+    if (estado.toLowerCase() === "en curso") {
+      show(
+        <Temas
+          temas={temas.map((t) => ({
+            id: t.id,
+            estado_id: t.estado_id,
+            orden: t.orden,
+            titulo: t.titulo,
+            tipo: t.tipoTema.nombre,
+            curso_id: t.curso_id,
+          }))}
+          cursoId={cursoId}
+        />,
+        {
+          title: "Temas del curso",
+          formId: "temas-curso",
+          footer: <></>,
+        },
+      );
     }
-    if (estado === "activo") {
-      show(<Temas temas={temas} cursoId={cursoId} />, {
-        title: "Temas del curso",
-        formId: "temas-curso",
-      });
+    if (estado.toLowerCase() === "activo") {
+      show(
+        <Temas
+          temas={temas.map((t) => ({
+            id: t.id,
+            estado_id: t.estado_id,
+            orden: t.orden,
+            titulo: t.titulo,
+            tipo: t.tipoTema.nombre,
+            curso_id: t.curso_id,
+          }))}
+          cursoId={cursoId}
+        />,
+        {
+          title: "Temas del curso",
+          formId: "temas-curso",
+        },
+      );
     }
   };
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     show(<LoaderForm id={id} />, {
       title: "Editar curso",
       formId: "curso-formulario-edit",
     });
   };
 
-  const handleToggleStatus = (id: number, currentStatus: string) => {
-    const isInactive = currentStatus === "inactivo";
+  const handleToggleStatus = (id: string, currentStatus: string) => {
+    const isInactive = currentStatus.toLowerCase() === "inactivo";
     showAlert({
       title: isInactive ? "¿Activar Curso?" : "¿Deshabilitar Curso?",
       description: `El Curso pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
@@ -271,13 +353,13 @@ export const useActions = () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
         await statusMutation.mutateAsync({
           id,
-          estado: isInactive ? "activo" : "inactivo",
+          estado: currentStatus,
         });
         toast.success("Estado actualizado");
       },
     });
   };
-  const handleComenzarCurso = (id: number) => {
+  const handleComenzarCurso = (id: string) => {
     showAlert({
       title: "Comenzar curso?",
       description: "El curso dara inicio",
@@ -285,6 +367,7 @@ export const useActions = () => {
       actionText: "Comenzar",
       onAction: async () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
+
         await statusMutation.mutateAsync({
           id,
           estado: "en curso",
@@ -293,7 +376,7 @@ export const useActions = () => {
       },
     });
   };
-  const handleFinalizarCurso = (id: number) => {
+  const handleFinalizarCurso = (id: string) => {
     showAlert({
       title: "Finalizar curso?",
       description: "El curso finalizara",

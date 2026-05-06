@@ -1,1 +1,0 @@
-DROP INDEX `Menu_recursoId_unique`;
