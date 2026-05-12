@@ -29,7 +29,7 @@ import { useEffect, useRef } from "react";
 import { syncWithBackend } from "./store/syncManager";
 
 function App() {
-  /* useEffect(() => {
+  useEffect(() => {
     const triggerSync = async () => {
       try {
         await syncWithBackend();
@@ -53,7 +53,7 @@ function App() {
       window.removeEventListener("onLocalDbChange", triggerSync);
       clearInterval(interval);
     };
-  }, []); */
+  }, []);
 
   const queryClient = new QueryClient();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

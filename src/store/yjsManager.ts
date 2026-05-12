@@ -42,7 +42,7 @@ export async function pushData(
   if (method === "UPDATE" || method === "DELETE") {
     console.log("entra aqui con id", docId);
     const result = await sqlite.select<any[]>(
-      "SELECT state FROM yjsDocs WHERE doc_id = $1",
+      "SELECT state FROM yjs_docs WHERE doc_id = $1",
       [docId],
     );
 
@@ -55,11 +55,8 @@ export async function pushData(
 
   // 2. Aplicar los nuevos cambios locales al Y.Doc
   if (method === "DELETE") {
-    // Si manejas soft-deletes, podrías usar yMap.set("deleted", true)
-    // Si es hard-delete, podrías limpiar el mapa o ignorarlo dependiendo tu lógica.
     yMap.set("__deleted", true);
   } else {
-    // Para INSERT y UPDATE iteramos los campos mapeados
     for (const [key, value] of Object.entries(payload)) {
       if (value !== undefined) {
         yMap.set(key, value);
@@ -73,14 +70,14 @@ export async function pushData(
   // 4. Guardar en SQL indicando que está "sucio" (dirty = 1 / true)
   if (method === "INSERT") {
     await sqlite.execute(
-      `INSERT INTO yjsDocs (doc_id, table_name, state, dirty) 
+      `INSERT INTO yjs_docs (doc_id, table_name, state, dirty) 
        VALUES ($1, $2, $3, 1)`,
       [docId, tableName, finalStateText],
     );
   } else {
     // INSERT OR REPLACE por seguridad si por alguna razón no existía
     await sqlite.execute(
-      `INSERT OR REPLACE INTO yjsDocs (doc_id, table_name, state, dirty) 
+      `INSERT OR REPLACE INTO yjs_docs (doc_id, table_name, state, dirty) 
        VALUES ($1, $2, $3, 1)`,
       [docId, tableName, finalStateText],
     );

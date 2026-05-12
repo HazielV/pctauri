@@ -25,70 +25,70 @@ import { addDays, parseISO, startOfDay } from "date-fns";
 
 type dataInscripcion =
   | {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente" | "finalizada" | "abandonada";
-      fechaInicio: string;
-      fechaFin: string;
-      gestionId: number;
-      estudianteId: number;
-      cursoId: number;
-      precioPactado: number;
-      horarioPlantillaId: number;
-      fechaInscripcion: string;
-      estadoInscripcion: "pendiente" | "reprobado" | "aprobado";
+      id: string;
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
+      fecha_inicio: string;
+      fecha_fin: string;
+      gestion_id: string;
+      estudiante_id: string;
+      curso_id: string;
+      precio_pactado: number;
+      horario_plantilla_id: string;
+      fecha_inscripcion: string;
+      estado_inscripcion_id: string;
       curso: {
-        id: number;
-        nombreCurso: string;
+        id: string;
+        nombre_curso: string;
       };
       estudiante: {
-        id: number;
-        codigoInterno: string | null;
+        id: string;
+        codigo_interno: string | null;
         persona: {
           nombres: string;
-          primerApellido: string;
-          segundoApellido: string | null;
+          primer_apellido: string;
+          segundo_apellido: string | null;
         };
       };
     }
   | undefined;
 type instructores =
   | {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
-      personaId: number;
-      nroLicencia: string;
-      disponibilidadActiva: boolean;
+      id: string;
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
+      persona_id: string;
+      nro_licencia: string;
+      disponibilidad_activa: boolean;
       persona: {
-        id: number;
+        id: string;
         nombres: string;
-        primerApellido: string;
-        segundoApellido: string | null;
-        nroDocumento: number;
-        nroCelular: number;
+        primer_apellido: string;
+        segundo_apellido: string | null;
+        nro_documento: number;
+        nro_celular: number;
         email: string;
-        sexo: "MASCULINO" | "FEMENINO" | "OTRO";
-        fechaNacimiento: string;
+        sexo_id: string;
+        tipo_documento_id: string;
+        fecha_nacimiento: string;
         direccion: string | null;
-        createdAt: string;
-        updatedAt: string;
-        tipoDocumento: "CEDULA" | "PASAPORTE" | "EXTRANJERO";
-        estado: "activo" | "inactivo" | "pendiente";
+        estado_id: string;
+        created_at: string;
+        updated_at: string;
       };
     }[]
   | undefined;
 type vehiculos =
   | {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      estado: "activo" | "inactivo" | "pendiente";
+      id: string;
+      estado_id: string;
+      created_at: string;
+      updated_at: string;
       placa: string;
       marca: string;
-      estadoOperativo: "DISPONIBLE" | "MANTENIMIENTO" | "AVERIADO";
+      estado_operativo_id: string;
     }[]
   | undefined;
 export function FormAsistencia({
@@ -134,14 +134,14 @@ export function FormAsistencia({
           <div className="text-primary/60">fecha inicio:</div>
           <div className="text-primary/60">fecha fin:</div>
           <div className="capitalize ">
-            {`${dataInscripcion?.estudiante?.persona?.nombres} ${dataInscripcion?.estudiante?.persona?.primerApellido} ${dataInscripcion?.estudiante?.persona?.segundoApellido}`}
+            {`${dataInscripcion?.estudiante?.persona?.nombres} ${dataInscripcion?.estudiante?.persona?.primer_apellido} ${dataInscripcion?.estudiante?.persona?.segundo_apellido}`}
           </div>
 
           <div className="capitalize  ">
-            {dataInscripcion?.curso.nombreCurso}
+            {dataInscripcion?.curso.nombre_curso}
           </div>
-          <div className="capitalize  ">{dataInscripcion?.fechaInicio}</div>
-          <div className="capitalize  ">{dataInscripcion?.fechaFin}</div>
+          <div className="capitalize  ">{dataInscripcion?.fecha_inicio}</div>
+          <div className="capitalize  ">{dataInscripcion?.fecha_fin}</div>
         </div>
         <div className="flex gap-5 p-0.5">
           <FieldGroup className="w-[85%]">
@@ -236,7 +236,7 @@ export function FormAsistencia({
                       <SelectGroup>
                         {instructores?.map((valor, index) => (
                           <SelectItem key={index} value={String(valor.id)}>
-                            {`${valor.persona.nombres} ${valor.persona.primerApellido}`}
+                            {`${valor.persona.nombres} ${valor.persona.primer_apellido} ${valor.persona.segundo_apellido}`}
                           </SelectItem>
                         ))}
                       </SelectGroup>

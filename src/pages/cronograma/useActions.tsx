@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import {
   clasePractica,
   claseTeorica,
+  estado,
   evaluacionEstudiante,
   examenProgramado,
   gestion,
@@ -71,9 +72,20 @@ export const useActions = () => {
         // 1. Clases Teóricas
         const teoricas = await db.query.claseTeorica.findMany({
           where: and(
-            gte(claseTeorica.fechaExacta, fInicio),
-            lte(claseTeorica.fechaExacta, fFin),
-            eq(claseTeorica.estado, "activo"),
+            gte(claseTeorica.fecha_exacta, fInicio),
+            lte(claseTeorica.fecha_exacta, fFin),
+            eq(
+              claseTeorica.estado_id,
+              db
+                .select({ id: estado.id })
+                .from(estado)
+                .where(
+                  and(
+                    eq(estado.nombre, "ACTIVO"),
+                    eq(estado.categoria, "SISTEMA"),
+                  ),
+                ),
+            ),
           ),
           with: {
             curso: true,
@@ -83,9 +95,20 @@ export const useActions = () => {
         // 2. Clases Prácticas
         const practicas = await db.query.clasePractica.findMany({
           where: and(
-            gte(clasePractica.fechaExacta, fInicio),
-            lte(clasePractica.fechaExacta, fFin),
-            eq(clasePractica.estado, "activo"),
+            gte(clasePractica.fecha_exacta, fInicio),
+            lte(clasePractica.fecha_exacta, fFin),
+            eq(
+              clasePractica.estado_id,
+              db
+                .select({ id: estado.id })
+                .from(estado)
+                .where(
+                  and(
+                    eq(estado.nombre, "ACTIVO"),
+                    eq(estado.categoria, "SISTEMA"),
+                  ),
+                ),
+            ),
           ),
           with: {
             inscripcion: { with: { estudiante: { with: { persona: true } } } },
@@ -95,8 +118,8 @@ export const useActions = () => {
         // 3. Exámenes Programados
         const examenes = await db.query.examenProgramado.findMany({
           where: and(
-            gte(examenProgramado.fechaExacta, fInicio),
-            lte(examenProgramado.fechaExacta, fFin),
+            gte(examenProgramado.fecha_exacta, fInicio),
+            lte(examenProgramado.fecha_exacta, fFin),
             // No traemos los cancelados
           ),
           with: { curso: true },
@@ -110,12 +133,26 @@ export const useActions = () => {
 
   // --- MUTACIONES ---
   const upsertMutation = useMutation({
-    mutationFn: async ({ id, values }: { id?: number; values: any }) => {
+    mutationFn: async ({ id, values }: { id?: string; values: any }) => {
       // Si usas un estado global para el loading, descomenta esto
       // setLoading(true);
-
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
+      const estadoProgramado = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "PROGRAMADO"), eq(t.categoria, "SISTEMA")),
+      });
+      const estadoPresente = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "PRESENTE"), eq(t.categoria, "ESTADO_ACADEMICO")),
+      });
+      if (!estadoActivo || !estadoProgramado || !estadoPresente) {
+        throw new Error("Error estados");
+      }
       const { titulo, fechaExacta, tipoExamen, cursoId } = values;
-      const cId = Number(cursoId);
+      const cId = cursoId;
 
       let examenIdFinal = id;
 
@@ -127,9 +164,9 @@ export const useActions = () => {
           .update(examenProgramado)
           .set({
             titulo,
-            fechaExacta,
-            tipoExamen,
-            cursoId: cId,
+            fecha_exacta: fechaExacta,
+            tipo_examen_id: tipoExamen,
+            curso_id: cId,
           })
           .where(eq(examenProgramado.id, id));
       } else {
@@ -141,11 +178,11 @@ export const useActions = () => {
         const [nuevoExamen] = await db
           .insert(examenProgramado)
           .values({
-            cursoId: cId,
+            curso_id: cId,
             titulo,
-            tipoExamen,
-            fechaExacta,
-            estado: "PROGRAMADO",
+            tipo_examen_id: tipoExamen,
+            fecha_exacta: fechaExacta,
+            estado_id: estadoProgramado.id,
           })
           .returning({ id: examenProgramado.id });
 
@@ -154,18 +191,19 @@ export const useActions = () => {
         // 2. LA MAGIA: Buscamos a todos los estudiantes inscritos en este curso
         const estudiantesInscritos = await db.query.inscripcion.findMany({
           where: and(
-            eq(inscripcion.cursoId, cId),
-            eq(inscripcion.estado, "activo"), // Solo a los que siguen estudiando
+            eq(inscripcion.curso_id, cId),
+            eq(inscripcion.estado_id, estadoActivo.id), // Solo a los que siguen estudiando
           ),
         });
 
         // 3. Generamos las "planillas de notas vacías" para cada uno
         if (estudiantesInscritos.length > 0) {
           const evaluacionesVacias = estudiantesInscritos.map((ins: any) => ({
-            examenProgramadoId: examenIdFinal!,
-            inscripcionId: ins.id,
+            examen_programado_id: examenIdFinal!,
+            inscripcion_id: ins.id,
             // La nota se queda como NULL por defecto, lista para ser llenada
-            estadoAsistencia: "PRESENTE" as const, // Asumimos que irán, se cambia el día de la clase
+            estado_academico_id: estadoPresente.id,
+            estado_id: estadoActivo.id, // Asumimos que irán, se cambia el día de la clase
           }));
 
           // Insertamos masivamente todas las planillas
@@ -189,15 +227,18 @@ export const useActions = () => {
   });
 
   const statusMutation = useMutation({
-    mutationFn: async ({
-      id,
-      estado,
-    }: {
-      id: number;
-      estado: "activo" | "inactivo";
-    }) => {
-      // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
-      return await db.update(gestion).set({ estado }).where(eq(gestion.id, id));
+    mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
+      const estadonuevo = await db.query.estado.findFirst({
+        where: (t, { eq, and }) =>
+          and(
+            eq(t.nombre, estado === "ACTIVO" ? "INACTIVO" : "ACTIVO"),
+            eq(t.categoria, "SISTEMA"),
+          ),
+      });
+      return await db
+        .update(gestion)
+        .set({ estado_id: estadonuevo?.id })
+        .where(eq(gestion.id, id));
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["gestion-list"] }),
@@ -209,15 +250,15 @@ export const useActions = () => {
       formId: "gestion-formulario-create",
     });
   };
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     show(<LoaderForm id={id} />, {
       title: "Editar gestion",
       formId: "gestion-formulario-edit",
     });
   };
 
-  const handleToggleStatus = (id: number, currentStatus: string) => {
-    const isInactive = currentStatus === "inactivo";
+  const handleToggleStatus = (id: string, currentStatus: string) => {
+    const isInactive = currentStatus.toLowerCase() === "inactivo";
     showAlert({
       title: isInactive ? "¿Activar Gestion?" : "¿Deshabilitar Gestion?",
       description: `La Gestion pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
@@ -227,7 +268,7 @@ export const useActions = () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
         await statusMutation.mutateAsync({
           id,
-          estado: isInactive ? "activo" : "inactivo",
+          estado: currentStatus,
         });
         toast.success("Estado actualizado");
       },

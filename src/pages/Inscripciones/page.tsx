@@ -1,6 +1,13 @@
 import { RiSearch2Line } from "@remixicon/react";
 import { Link, useSearchParams } from "wouter";
-import { ChevronDown, FileStack, PlusIcon } from "lucide-react";
+import {
+  ChevronDown,
+  CircleCheckBig,
+  FileStack,
+  PenLine,
+  PlusIcon,
+  Trash2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -123,7 +130,7 @@ export default function Page() {
                       {data.estado.nombre.toLowerCase()}
                     </div>
                   </TableCell>
-                  {/* <TableCell>
+                  <TableCell>
                     <div className="flex gap-2">
                       <div className=" flex gap-2 h-auto">
                         <Trash2
@@ -131,7 +138,7 @@ export default function Page() {
                           className="cursor-pointer hover:text-black"
                         />
                       </div>
-                      {data.estado === "activo" && (
+                      {data.estado.nombre === "activo" && (
                         <button
                           onClick={() => handleEdit(data.id)}
                           className=" flex gap-2 h-auto"
@@ -142,10 +149,10 @@ export default function Page() {
                           />
                         </button>
                       )}
-                      {data.estado === "activo" && (
+                      {data.estado.nombre === "activo" && (
                         <button
                           onClick={() =>
-                            handleToggleStatus(data.id, data.estado)
+                            handleToggleStatus(data.id, data.estado.nombre)
                           }
                           className=" flex gap-2 h-auto"
                         >
@@ -155,10 +162,10 @@ export default function Page() {
                           />
                         </button>
                       )}
-                      {data.estado === "inactivo" && (
+                      {data.estado.nombre === "inactivo" && (
                         <button
                           onClick={() =>
-                            handleToggleStatus(data.id, data.estado)
+                            handleToggleStatus(data.id, data.estado.nombre)
                           }
                           className=" flex gap-2 h-auto"
                         >
@@ -169,7 +176,7 @@ export default function Page() {
                         </button>
                       )}
                     </div>
-                  </TableCell> */}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

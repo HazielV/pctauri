@@ -90,7 +90,7 @@ export default function Page() {
   const mapaTeoria = useMemo(() => {
     const map = new Map();
     matriz?.clasesTeoricas?.forEach((clase) => {
-      map.set(`${clase.cursoId}-${clase.fechaExacta}`, clase);
+      map.set(`${clase.curso_id}-${clase.fecha_exacta}`, clase);
     });
     return map;
   }, [matriz?.clasesTeoricas]);
@@ -99,7 +99,7 @@ export default function Page() {
   const mapaPractica = useMemo(() => {
     const map = new Map();
     matriz?.clasesPracticas?.forEach((clase) => {
-      map.set(`${clase.inscripcionId}-${clase.fechaExacta}`, clase);
+      map.set(`${clase.inscripcion_id}-${clase.fecha_exacta}`, clase);
     });
     return map;
   }, [matriz?.clasesPracticas]);
@@ -108,9 +108,9 @@ export default function Page() {
   const mapaAsistencias = useMemo(() => {
     const map = new Map();
     matriz?.asistencias?.forEach((asist) => {
-      const key = asist.claseTeoricaId
-        ? `T-${asist.inscripcionId}-${asist.claseTeoricaId}`
-        : `P-${asist.inscripcionId}-${asist.clasePracticaId}`;
+      const key = asist.clase_teorica_id
+        ? `T-${asist.inscripcion_id}-${asist.clase_teorica_id}`
+        : `P-${asist.inscripcion_id}-${asist.clase_practica_id}`;
       map.set(key, asist);
     });
     return map;
@@ -211,8 +211,8 @@ export default function Page() {
 
                 {matriz?.inscripciones.map((ins) => {
                   const diasTeoriaConfig = new Set(
-                    ins.curso?.horarioPlantillas?.map((h: any) =>
-                      h.diaSemana.toUpperCase(),
+                    ins.curso?.horarioPlantillas?.map((h) =>
+                      h.diaSemana.nombre.toUpperCase(),
                     ) || [],
                   );
 
@@ -220,10 +220,10 @@ export default function Page() {
                     <TableRow key={ins.id} className="">
                       <TableCell className="border-r font-medium  z-10 min-w-45">
                         <div className="text-sm leading-none mb-1">
-                          {`${ins.estudiante.persona.nombres} ${ins.estudiante.persona.primerApellido}`}
+                          {`${ins.estudiante.persona.nombres} ${ins.estudiante.persona.primer_apellido}`}
                         </div>
                         <div className="text-[10px] text-foreground/50 uppercase font-bold tracking-tighter">
-                          {ins.curso.nombreCurso}
+                          {ins.curso.nombre_curso}
                         </div>
                       </TableCell>
 
@@ -238,17 +238,17 @@ export default function Page() {
 
                         // 1. Buscamos clases en los Mapas (O(1) performance)
                         const claseT = mapaTeoria.get(
-                          `${ins.cursoId}-${fechaDia}`,
+                          `${ins.curso_id}-${fechaDia}`,
                         );
                         const claseP = mapaPractica.get(
                           `${ins.id}-${fechaDia}`,
                         );
                         const fechaActualObj = new Date(fechaDia + "T00:00:00");
                         const inicioInscripcionObj = new Date(
-                          ins.fechaInicio + "T00:00:00",
+                          ins.fecha_inicio + "T00:00:00",
                         );
                         const finInscripcionObj = new Date(
-                          ins.fechaFin + "T00:00:00",
+                          ins.fecha_fin + "T00:00:00",
                         );
 
                         const estaEnRangoInscripcion = isWithinInterval(
@@ -265,8 +265,8 @@ export default function Page() {
                           diasTeoriaConfig.has(nombreDiaDB);
                         const plantillaDelDia =
                           ins.curso?.horarioPlantillas?.find(
-                            (h: any) =>
-                              h.diaSemana.toUpperCase() === nombreDiaDB,
+                            (h) =>
+                              h.diaSemana.nombre.toUpperCase() === nombreDiaDB,
                           );
 
                         // 3. LA NUEVA REGLA: Tiene clase si hay un registro físico (T o P) O si el contrato lo exige
@@ -316,7 +316,7 @@ export default function Page() {
                                         `T-${ins.id}-${claseT.id}`,
                                       );
                                       handleLlenarAsistencia({
-                                        cursoId: ins.cursoId,
+                                        cursoId: ins.curso_id,
                                         fecha: fechaDia,
                                         claseId: claseT.id,
                                         tipoClase: "T",
@@ -327,8 +327,8 @@ export default function Page() {
                                   }}
                                   tipo="T"
                                   clase={claseT}
-                                  fallbackInicio={plantillaDelDia?.horaInicio}
-                                  fallbackFin={plantillaDelDia?.horaFin}
+                                  fallbackInicio={plantillaDelDia?.hora_inicio}
+                                  fallbackFin={plantillaDelDia?.hora_fin}
                                   asistencia={
                                     claseT
                                       ? mapaAsistencias.get(
@@ -346,7 +346,7 @@ export default function Page() {
                                       `P-${ins.id}-${claseP.id}`,
                                     );
                                     handleLlenarAsistencia({
-                                      cursoId: ins.cursoId,
+                                      cursoId: ins.curso_id,
                                       fecha: fechaDia,
                                       claseId: claseP.id,
                                       tipoClase: "P",
@@ -385,8 +385,8 @@ const IconoAsistencia = ({
   fallbackFin,
   ...props
 }: any) => {
-  const horaInicio = clase?.horaInicio || fallbackInicio || "--:--";
-  const horaFin = clase?.horaFin || fallbackFin || "--:--";
+  const horaInicio = clase?.hora_inicio || fallbackInicio || "--:--";
+  const horaFin = clase?.hora_fin || fallbackFin || "--:--";
   return (
     <div
       {...props}
@@ -415,9 +415,9 @@ const IconoAsistencia = ({
           <CircleDashed size={14} className="text-slate-300 animate-pulse" />
         ) : !asistencia ? (
           <Clock size={14} className="text-blue-400" />
-        ) : asistencia.estadoAsistencia === "PRESENTE" ? (
+        ) : asistencia?.estadoAcademico?.nombre === "PRESENTE" ? (
           <CheckCircle size={14} className="text-emerald-500" />
-        ) : asistencia.estadoAsistencia === "REPROGRAMADA" ? (
+        ) : asistencia?.estadoAcademico?.nombre === "REPROGRAMADA" ? (
           <Clock4 size={14} className="text-yellow-500" />
         ) : (
           <X size={14} className="text-rose-500" />

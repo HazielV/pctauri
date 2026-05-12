@@ -118,11 +118,11 @@ export function Form({ cursos }: { cursos: cursos }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {persona.tipoDocumento.enumValues.map((valor, index) => (
+                    {/* {persona.tipoDocumento.enumValues.map((valor, index) => (
                       <SelectItem key={index} value={valor}>
                         {valor}
                       </SelectItem>
-                    ))}
+                    ))} */}
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -242,11 +242,11 @@ export function Form({ cursos }: { cursos: cursos }) {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {persona.sexo.enumValues.map((valor, index) => (
+                  {/*  {persona.sexo.enumValues.map((valor, index) => (
                     <SelectItem key={index} value={valor}>
                       {valor}
                     </SelectItem>
-                  ))}
+                  ))} */}
                 </SelectGroup>
               </SelectContent>
             </Select>

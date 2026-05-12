@@ -73,7 +73,7 @@ export function LoaderForm({ id }: { id?: string }) {
     },
   });
   const { data: catalogos, isLoading: isLoadingCatalogos } = useQuery({
-    queryKey: ["catalogos_data", id],
+    queryKey: ["catalogos_data", "DIA_SEMANA", "TIPO_ACADEMICO"],
     queryFn: async () => {
       const initialData = await db.query.catalogo.findMany({
         where: (t, { eq, or }) =>

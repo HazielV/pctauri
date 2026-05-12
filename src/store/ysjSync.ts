@@ -11,7 +11,7 @@ export async function getLocalDirtyDocs() {
   const sqlite = await getDb();
   // Asumimos que dirty es guardado como INTEGER (1 o 0) en SQLite
   const docs = await sqlite.select<any[]>(
-    "SELECT doc_id, table_name, state FROM yjsDocs WHERE dirty = 1",
+    "SELECT doc_id, table_name, state FROM yjs_docs WHERE dirty = 1",
   );
   return docs; // Devuelve un array con { doc_id, table_name, state (Base64) }
 }
@@ -22,7 +22,7 @@ export async function getAllLocalDocs() {
   const sqlite = await getDb();
   // Solo necesitamos doc_id, table_name y el state para calcular el vector
   const docs = await sqlite.select<any[]>(
-    "SELECT doc_id, table_name, state FROM yjsDocs",
+    "SELECT doc_id, table_name, state FROM yjs_docs",
   );
   return docs;
 }
@@ -38,7 +38,7 @@ export async function markDocsAsSynced(docIds: string[]) {
     // Convertir arreglo a parámetros para query: "?, ?, ?"
     const placeholders = docIds.map(() => "?").join(",");
     await sqlite.execute(
-      `UPDATE yjsDocs SET dirty = 0 WHERE doc_id IN (${placeholders})`,
+      `UPDATE yjs_docs SET dirty = 0 WHERE doc_id IN (${placeholders})`,
       docIds,
     );
   } catch (e) {
@@ -75,7 +75,7 @@ export async function applyRemoteSync(
 
       // Consultamos el estado local (esta es la única lectura necesaria)
       const localCheck = await sqlite.select<any[]>(
-        "SELECT state FROM yjsDocs WHERE doc_id = ?",
+        "SELECT state FROM yjs_docs WHERE doc_id = ?",
         [row.doc_id],
       );
 
@@ -92,7 +92,7 @@ export async function applyRemoteSync(
       if (newStateText !== oldStateText) {
         // Actualización de la tabla de metadatos Yjs
         sqlScript += `
-          INSERT OR REPLACE INTO yjsDocs (doc_id, table_name, state, dirty) 
+          INSERT OR REPLACE INTO yjs_docs (doc_id, table_name, state, dirty) 
           VALUES ($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, 0);
         `;
         params.push(row.doc_id, row.table_name, newStateText);

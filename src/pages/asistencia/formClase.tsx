@@ -14,11 +14,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { asistenciaGeneral, pago } from "@/db/schema";
 import { useModalStore } from "@/store/modalState";
 import { useActions } from "./useActions";
 import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+type catalogos =
+  | {
+      id: string;
+      nombre: string;
+      categoria: string | null;
+      descripcion: string | null;
+    }[]
+  | undefined;
+type estados =
+  | {
+      id: string;
+      nombre: string;
+      categoria: string | null;
+      descripcion: string | null;
+    }[]
+  | undefined;
 export default function FormClase({
   cursoId,
   fecha,
@@ -26,16 +41,19 @@ export default function FormClase({
   tipoClase,
   inscripcionId,
   data,
+  catalogos,
+  estados,
 }: {
   fecha: string;
-  claseId: number;
+  claseId: string;
   tipoClase: string;
-  inscripcionId: number;
+  inscripcionId: string;
   data: any;
-  cursoId: number;
+  cursoId: string;
+  catalogos: catalogos;
+  estados: estados;
 }) {
   const { formId } = useModalStore();
-  const [metodoPago, setMetodoPago] = useState("");
   const { upsertAsistenciaMutation, useModalContextData } = useActions();
   const { data: contexto, isLoading } = useModalContextData({
     inscripcionId,
@@ -44,7 +62,7 @@ export default function FormClase({
     tipoClase,
     claseId,
   });
-  const [temasSeleccionados, setTemasSeleccionados] = useState<number[]>([]);
+  const [temasSeleccionados, setTemasSeleccionados] = useState<string[]>([]);
 
   // Cuando la data cargue, inicializamos los checkboxes que ya estaban guardados
   useEffect(() => {
@@ -52,7 +70,7 @@ export default function FormClase({
       setTemasSeleccionados(contexto.avanzadosHoy);
     }
   }, [contexto]);
-  const toggleTema = (temaId: number) => {
+  const toggleTema = (temaId: string) => {
     setTemasSeleccionados((prev) =>
       prev.includes(temaId)
         ? prev.filter((id) => id !== temaId)
@@ -90,7 +108,7 @@ export default function FormClase({
       values: { ...formdata, inscripcionId, tipoClase, claseId },
     });
   }; */
-  console.log("contexto", contexto);
+  console.log(contexto);
   if (isLoading)
     return (
       <div className="p-10 text-center">Cargando datos de la clase...</div>
@@ -170,21 +188,26 @@ export default function FormClase({
                 </FieldLabel>
                 <Select
                   disabled={contexto?.finanzas.deuda === 0}
-                  value={metodoPago}
-                  onValueChange={(e) => setMetodoPago(e)}
                   name="metodoPago"
-                  defaultValue="EFECTIVO"
+                  defaultValue={
+                    data?.estadoAcademico?.id ||
+                    catalogos
+                      ?.filter((c) => c.categoria === "METODO_PAGO")
+                      .find((c) => c.nombre === "EFECTIVO")?.id
+                  }
                 >
                   <SelectTrigger id="metodoPago" className="flex-1 w-full">
                     <SelectValue placeholder="Seleccione un tipo" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {pago.metodoPago.enumValues.map((e, ind) => (
-                        <SelectItem key={ind} value={e}>
-                          {e}
-                        </SelectItem>
-                      ))}
+                      {catalogos
+                        ?.filter((c) => c.categoria === "METODO_PAGO")
+                        .map((valor) => (
+                          <SelectItem key={valor.id} value={valor.id}>
+                            {valor.nombre}
+                          </SelectItem>
+                        ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -204,7 +227,6 @@ export default function FormClase({
                     placeholder="pago/cuota"
                     name="montoPago"
                     type="number"
-                    required
                     autoComplete={"off"}
                     disabled={contexto?.finanzas.deuda === 0}
                     max={contexto?.finanzas.deuda}
@@ -242,29 +264,22 @@ export default function FormClase({
             Tipo de asistencia <span className="text-destructive ">*</span>
           </FieldLabel>
           <Select
+            required
             name="estadoAsistencia"
-            defaultValue={data?.estadoAsistencia || "PRESENTE"}
+            defaultValue={data?.estadoAcademico?.id}
           >
             <SelectTrigger id="estadoAsistencia" className="flex-1 w-full">
               <SelectValue placeholder="Seleccione un tipo" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {tipoClase === "P"
-                  ? asistenciaGeneral.estadoAsistencia.enumValues.map(
-                      (e, ind) => (
-                        <SelectItem key={ind} value={e}>
-                          {e}
-                        </SelectItem>
-                      ),
-                    )
-                  : asistenciaGeneral.estadoAsistencia.enumValues
-                      .filter((e) => e != "PROGRAMADA" && e != "REPROGRAMADA")
-                      .map((e, ind) => (
-                        <SelectItem key={ind} value={e}>
-                          {e}
-                        </SelectItem>
-                      ))}
+                {estados
+                  ?.filter((e) => e.categoria === "ESTADO_ACADEMICO")
+                  .map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.nombre}
+                    </SelectItem>
+                  ))}
               </SelectGroup>
             </SelectContent>
           </Select>
@@ -280,7 +295,9 @@ export default function FormClase({
               <InputGroup className="w-24">
                 <InputGroupInput
                   type="number"
-                  step="0.01"
+                  required
+                  min={0}
+                  max={100}
                   name="notaExamen"
                   defaultValue={
                     contexto.examen.evaluacionesEstudiantes[0]?.nota || ""

@@ -16,21 +16,20 @@ import { toast } from "sonner";
 import { LoaderForm } from "./loaderForm";
 import { eachDayOfInterval, format, parseISO } from "date-fns";
 interface GenerarClasesParams {
-  inscripcionId: number;
-  cursoId: number;
-  horarioPlantillaId: number;
+  inscripcionId: string;
+  cursoId: string;
+  horarioPlantillaId: string;
   fechaInicio: string; // Formato YYYY-MM-DD
   fechaFin: string; // Formato YYYY-MM-DD
-  // La configuración de prácticas que viene del formulario
   diasPracticos: {
     diaSemana: string; // Ej: "MARTES", "JUEVES"
     horaInicio: string;
     horaFin: string;
-    instructorId: number;
-    vehiculoId: number;
+    instructorId: string;
+    vehiculoId: string;
   }[];
 }
-async function generarClasesLote(params: GenerarClasesParams) {
+/* async function generarClasesLote(params: GenerarClasesParams) {
   const {
     inscripcionId,
     cursoId,
@@ -63,7 +62,7 @@ async function generarClasesLote(params: GenerarClasesParams) {
   // 2. Buscamos TODOS los días que corresponden a ese mismo "Turno" (nombre)
   const horariosTeoricos = await db.query.horarioPlantilla.findMany({
     where: and(
-      eq(horarioPlantilla.cursoId, cursoId),
+      eq(horarioPlantilla.curso_id, cursoId),
       eq(horarioPlantilla.nombre, plantillaElegida.nombre), // Agrupador lógico
     ),
   });
@@ -155,8 +154,165 @@ async function generarClasesLote(params: GenerarClasesParams) {
   }
 
   return true;
-}
+} */
+async function generarClasesLote(params: GenerarClasesParams) {
+  const {
+    inscripcionId,
+    cursoId,
+    horarioPlantillaId,
+    fechaInicio,
+    fechaFin,
+    diasPracticos, // Ahora asume que trae { diaSemanaId: string, ... }
+  } = params;
 
+  // 1. Consultar el catálogo de días en la BD
+  // Ajusta el nombre de tu tabla de catálogos según tu esquema en Drizzle
+  const catalogosDias = await db.query.catalogo.findMany({
+    where: (t) => eq(t.categoria, "DIA_SEMANA"),
+  });
+  const estadoActivo = await db.query.estado.findFirst({
+    where: (t, { and }) =>
+      and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+  });
+  const estadoAcademicoActivo = await db.query.estado.findFirst({
+    where: (t, { and }) =>
+      and(eq(t.nombre, "PROGRAMADA"), eq(t.categoria, "ESTADO_ACADEMICO")),
+  });
+  if (!estadoActivo || !catalogosDias || !estadoAcademicoActivo) {
+    throw new Error("Error estados");
+  }
+  // Mapeo temporal para asociar el string de la BD con el índice de JS
+  const indicesDias: Record<string, number> = {
+    DOMINGO: 0,
+    LUNES: 1,
+    MARTES: 2,
+    MIERCOLES: 3,
+    JUEVES: 4,
+    VIERNES: 5,
+    SABADO: 6,
+  };
+
+  // 1.5 Crear el Mapa traductor de JS (0-6) al UUID de tu Base de Datos
+  const mapaDiasUUID: Record<number, string> = {};
+  for (const dia of catalogosDias) {
+    const indexJS = indicesDias[dia.nombre.toUpperCase()]; // Aseguramos mayúsculas
+    if (indexJS !== undefined) {
+      mapaDiasUUID[indexJS] = dia.id.toLowerCase(); // dia.id es el UUID
+    }
+  }
+  console.log("=== INICIO GENERACIÓN DE CLASES ===");
+  console.log("1. Mapa de Días (JS Index -> UUID BD):", mapaDiasUUID);
+  console.log("2. Días Prácticos recibidos por parámetro:", diasPracticos);
+  // 2. Obtener la plantilla teórica elegida
+  const plantillaElegida = await db.query.horarioPlantilla.findFirst({
+    where: eq(horarioPlantilla.id, horarioPlantillaId),
+  });
+
+  if (!plantillaElegida) throw new Error("Plantilla teórica no encontrada");
+
+  // Buscamos TODOS los horarios teóricos del mismo turno
+  const horariosTeoricos = await db.query.horarioPlantilla.findMany({
+    where: and(
+      eq(horarioPlantilla.curso_id, cursoId),
+      eq(horarioPlantilla.nombre, plantillaElegida.nombre),
+    ),
+  });
+
+  if (horariosTeoricos.length === 0)
+    throw new Error("El curso no tiene horarios teóricos configurados.");
+
+  // Ahora el Set guarda UUIDs en lugar de "MARTES", "JUEVES"
+  // Asumiendo que la tabla horarioPlantilla también se actualizó para usar el UUID (diaSemanaId)
+  const diasTeoriaConfig = new Set(
+    horariosTeoricos.map((h) => h.dia_semana_id),
+  );
+
+  // 3. Generar el array de todos los días dentro del contrato
+  const diasDelContrato = eachDayOfInterval({
+    start: parseISO(fechaInicio),
+    end: parseISO(fechaFin),
+  });
+
+  const nuevasPracticas = [];
+  const teoriasParaVerificar = [];
+
+  // 4. Bucle principal: Evaluamos día por día
+  for (const dateObj of diasDelContrato) {
+    const fechaExacta = format(dateObj, "yyyy-MM-dd");
+    const indexDiaJS = dateObj.getDay();
+    const diaActualUUID = mapaDiasUUID[dateObj.getDay()];
+
+    console.log(`\nAnalizando fecha: ${fechaExacta} (Día JS: ${indexDiaJS})`);
+    console.log(`UUID esperado para este día: ${diaActualUUID}`);
+
+    // --- EVALUAR PRÁCTICA ---
+    // Comparamos UUID con UUID
+    const configPractica = diasPracticos.find(
+      (dp) => dp.diaSemana.toLowerCase() === diaActualUUID.toLowerCase(),
+    );
+
+    if (configPractica) {
+      console.log(
+        `✅ ¡COINCIDENCIA PRÁCTICA ENCONTRADA! Preparando inserción para ${fechaExacta}.`,
+      );
+      nuevasPracticas.push({
+        inscripcion_id: inscripcionId,
+        instructor_id: configPractica.instructorId,
+        vehiculo_id: configPractica.vehiculoId,
+        fecha_exacta: fechaExacta,
+        hora_inicio: configPractica.horaInicio,
+        hora_fin: configPractica.horaFin,
+        estado_id: estadoActivo.id,
+        estado_academico_id: estadoAcademicoActivo.id,
+      });
+    } else {
+      console.log(`❌ No hay práctica configurada para este día.`);
+    }
+
+    // --- EVALUAR TEORÍA ---
+    // Comprobamos si el UUID de hoy está en el Set de UUIDs teóricos
+    if (diasTeoriaConfig.has(diaActualUUID)) {
+      const plantillaDelDia = horariosTeoricos.find(
+        (h) => h.dia_semana_id === diaActualUUID,
+      );
+      if (plantillaDelDia) {
+        teoriasParaVerificar.push({
+          curso_id: cursoId,
+          horario_plantilla_id: plantillaDelDia.id,
+          aula_id: "asdf5123456",
+          fecha_exacta: fechaExacta,
+          hora_inicio: plantillaDelDia.hora_inicio,
+          hora_fin: plantillaDelDia.hora_fin,
+          estado_academico_id: estadoAcademicoActivo.id,
+          estado_id: estadoActivo.id,
+        });
+      }
+    }
+  }
+  console.log(`\n=== RESUMEN DE INSERCIÓN ===`);
+  console.log(`Prácticas a insertar: ${nuevasPracticas.length}`);
+  // 5. INSERCIÓN MASIVA DE PRÁCTICAS
+  if (nuevasPracticas.length > 0) {
+    await db.insert(clasePractica).values(nuevasPracticas);
+  }
+
+  // 6. INSERCIÓN INTELIGENTE DE TEORÍAS
+  for (const teoria of teoriasParaVerificar) {
+    const existeTeoria = await db.query.claseTeorica.findFirst({
+      where: and(
+        eq(claseTeorica.curso_id, teoria.curso_id),
+        eq(claseTeorica.fecha_exacta, teoria.fecha_exacta),
+      ),
+    });
+
+    if (!existeTeoria) {
+      const datosLimpios = teoria;
+      await db.insert(claseTeorica).values(datosLimpios);
+    }
+  }
+
+  return true;
+}
 export const useActions = () => {
   const queryClient = useQueryClient();
   const { setLoading, show, close } = useModalStore();
@@ -244,7 +400,8 @@ export const useActions = () => {
 
       const {
         cursoId,
-        gestionId,
+        tipo_documento_id,
+        gestion_id: gestionId,
         precioPactado: pPactado,
         horarioPlantillaId,
         fechaInicio,
@@ -256,25 +413,37 @@ export const useActions = () => {
         vehiculoId: vId,
         ...dataPersona
       } = values;
-
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
+      const estadoInscripcion = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "PENDIENTE"), eq(t.categoria, "ESTADO_INSCRIPCION")),
+      });
+      if (!estadoActivo || !estadoInscripcion) {
+        throw new Error("Error estados");
+      }
+      console.log("valores de llegada: ", values);
+      /* throw new Error("Error simulado"); */
       const precioPactado = Number(pPactado);
 
-      let currentEstudianteId: number | null = null;
+      let currentEstudianteId: string | null = null;
       if (nroDocumento) {
         const per = await db.query.persona.findFirst({
-          where: eq(persona.nroDocumento, Number(nroDocumento)),
+          where: eq(persona.nro_documento, Number(nroDocumento)),
         });
 
         if (per) {
           const est = await db.query.estudiante.findFirst({
-            where: eq(estudiante.personaId, per.id),
+            where: eq(estudiante.persona_id, per.id),
           });
           if (est) {
             currentEstudianteId = est.id;
           } else {
             const [nuevoEst] = await db
               .insert(estudiante)
-              .values({ personaId: per.id })
+              .values({ persona_id: per.id, estado_id: estadoActivo.id })
               .returning({ id: estudiante.id });
             currentEstudianteId = nuevoEst.id;
           }
@@ -287,7 +456,7 @@ export const useActions = () => {
         if (nuevaPer) {
           const [nuevoEst] = await db
             .insert(estudiante)
-            .values({ personaId: nuevaPer.id })
+            .values({ persona_id: nuevaPer.id, estado_id: estadoActivo.id })
             .returning({ id: estudiante.id });
           currentEstudianteId = nuevoEst.id;
         }
@@ -297,9 +466,9 @@ export const useActions = () => {
 
       const inscripcionActiva = await db.query.inscripcion.findFirst({
         where: and(
-          eq(inscripcion.estudianteId, currentEstudianteId),
-          eq(inscripcion.cursoId, cursoId),
-          eq(inscripcion.estado, "activo"),
+          eq(inscripcion.estudiante_id, currentEstudianteId),
+          eq(inscripcion.curso_id, cursoId),
+          eq(inscripcion.estado_id, estadoActivo.id),
         ),
       });
 
@@ -310,13 +479,15 @@ export const useActions = () => {
       const [nuevaInscripcion] = await db
         .insert(inscripcion)
         .values({
-          cursoId,
-          estudianteId: currentEstudianteId,
-          precioPactado,
-          gestionId,
-          horarioPlantillaId,
-          fechaInicio,
-          fechaFin,
+          curso_id: cursoId,
+          estudiante_id: currentEstudianteId,
+          precio_pactado: precioPactado,
+          gestion_id: gestionId,
+          horario_plantilla_id: horarioPlantillaId,
+          estado_inscripcion_id: estadoInscripcion.id,
+          fecha_inicio: fechaInicio,
+          fecha_fin: fechaFin,
+          estado_id: estadoActivo.id,
         })
         .returning({ id: inscripcion.id });
 
@@ -333,8 +504,8 @@ export const useActions = () => {
             diaSemana: diaSemanaPractico.toUpperCase(),
             horaInicio: horaPracticaInicio,
             horaFin: horaPracticaFin,
-            instructorId: Number(iId),
-            vehiculoId: Number(vId),
+            instructorId: iId,
+            vehiculoId: vId,
           },
         ],
       });
@@ -361,17 +532,17 @@ export const useActions = () => {
   });
 
   const statusMutation = useMutation({
-    mutationFn: async ({
-      id,
-      estado,
-    }: {
-      id: number;
-      estado: "activo" | "inactivo";
-    }) => {
-      // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
+    mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
+      const estadonuevo = await db.query.estado.findFirst({
+        where: (t, { eq, and }) =>
+          and(
+            eq(t.nombre, estado === "ACTIVO" ? "INACTIVO" : "ACTIVO"),
+            eq(t.categoria, "SISTEMA"),
+          ),
+      });
       return await db
         .update(inscripcion)
-        .set({ estado })
+        .set({ estado_id: estadonuevo?.id })
         .where(eq(inscripcion.id, id));
     },
     onSuccess: () =>
@@ -384,15 +555,15 @@ export const useActions = () => {
       formId: "inscripcion-formulario-create",
     });
   };
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     show(<LoaderForm />, {
       title: "Editar inscripcion",
       formId: "inscripcion-formulario-edit",
     });
   };
 
-  const handleToggleStatus = (id: number, currentStatus: string) => {
-    const isInactive = currentStatus === "inactivo";
+  const handleToggleStatus = (id: string, currentStatus: string) => {
+    const isInactive = currentStatus.toLowerCase() === "inactivo";
     showAlert({
       title: isInactive ? "¿Activar Curso?" : "¿Deshabilitar Curso?",
       description: `El Curso pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
@@ -402,7 +573,7 @@ export const useActions = () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
         await statusMutation.mutateAsync({
           id,
-          estado: isInactive ? "activo" : "inactivo",
+          estado: currentStatus,
         });
         toast.success("Estado actualizado");
       },

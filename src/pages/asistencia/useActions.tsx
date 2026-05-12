@@ -4,8 +4,10 @@ import { db } from "@/db/client";
 import {
   asistenciaGeneral,
   avanceClase,
+  catalogo,
   clasePractica,
   claseTeorica,
+  estado,
   evaluacionEstudiante,
   examenProgramado,
   inscripcion,
@@ -20,9 +22,11 @@ import { toast } from "sonner";
 import { LoaderFormAsistencia } from "./loaderAsistencia";
 import FormClase from "./formClase";
 import { format } from "date-fns";
+import { LoaderClase } from "./loaderClase";
 
 export const useActions = () => {
   const queryClient = useQueryClient();
+
   const { setLoading, show, close } = useModalStore();
   const { showAlert } = useAlertStore();
   async function getAsistenciaMatrizGlobal(
@@ -32,7 +36,15 @@ export const useActions = () => {
     perPage: number,
   ) {
     const inscripciones = await db.query.inscripcion.findMany({
-      where: eq(inscripcion.estado, "activo"),
+      where: eq(
+        inscripcion.estado_id,
+        db
+          .select({ id: estado.id })
+          .from(estado)
+          .where(
+            and(eq(estado.nombre, "ACTIVO"), eq(estado.categoria, "SISTEMA")),
+          ),
+      ),
       limit: perPage,
       offset: (page - 1) * perPage,
       with: {
@@ -40,7 +52,13 @@ export const useActions = () => {
           with: { persona: true },
         },
         curso: {
-          with: { horarioPlantillas: true }, // vital para saber sus días teóricos
+          with: {
+            horarioPlantillas: {
+              with: {
+                diaSemana: true,
+              },
+            },
+          }, // vital para saber sus días teóricos
         },
       },
     });
@@ -58,29 +76,32 @@ export const useActions = () => {
     // Extraemos los IDs para filtrar las siguientes consultas
     const inscripcionesIds = inscripciones.map((i) => i.id);
     // Usamos un Set para no tener IDs duplicados si varios alumnos son del mismo curso
-    const cursosIds = [...new Set(inscripciones.map((i) => i.cursoId))];
+    const cursosIds = [...new Set(inscripciones.map((i) => i.curso_id))];
 
     // 2. OBTENEMOS EL CALENDARIO REAL DE ESA SEMANA
     // Traemos TODAS las clases (tengan asistencia marcada o no)
 
     const clasesTeoricas = await db.query.claseTeorica.findMany({
       where: and(
-        inArray(claseTeorica.cursoId, cursosIds), // <--- ESTO ES LO QUE FALTABA
-        between(claseTeorica.fechaExacta, fInicio, fFin),
+        inArray(claseTeorica.curso_id, cursosIds), // <--- ESTO ES LO QUE FALTABA
+        between(claseTeorica.fecha_exacta, fInicio, fFin),
       ),
       with: { horarioPlantilla: true },
     });
 
     const clasesPracticas = await db.query.clasePractica.findMany({
       where: and(
-        inArray(clasePractica.inscripcionId, inscripcionesIds), // Solo de los alumnos de esta página
-        between(clasePractica.fechaExacta, fInicio, fFin),
+        inArray(clasePractica.inscripcion_id, inscripcionesIds), // Solo de los alumnos de esta página
+        between(clasePractica.fecha_exacta, fInicio, fFin),
       ),
     });
 
     // 3. OBTENEMOS LAS ASISTENCIAS YA MARCADAS
     const asistencias = await db.query.asistenciaGeneral.findMany({
-      where: inArray(asistenciaGeneral.inscripcionId, inscripcionesIds),
+      where: inArray(asistenciaGeneral.inscripcion_id, inscripcionesIds),
+      with: {
+        estadoAcademico: true,
+      },
     });
 
     // Devolvemos todo el paquete para que el Frontend arme la matriz
@@ -91,8 +112,6 @@ export const useActions = () => {
       asistencias,
     };
   }
-
-  // Ejemplo de lo que debería hacer tu función getAsistenciaMatriz
 
   // --- QUERIES ---
   const useGetData = ({
@@ -121,19 +140,31 @@ export const useActions = () => {
   const upsertMutation = useMutation({
     mutationFn: async ({ values, fecha }: { values: any; fecha: Date }) => {
       setLoading(true);
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
+      const estadoInscripcion = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "PENDIENTE"), eq(t.categoria, "ESTADO_INSCRIPCION")),
+      });
+      if (!estadoActivo || !estadoInscripcion) {
+        throw new Error("Error estados");
+      }
       const { vehiculoId, instructorId, inscripcionId, horaIni, horaFin } =
         values;
       const fechaFormateada = format(fecha, "yyyy-MM-dd");
 
       // 1. Crear Clase Práctica Manual
       return await db.insert(clasePractica).values({
-        inscripcionId: Number(inscripcionId),
-        instructorId: Number(instructorId),
-        vehiculoId: Number(vehiculoId),
-        fechaExacta: fechaFormateada,
-        horaInicio: horaIni, // O podrías añadir inputs de hora al form
-        horaFin: horaFin,
-        estadoClase: "PROGRAMADA",
+        inscripcion_id: inscripcionId,
+        instructor_id: instructorId,
+        vehiculo_id: vehiculoId,
+        fecha_exacta: fechaFormateada,
+        hora_inicio: horaIni, // O podrías añadir inputs de hora al form
+        hora_fin: horaFin,
+        estado_id: estadoActivo.id,
+        estado_academico_id: estadoInscripcion.id,
       });
     },
     onSuccess: () => {
@@ -170,16 +201,41 @@ export const useActions = () => {
           with: { pagos: true },
         });
         const pagado =
-          inscripcionData?.pagos.reduce((acc, p) => acc + p.montoPagado, 0) ||
+          inscripcionData?.pagos.reduce((acc, p) => acc + p.monto_pagado, 0) ||
           0;
-        const deuda = (inscripcionData?.precioPactado || 0) - pagado;
+        const deuda = (inscripcionData?.precio_pactado || 0) - pagado;
 
         // 2. TEMAS: Traer temas del curso según el tipo (T o P)
         const temasCurso = await db.query.tema.findMany({
           where: and(
-            eq(tema.cursoId, cursoId),
-            eq(tema.tipo, tipoClase === "T" ? "TEORICO" : "PRACTICO"),
-            eq(tema.estado, "activo"),
+            eq(tema.curso_id, cursoId),
+            eq(
+              tema.tipo_tema_id,
+              db
+                .select({ id: catalogo.id })
+                .from(catalogo)
+                .where(
+                  and(
+                    eq(
+                      catalogo.nombre,
+                      tipoClase === "T" ? "TEORICO" : "PRACTICO",
+                    ),
+                    eq(catalogo.categoria, "TIPO_ACADEMICO"),
+                  ),
+                ),
+            ),
+            eq(
+              tema.estado_id,
+              db
+                .select({ id: estado.id })
+                .from(estado)
+                .where(
+                  and(
+                    eq(estado.nombre, "ACTIVO"),
+                    eq(estado.categoria, "SISTEMA"),
+                  ),
+                ),
+            ),
           ),
         });
 
@@ -187,32 +243,42 @@ export const useActions = () => {
         const avancesEstudiante = await db.query.avanceClase.findMany({
           where:
             tipoClase === "T"
-              ? eq(avanceClase.claseTeoricaId, claseId) // Si es teoría, todos avanzan juntos
-              : eq(avanceClase.clasePracticaId, claseId), // Si es práctica, es su avance individual
+              ? eq(avanceClase.clase_teorica_id, claseId) // Si es teoría, todos avanzan juntos
+              : eq(avanceClase.clase_practica_id, claseId), // Si es práctica, es su avance individual
         });
-        const idsAvanzadosHoy = avancesEstudiante.map((a) => a.temaId);
+        const idsAvanzadosHoy = avancesEstudiante.map((a) => a.tema_id);
 
         // (Opcional pero recomendado: buscar avances de clases anteriores para marcarlos como "Ya pasados")
-
         // 4. EXAMEN: ¿Hay examen programado para este día?
         const examenHoy = await db.query.examenProgramado.findFirst({
           where: and(
-            eq(examenProgramado.cursoId, cursoId),
-            eq(examenProgramado.fechaExacta, fecha),
+            eq(examenProgramado.curso_id, cursoId),
+            eq(examenProgramado.fecha_exacta, fecha),
             eq(
-              examenProgramado.tipoExamen,
-              tipoClase === "T" ? "TEORICO" : "PRACTICO",
+              examenProgramado.tipo_examen_id,
+              db
+                .select({ id: catalogo.id })
+                .from(catalogo)
+                .where(
+                  and(
+                    eq(
+                      catalogo.nombre,
+                      tipoClase === "T" ? "TEORICO" : "PRACTICO",
+                    ),
+                    eq(catalogo.categoria, "TIPO_ACADEMICO"),
+                  ),
+                ),
             ),
           ),
           with: {
             evaluacionesEstudiantes: {
-              where: eq(evaluacionEstudiante.inscripcionId, inscripcionId),
+              where: eq(evaluacionEstudiante.inscripcion_id, inscripcionId),
             },
           },
         });
 
         return {
-          finanzas: { total: inscripcionData?.precioPactado, pagado, deuda },
+          finanzas: { total: inscripcionData?.precio_pactado, pagado, deuda },
           temas: temasCurso,
           avanzadosHoy: idsAvanzadosHoy,
           examen: examenHoy,
@@ -222,8 +288,9 @@ export const useActions = () => {
     });
   };
   const upsertAsistenciaMutation = useMutation({
-    mutationFn: async ({ id, values }: { id?: number; values: any }) => {
+    mutationFn: async ({ id, values }: { id?: string; values: any }) => {
       setLoading(true);
+
       const {
         inscripcionId,
         estadoAsistencia,
@@ -231,15 +298,42 @@ export const useActions = () => {
         claseId,
         montoPago,
         metodoPago,
-        // NUEVOS DATOS:
+
         temasAvanzados,
         examenProgramadoId,
         notaExamen,
       } = values;
+      console.log({
+        inscripcionId,
+        estadoAsistencia,
+        tipoClase,
+        claseId,
+        montoPago,
+        metodoPago,
 
+        temasAvanzados,
+        examenProgramadoId,
+        notaExamen,
+      });
+
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
+      const estadoInscripcion = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "PENDIENTE"), eq(t.categoria, "ESTADO_INSCRIPCION")),
+      });
+      const estadoAsistenciaEncontrado = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.id, estadoAsistencia), eq(t.categoria, "ESTADO_ACADEMICO")),
+      });
+      if (!estadoActivo || !estadoInscripcion || !estadoAsistenciaEncontrado) {
+        throw new Error("Error estados");
+      }
       const monto = Number(montoPago);
-      const iId = Number(inscripcionId);
-      const cId = Number(claseId);
+      const iId = inscripcionId;
+      const cId = claseId;
 
       let asistenciaIdFinal = id;
 
@@ -250,20 +344,21 @@ export const useActions = () => {
         await db
           .update(asistenciaGeneral)
           .set({
-            estadoAsistencia,
-            updatedAt: new Date().toISOString(),
+            estado_academico_id: estadoAsistenciaEncontrado.id,
+            updated_at: new Date().toISOString(),
           })
           .where(eq(asistenciaGeneral.id, id));
       } else {
         const payload: any = {
-          inscripcionId: iId,
-          estadoAsistencia,
+          inscripcion_id: iId,
+          estado_academico_id: estadoAsistenciaEncontrado.id,
+          estado_id: estadoActivo.id,
         };
 
         if (tipoClase === "P") {
-          payload.clasePracticaId = cId;
+          payload.clase_practica_id = cId;
         } else {
-          payload.claseTeoricaId = cId;
+          payload.clase_teorica_id = cId;
         }
 
         const [nuevaAsis] = await db
@@ -280,9 +375,10 @@ export const useActions = () => {
       if (monto > 0) {
         try {
           await db.insert(pago).values({
-            inscripcionId: iId,
-            montoPagado: monto,
-            metodoPago: metodoPago || "EFECTIVO",
+            inscripcion_id: iId,
+            monto_pagado: monto,
+            metodo_pago_id: metodoPago,
+            estado_id: estadoActivo.id,
             // estado: "activo", // Descomenta si tu esquema requiere estado en pagos
           });
         } catch (error) {
@@ -299,19 +395,20 @@ export const useActions = () => {
         if (tipoClase === "P") {
           await db
             .delete(avanceClase)
-            .where(eq(avanceClase.clasePracticaId, cId));
+            .where(eq(avanceClase.clase_practica_id, cId));
         } else {
           await db
             .delete(avanceClase)
-            .where(eq(avanceClase.claseTeoricaId, cId));
+            .where(eq(avanceClase.clase_teorica_id, cId));
         }
 
         // b) Insertamos los checkboxes que vinieron marcados
         if (temasAvanzados.length > 0) {
-          const nuevosAvances = temasAvanzados.map((temaId: number) => ({
-            temaId: Number(temaId),
-            clasePracticaId: tipoClase === "P" ? cId : null,
-            claseTeoricaId: tipoClase === "T" ? cId : null,
+          const nuevosAvances = temasAvanzados.map((temaId) => ({
+            tema_id: temaId,
+            clase_practica_id: tipoClase === "P" ? cId : null,
+            clase_teorica_id: tipoClase === "T" ? cId : null,
+            estado_id: estadoActivo.id,
           }));
 
           await db.insert(avanceClase).values(nuevosAvances);
@@ -329,8 +426,8 @@ export const useActions = () => {
         const evaluacionExistente =
           await db.query.evaluacionEstudiante.findFirst({
             where: and(
-              eq(evaluacionEstudiante.examenProgramadoId, examenProgramadoId),
-              eq(evaluacionEstudiante.inscripcionId, iId),
+              eq(evaluacionEstudiante.examen_programado_id, examenProgramadoId),
+              eq(evaluacionEstudiante.inscripcion_id, iId),
             ),
           });
 
@@ -340,15 +437,18 @@ export const useActions = () => {
             .update(evaluacionEstudiante)
             .set({
               nota: notaFinal,
-              fechaCalificacion: new Date().toISOString(),
+              fecha_calificacion: new Date().toISOString(),
             })
             .where(eq(evaluacionEstudiante.id, evaluacionExistente.id));
         } else {
           // Creamos la nota por primera vez
+
           await db.insert(evaluacionEstudiante).values({
-            examenProgramadoId: examenProgramadoId,
-            inscripcionId: iId,
+            examen_programado_id: examenProgramadoId,
+            inscripcion_id: iId,
             nota: notaFinal,
+            estado_academico_id: estadoAsistenciaEncontrado.id,
+            estado_id: estadoActivo.id,
           });
         }
       }
@@ -379,17 +479,17 @@ export const useActions = () => {
     },
   });
   const statusMutation = useMutation({
-    mutationFn: async ({
-      id,
-      estado,
-    }: {
-      id: number;
-      estado: "activo" | "inactivo";
-    }) => {
-      // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
+    mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
+      const estadonuevo = await db.query.estado.findFirst({
+        where: (t, { eq, and }) =>
+          and(
+            eq(t.nombre, estado === "ACTIVO" ? "INACTIVO" : "ACTIVO"),
+            eq(t.categoria, "SISTEMA"),
+          ),
+      });
       return await db
         .update(inscripcion)
-        .set({ estado })
+        .set({ estado_id: estadonuevo?.id })
         .where(eq(inscripcion.id, id));
     },
     onSuccess: () =>
@@ -419,7 +519,7 @@ export const useActions = () => {
     data,
   }: any) => {
     show(
-      <FormClase
+      <LoaderClase
         cursoId={cursoId}
         data={data}
         inscripcionId={inscripcionId}
@@ -433,9 +533,19 @@ export const useActions = () => {
       },
     );
   };
-
-  const handleToggleStatus = (id: number, currentStatus: string) => {
-    const isInactive = currentStatus === "inactivo";
+  {
+    /* <FormClase
+        cursoId={cursoId}
+        data={data}
+        inscripcionId={inscripcionId}
+        fecha={fecha}
+        claseId={claseId}
+        tipoClase={tipoClase}
+        catalogos={catalogos}
+      />, */
+  }
+  const handleToggleStatus = (id: string, currentStatus: string) => {
+    const isInactive = currentStatus.toLowerCase() === "inactivo";
     showAlert({
       title: isInactive ? "¿Activar Curso?" : "¿Deshabilitar Curso?",
       description: `El Curso pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
@@ -445,7 +555,7 @@ export const useActions = () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
         await statusMutation.mutateAsync({
           id,
-          estado: isInactive ? "activo" : "inactivo",
+          estado: currentStatus,
         });
         toast.success("Estado actualizado");
       },
@@ -455,7 +565,7 @@ export const useActions = () => {
     mutationFn: async (documento: string) => {
       // Aquí llamas a tu función de Drizzle
       const resultado = await db.query.persona.findFirst({
-        where: eq(persona.nroDocumento, Number(documento)),
+        where: eq(persona.nro_documento, Number(documento)),
       });
       return resultado;
     },

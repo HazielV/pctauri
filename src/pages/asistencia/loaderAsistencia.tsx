@@ -9,20 +9,19 @@ export function LoaderFormAsistencia({ inscripcionId, fechaActual }: any) {
     queryKey: ["inscripcion-asistencia"],
     queryFn: () => {
       return db.query.inscripcion.findFirst({
-        where: (inscripcion, { eq }) =>
-          eq(inscripcion.id, Number(inscripcionId)),
+        where: (inscripcion, { eq }) => eq(inscripcion.id, inscripcionId),
         with: {
           estudiante: {
             columns: {
               id: true,
-              codigoInterno: true,
+              codigo_interno: true,
             },
             with: {
               persona: {
                 columns: {
                   nombres: true,
-                  primerApellido: true,
-                  segundoApellido: true,
+                  primer_apellido: true,
+                  segundo_apellido: true,
                 },
               },
             },
@@ -30,7 +29,7 @@ export function LoaderFormAsistencia({ inscripcionId, fechaActual }: any) {
           curso: {
             columns: {
               id: true,
-              nombreCurso: true,
+              nombre_curso: true,
             },
           },
         },

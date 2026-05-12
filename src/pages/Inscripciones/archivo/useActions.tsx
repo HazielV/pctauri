@@ -15,7 +15,7 @@ export const useActions = () => {
   const getData = async (
     page: number,
     perPage: number,
-    estudianteId: number,
+    estudianteId: string,
   ) => {
     try {
       const [totalResult] = await db
@@ -27,20 +27,37 @@ export const useActions = () => {
         offset: skip,
         limit: perPage,
         with: {
+          evaluaciones: {
+            with: {
+              examenProgramado: true,
+            },
+          },
+
+          estadoInscripcion: true,
+          estado: true,
           asistenciaGenerals: {
             with: {
-              clasePractica: true,
-              claseTeorica: true,
+              clasePractica: {
+                with: {
+                  avances: true,
+                },
+              },
+              claseTeorica: {
+                with: {
+                  avances: true,
+                },
+              },
             },
           },
           pagos: true,
           curso: {
             columns: {
-              nombreCurso: true,
-              horasPracticasReq: true,
-              horasTeoricasReq: true,
+              nombre_curso: true,
+              horas_teoricas_req: true,
+              horas_practicas_req: true,
             },
             with: {
+              temas: true,
               sucursal: true,
               gestion: true,
             },
@@ -48,26 +65,37 @@ export const useActions = () => {
           estudiante: {
             columns: {
               id: true,
-              codigoInterno: true,
+              codigo_interno: true,
             },
             with: {
               persona: true,
             },
           },
         },
-        where: eq(inscripcion.estudianteId, estudianteId),
+        where: eq(inscripcion.estudiante_id, estudianteId),
       });
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
+      const estadoAcademico = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "PRESENTE"), eq(t.categoria, "ESTADO_ACADEMICO")),
+      });
+      if (!estadoActivo || !estadoAcademico) {
+        throw new Error("Error estados");
+      }
       const inscripcionesConStats = data.map((ins) => {
         // 1. Cálculos de Pagos
-        const precioPactado = Number(ins.precioPactado) || 0;
+        const precioPactado = Number(ins.precio_pactado) || 0;
         const montoPagado = ins.pagos.reduce(
-          (acc, pago) => acc + Number(pago.montoPagado),
+          (acc, pago) => acc + Number(pago.monto_pagado),
           0,
         );
 
         // 2. Metas del Curso (TOTAL DE HORAS REQUERIDAS)
-        const totalHorasPracticas = Number(ins.curso.horasPracticasReq) || 0;
-        const totalHorasTeoricas = Number(ins.curso.horasTeoricasReq) || 0;
+        const totalHorasPracticas = Number(ins.curso.horas_practicas_req) || 0;
+        const totalHorasTeoricas = Number(ins.curso.horas_teoricas_req) || 0;
 
         // 3. Función auxiliar para calcular duración en horas ("10:30" - "08:00" = 2.5)
         const calcularHoras = (horaInicio?: string, horaFin?: string) => {
@@ -84,17 +112,17 @@ export const useActions = () => {
         let horasTeoricasAsistidas = 0;
 
         ins.asistenciaGenerals.forEach((asistencia) => {
-          if (asistencia.estadoAsistencia === "PRESENTE") {
+          if (asistencia.estado_academico_id === estadoAcademico.id) {
             if (asistencia.clasePractica) {
               horasPracticasAsistidas += calcularHoras(
-                asistencia.clasePractica.horaInicio,
-                asistencia.clasePractica.horaFin,
+                asistencia.clasePractica.hora_inicio,
+                asistencia.clasePractica.hora_fin,
               );
             }
             if (asistencia.claseTeorica) {
               horasTeoricasAsistidas += calcularHoras(
-                asistencia.claseTeorica.horaInicio,
-                asistencia.claseTeorica.horaFin,
+                asistencia.claseTeorica.hora_inicio,
+                asistencia.claseTeorica.hora_fin,
               );
             }
           }
@@ -138,7 +166,7 @@ export const useActions = () => {
     }
   };
   // --- QUERIES ---
-  const useGetData = (page: number, perPage: number, estudianteId: number) =>
+  const useGetData = (page: number, perPage: number, estudianteId: string) =>
     useQuery({
       queryKey: ["inscripciones_x_estudiante", page, perPage, estudianteId], // Si esto cambia, se refetchea
       queryFn: () => getData(page, perPage, estudianteId),
@@ -153,28 +181,40 @@ export const useActions = () => {
     }: {
       id?: number;
       values: any;
-      nroDocumento?: number;
+      nroDocumento?: string;
     }) => {
       setLoading(true);
-
+      const estadoActivo = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "ACTIVO"), eq(t.categoria, "SISTEMA")),
+      });
+      const estadoInscripcion = await db.query.estado.findFirst({
+        where: (t, { and }) =>
+          and(eq(t.nombre, "PENDIENTE"), eq(t.categoria, "ESTADO_INSCRIPCION")),
+      });
+      if (!estadoActivo || !estadoInscripcion) {
+        throw new Error("Error estados");
+      }
       const { cursoId, gestionId, precioPactado, ...dataPersona } = values;
       if (nroDocumento) {
         const per = await db.query.persona.findFirst({
-          where: eq(persona.nroDocumento, Number(nroDocumento)),
+          where: eq(persona.nro_documento, Number(nroDocumento)),
         });
         if (per) {
           const [u] = await db
             .insert(estudiante)
-            .values({ personaId: per.id })
+            .values({ persona_id: per.id, estado_id: estadoActivo.id })
             .returning({ estudianteId: estudiante.id });
 
           if (u) {
             await db.insert(inscripcion).values({
-              horarioPlantillaId: 1,
-              cursoId: cursoId,
-              estudianteId: u.estudianteId,
-              precioPactado: precioPactado,
-              gestionId: gestionId,
+              horario_plantilla_id: "1",
+              curso_id: cursoId,
+              estudiante_id: u.estudianteId,
+              precio_pactado: precioPactado,
+              gestion_id: gestionId,
+              estado_id: estadoActivo.id,
+              estado_inscripcion_id: estadoInscripcion.id,
             });
           }
         }
@@ -186,16 +226,18 @@ export const useActions = () => {
         if (p) {
           const [u] = await db
             .insert(estudiante)
-            .values({ personaId: p.personaId })
+            .values({ persona_id: p.personaId, estado_id: estadoActivo.id })
             .returning({ estudianteId: estudiante.id });
 
           if (u) {
             await db.insert(inscripcion).values({
-              horarioPlantillaId: 1,
-              cursoId: cursoId,
-              estudianteId: u.estudianteId,
-              precioPactado: precioPactado,
-              gestionId: gestionId,
+              horario_plantilla_id: "1",
+              curso_id: cursoId,
+              estudiante_id: u.estudianteId,
+              precio_pactado: precioPactado,
+              gestion_id: gestionId,
+              estado_id: estadoActivo.id,
+              estado_inscripcion_id: estadoInscripcion.id,
             });
           }
         }
@@ -226,19 +268,30 @@ export const useActions = () => {
       estadoVida,
       estadoAcademico,
     }: {
-      id: number;
-      estadoVida: "finalizada" | "abandonada";
-      estadoAcademico: "aprobado" | "reprobado";
+      id: string;
+      estadoVida: "FINALIZADO" | "ABANDONADA";
+      estadoAcademico: "APROBADO" | "REPROBADO";
     }) => {
-      // Si tienes una columna "aprobado" (boolean) en tu tabla inscripcion,
-      // podrías recibirla aquí y actualizarla también.
+      const estadoacademico = await db.query.estado.findFirst({
+        where: (t, { eq, and }) =>
+          and(
+            eq(t.nombre, estadoAcademico.toUpperCase()),
+            eq(t.categoria, "SISTEMA"),
+          ),
+      });
+      const estadonuevo = await db.query.estado.findFirst({
+        where: (t, { eq, and }) =>
+          and(
+            eq(t.nombre, estadoVida.toUpperCase()),
+            eq(t.categoria, "SISTEMA"),
+          ),
+      });
       return await db
         .update(inscripcion)
         .set({
-          estado: estadoVida,
-          estadoInscripcion: estadoAcademico,
-
-          updatedAt: new Date().toISOString(),
+          estado_id: estadonuevo?.id,
+          estado_inscripcion_id: estadoacademico?.id,
+          updated_at: new Date().toISOString(),
         })
         .where(eq(inscripcion.id, id));
     },
@@ -253,17 +306,14 @@ export const useActions = () => {
     },
   });
   const statusMutation = useMutation({
-    mutationFn: async ({
-      id,
-      estado,
-    }: {
-      id: number;
-      estado: "activo" | "inactivo";
-    }) => {
-      // Simulamos error para probar: if(id === 1) throw new Error("Error provocado");
+    mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
+      const estadonuevo = await db.query.estado.findFirst({
+        where: (t, { eq, and }) =>
+          and(eq(t.nombre, estado), eq(t.categoria, "SISTEMA")),
+      });
       return await db
         .update(inscripcion)
-        .set({ estado })
+        .set({ estado_id: estadonuevo?.id })
         .where(eq(inscripcion.id, id));
     },
     onSuccess: () =>
@@ -276,15 +326,15 @@ export const useActions = () => {
       formId: "inscripcion-formulario-create",
     });
   };
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     show(<LoaderForm />, {
       title: "Editar inscripcion",
       formId: "inscripcion-formulario-edit",
     });
   };
 
-  const handleToggleStatus = (id: number, currentStatus: string) => {
-    const isInactive = currentStatus === "inactivo";
+  const handleToggleStatus = (id: string, currentStatus: string) => {
+    const isInactive = currentStatus.toLowerCase() === "inactivo";
     showAlert({
       title: isInactive ? "¿Activar Curso?" : "¿Deshabilitar Curso?",
       description: `El Curso pasará a estar ${isInactive ? "activo" : "inactivo"} en el sistema.`,
@@ -294,13 +344,13 @@ export const useActions = () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
         await statusMutation.mutateAsync({
           id,
-          estado: isInactive ? "activo" : "inactivo",
+          estado: currentStatus,
         });
         toast.success("Estado actualizado");
       },
     });
   };
-  const handleAbandonarIns = (id: number) => {
+  const handleAbandonarIns = (id: string) => {
     showAlert({
       title: "Abandonar inscripcion?",
       description: "Esta seguro de marcar como abandono",
@@ -310,17 +360,17 @@ export const useActions = () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
         await finalizarInscripcionMutation.mutateAsync({
           id,
-          estadoVida: "abandonada",
-          estadoAcademico: "reprobado",
+          estadoVida: "ABANDONADA",
+          estadoAcademico: "REPROBADO",
         });
         toast.success("Estado actualizado");
       },
     });
   };
   const handleFinalizarIns = (
-    id: number,
+    id: string,
     mensaje: string,
-    estadoAcademico: "aprobado" | "reprobado",
+    estadoAcademico: "APROBADO" | "REPROBADO",
   ) => {
     showAlert({
       title: "Finalizar inscripcion?",
@@ -331,7 +381,7 @@ export const useActions = () => {
         // Al ser una mutación de TanStack Query, lanzamos la promesa
         await finalizarInscripcionMutation.mutateAsync({
           id,
-          estadoVida: "finalizada",
+          estadoVida: "FINALIZADO",
           estadoAcademico: estadoAcademico,
         });
         toast.success("Estado actualizado");
@@ -342,7 +392,7 @@ export const useActions = () => {
     mutationFn: async (documento: string) => {
       // Aquí llamas a tu función de Drizzle
       const resultado = await db.query.persona.findFirst({
-        where: eq(persona.nroDocumento, Number(documento)),
+        where: eq(persona.nro_documento, Number(documento)),
       });
       return resultado;
     },

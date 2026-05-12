@@ -4,23 +4,19 @@ import {
   DollarSign,
   NotebookText,
   CheckCircle2,
-  XCircle,
   Clock,
 } from "lucide-react";
 import { Contendor } from "@/components/contenido";
 import { useActions } from "./useActions";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Page() {
-  const {
-    useGetData,
-    finalizarInscripcionMutation,
-    handleAbandonarIns,
-    handleFinalizarIns,
-  } = useActions();
+  const { useGetData, handleAbandonarIns, handleFinalizarIns } = useActions();
   const [searchParams] = useSearchParams();
   const params = useParams();
 
-  const estudianteId = Number(params.id);
+  const estudianteId = String(params.id);
   const page = parseInt(searchParams.get("page") || "1");
   const perPage = parseInt(searchParams.get("perpage") || "10");
 
@@ -50,22 +46,22 @@ export default function Page() {
   // 3. AHORA TYPESCRIPT SABE QUE 'inscripciones' ES UN ARREGLO Y TIENE AL MENOS 1 ELEMENTO
   const estudiante = inscripciones[0].estudiante;
   const persona = estudiante.persona;
+
   return (
     <Contendor>
       {/* HEADER DEL ESTUDIANTE */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-primary capitalize tracking-tight">
-          {`${persona.nombres} ${persona.primerApellido} ${persona.segundoApellido || ""}`}
+          {`${persona.nombres} ${persona.primer_apellido} ${persona.segundo_apellido || ""}`}
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Estudiante ID: #{estudiante.id} | CI: {persona.nroDocumento}
+          Estudiante ID: #{estudiante.id} | CI: {persona.nro_documento}
         </p>
       </div>
 
       {/* TARJETAS DE INSCRIPCIÓN (CURSOS) */}
       <div className="space-y-6">
-        {inscripciones.map((ins: any) => {
-          console.log(ins);
+        {inscripciones.map((ins) => {
           // Extraemos los cálculos que haremos en el backend/useActions
           const {
             totalPracticas,
@@ -76,7 +72,7 @@ export default function Page() {
             precioPactado,
             progresoGeneral,
           } = ins.stats; // Asumiremos que tu useGetData devuelve un objeto 'stats'
-
+          console.log(ins);
           return (
             <div
               key={ins.id}
@@ -86,29 +82,29 @@ export default function Page() {
               <div className="flex items-center justify-between p-5 border-b border-border bg-secondary/40 ">
                 <div>
                   <h3 className="font-semibold  text-lg flex items-center gap-2">
-                    {ins.curso.nombreCurso}
+                    {ins.curso.nombre_curso}
                   </h3>
                   <p className="text-xs  mt-1">
-                    {ins.fechaInicio} — {ins.fechaFin}
+                    {ins.fecha_inicio} — {ins.fecha_fin}
                   </p>
                 </div>
 
                 {/* BADGE DE ESTADO */}
 
-                {ins.estadoInscripcion === "pendiente" && (
+                {ins.estadoInscripcion.nombre === "PENDIENTE" && (
                   <div className="text-sm rounded-full p-0.75 px-2 bg-emerald-50 text-emerald-700 dark:bg-emerald-800/20 dark:text-emerald-300 text-center border-[0.5px] border-emerald-700/10 cursor-default w-auto min-w-15 capitalize ">
-                    {ins.estadoInscripcion}
+                    {ins.estadoInscripcion.nombre.toLowerCase()}
                   </div>
                 )}
 
-                {ins.estadoInscripcion === "aprobado" && (
+                {ins.estadoInscripcion.nombre === "APROBADO" && (
                   <div className="text-sm rounded-full p-0.75 px-2 bg-blue-50 text-blue-700 dark:bg-blue-800/20 dark:text-blue-300 text-center border-[0.5px] border-blue-700/10 cursor-default w-auto min-w-15 capitalize ">
-                    {ins.estadoInscripcion}
+                    {ins.estadoInscripcion.nombre.toLowerCase()}
                   </div>
                 )}
-                {ins.estadoInscripcion === "reprobado" && (
+                {ins.estadoInscripcion.nombre === "REPROBADO" && (
                   <div className="text-sm rounded-full p-0.75 px-2 bg-red-50 text-red-700 dark:bg-red-800/20 dark:text-red-300 text-center border-[0.5px] border-red-700/10 cursor-default w-auto min-w-15 capitalize">
-                    {ins.estadoInscripcion}
+                    {ins.estadoInscripcion.nombre.toLowerCase()}
                   </div>
                 )}
               </div>
@@ -128,12 +124,70 @@ export default function Page() {
                     />
                   </div>
                 </div>
+                <div className=" grid grid-cols-2 gap-2 mb-5">
+                  <FieldGroup className="p-3 rounded-lg border grid gap-2 ">
+                    {ins?.curso?.temas && ins?.curso?.temas.length > 0 && (
+                      <>
+                        {ins?.curso?.temas.map((t: any, index: number) => {
+                          const estaCompletado = ins.asistenciaGenerals?.some(
+                            (asis: any) => {
+                              // Buscamos en los avances de la clase práctica
+                              const enPractica =
+                                asis.clasePractica?.avances?.some(
+                                  (av: any) => av.tema_id === t.id,
+                                );
 
+                              // Buscamos en los avances de la clase teórica
+                              const enTeoria = asis.claseTeorica?.avances?.some(
+                                (av: any) => av.tema_id === t.id,
+                              );
+
+                              return enPractica || enTeoria;
+                            },
+                          );
+                          return (
+                            <Field orientation="horizontal" key={index}>
+                              <Checkbox
+                                id={String(t.id + "-" + index)}
+                                name={t.id}
+                                checked={!!estaCompletado}
+                              />
+                              <FieldLabel
+                                htmlFor={String(t.id + "-" + index)}
+                                className="font-normal capitalize"
+                              >
+                                {t.titulo}
+                              </FieldLabel>
+                            </Field>
+                          );
+                        })}
+                      </>
+                    )}
+                  </FieldGroup>
+                  <div className="p-3 rounded-lg border flex flex-col gap-2 ">
+                    <h1 className="font-medium">Evaluaciones</h1>
+                    <div className="grid grid-cols-2  border rounded-md">
+                      <div className="col-span-2 grid grid-cols-subgrid px-2  text-xs font-medium  bg-secondary/40">
+                        <div className="py-2">TEMA</div>
+                        <div className="py-2">Nota</div>
+                      </div>
+                      {ins?.evaluaciones.map((e: any) => (
+                        <div
+                          key={e.id}
+                          className="col-span-2 grid grid-cols-subgrid px-2 py-1 text-sm "
+                        >
+                          <span>{e.examenProgramado.titulo}</span>
+                          <span className="font-medium">{`${e.nota}/100`}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
                 {/* MÉTRICAS CLAVE */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* PRÁCTICAS */}
                   <div className="flex items-start gap-4 p-4 rounded-xl border border-border bg-background">
-                    <div className="p-2.5 bg-violet-100 text-violet-600 dark:bg-violet-700/30 dark:text-violet-300 rounded-lg">
+                    <div className="p-2.5 bg-violet-100/60 text-violet-600 dark:bg-violet-700/30 dark:text-violet-300 rounded-lg">
                       <CarFront size={20} strokeWidth={2.5} />
                     </div>
                     <div>
@@ -153,7 +207,7 @@ export default function Page() {
 
                   {/* TEORÍA */}
                   <div className="flex items-start gap-4 p-4 rounded-xl border border-border bg-background">
-                    <div className="p-2.5 bg-blue-100 text-blue-600 dark:bg-blue-700/30 dark:text-blue-300 rounded-lg">
+                    <div className="p-2.5 bg-blue-100/60 text-blue-600 dark:bg-blue-700/30 dark:text-blue-300 rounded-lg">
                       <NotebookText size={20} strokeWidth={2.5} />
                     </div>
                     <div>
@@ -173,7 +227,7 @@ export default function Page() {
 
                   {/* PAGOS */}
                   <div className="flex items-start gap-4 p-4 rounded-xl border border-border bg-background">
-                    <div className="p-2.5 bg-emerald-100 text-emerald-600 dark:bg-emerald-700/30 dark:text-emerald-300 rounded-lg">
+                    <div className="p-2.5 bg-emerald-100/60 text-emerald-600 dark:bg-emerald-700/30 dark:text-emerald-300 rounded-lg">
                       <DollarSign size={20} strokeWidth={2.5} />
                     </div>
                     <div>
@@ -194,7 +248,7 @@ export default function Page() {
 
                 {/* ACCIONES (Opcional por ahora) */}
                 {/* ACCIONES DE CIERRE (Solo visibles si la inscripción está ACTIVA) */}
-                {ins.estadoInscripcion === "pendiente" && (
+                {ins.estadoInscripcion.nombre === "PENDIENTE" && (
                   <div className="mt-6 pt-4 border-t border-border flex justify-between items-center">
                     {/* Mensaje de retroalimentación dinámica */}
                     <div className="text-sm font-medium">
@@ -229,7 +283,7 @@ export default function Page() {
                           handleFinalizarIns(
                             ins.id,
                             mensaje,
-                            esAprobado ? "aprobado" : "reprobado",
+                            esAprobado ? "APROBADO" : "REPROBADO",
                           );
                         }}
                         className={`px-3 py-2 text-xs font-medium text-white rounded-xl cursor-pointer transition-colors shadow-sm ${

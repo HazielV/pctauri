@@ -85,9 +85,9 @@ export default function CronogramaMes() {
   const obtenerEventosDelDia = (fechaStr: string) => {
     if (!eventos) return { t: [], p: [], e: [] };
     return {
-      t: eventos.teoricas.filter((c) => c.fechaExacta === fechaStr),
-      p: eventos.practicas.filter((c) => c.fechaExacta === fechaStr),
-      e: eventos.examenes.filter((ex) => ex.fechaExacta === fechaStr),
+      t: eventos.teoricas.filter((c) => c.fecha_exacta === fechaStr),
+      p: eventos.practicas.filter((c) => c.fecha_exacta === fechaStr),
+      e: eventos.examenes.filter((ex) => ex.fecha_exacta === fechaStr),
     };
   };
 
@@ -119,7 +119,7 @@ export default function CronogramaMes() {
                 <button
                   onClick={() => {
                     const params = new URLSearchParams(searchParams);
-                    params.delete("mes"); // Volver a hoy
+                    params.delete("mes");
                     setSearchParams(params);
                   }}
                   className="px-4 py-1 border rounded-md hover:bg-secondary text-xs font-medium"
@@ -207,7 +207,7 @@ export default function CronogramaMes() {
                     {eventosHoy.e.map((ex) => (
                       <div
                         key={ex.id}
-                        className="bg-red-500/10 text-red-600 border border-red-500/20 px-1 py-0.5 rounded truncate"
+                        className="bg-violet-500/10 text-violet-600 border border-violet-500/20 px-1 py-0.5 rounded truncate"
                       >
                         📝 {ex.titulo}
                       </div>
@@ -221,10 +221,10 @@ export default function CronogramaMes() {
                       >
                         <div className="absolute left-0.5 w-0.5 h-4/5 bg-orange-600 rounded-full"></div>
                         <span className="text-muted-foreground">
-                          {te.curso?.nombreCurso}
+                          {te.curso?.nombre_curso}
                         </span>
                         <span className="whitespace-nowrap font-semibold">
-                          {`${te.horaInicio}-${te.horaFin}`}
+                          {`${te.hora_inicio}-${te.hora_fin}`}
                         </span>
                       </div>
                     ))}
@@ -236,7 +236,7 @@ export default function CronogramaMes() {
                         <div className="absolute left-0.5 w-0.5 h-4/5 bg-blue-600 rounded-full"></div>
                         <span className="text-muted-foreground">Practico</span>
                         <span className="whitespace-nowrap font-semibold">
-                          {`${te.horaInicio}-${te.horaFin}`}
+                          {`${te.hora_inicio}-${te.hora_fin}`}
                         </span>
                       </div>
                     ))}
@@ -269,8 +269,8 @@ export default function CronogramaMes() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
-                            <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+                            <div className="w-2 h-2 rounded-full bg-orange-500 shrink-0"></div>
+                            <span className="text-sm font-semibold text-orange-600 dark:text-orange-400">
                               {ex.titulo}
                             </span>
                           </div>
@@ -280,10 +280,7 @@ export default function CronogramaMes() {
                           </button>
                         </div>
                         <div className="text-xs text-muted-foreground pl-4">
-                          <span className="font-medium text-foreground">
-                            {ex.tipoExamen}
-                          </span>{" "}
-                          • {ex.curso?.nombreCurso}
+                          • {ex.curso?.nombre_curso}
                         </div>
                       </div>
                     ))}
@@ -297,7 +294,7 @@ export default function CronogramaMes() {
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-orange-500 shrink-0"></div>
                           <span className="text-sm font-semibold">
-                            {te.horaInicio} - {te.horaFin}
+                            {te.hora_inicio} - {te.hora_fin}
                           </span>
                         </div>
 
@@ -312,7 +309,7 @@ export default function CronogramaMes() {
                           <div className="flex items-start gap-2 text-xs text-muted-foreground">
                             <BookOpen size={14} className="shrink-0 mt-0.5" />
                             <span className="leading-tight">
-                              {te.curso?.nombreCurso}
+                              {te.curso?.nombre_curso}
                             </span>
                           </div>
                         </div>
@@ -324,7 +321,7 @@ export default function CronogramaMes() {
                       // Extraemos el nombre del estudiante si existe
                       const nombreEstudiante = pr.inscripcion?.estudiante
                         ?.persona
-                        ? `${pr.inscripcion.estudiante.persona.nombres} ${pr.inscripcion.estudiante.persona.primerApellido}`
+                        ? `${pr.inscripcion.estudiante.persona.nombres} ${pr.inscripcion.estudiante.persona.primer_apellido}`
                         : "Estudiante no asignado";
 
                       return (
@@ -335,7 +332,7 @@ export default function CronogramaMes() {
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></div>
                             <span className="text-sm font-semibold">
-                              {pr.horaInicio} - {pr.horaFin}
+                              {pr.hora_inicio} - {pr.hora_fin}
                             </span>
                           </div>
 

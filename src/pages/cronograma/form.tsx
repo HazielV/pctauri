@@ -11,7 +11,12 @@ import {
 import { useActions } from "./useActions";
 import { useModalStore } from "@/store/modalState";
 
-export default function Form({ data, fechaSeleccionada, cursosActivos }: any) {
+export default function Form({
+  data,
+  fechaSeleccionada,
+  cursosActivos,
+  catalogos,
+}: any) {
   const { upsertMutation } = useActions();
   const { formId } = useModalStore();
   const handleSubmit = (e: React.FormEvent) => {
@@ -63,17 +68,19 @@ export default function Form({ data, fechaSeleccionada, cursosActivos }: any) {
           <FieldLabel htmlFor="tipoExamen">
             Tipo de Evaluación <span className="text-destructive">*</span>
           </FieldLabel>
-          <Select
-            name="tipoExamen"
-            defaultValue={data?.tipoExamen || "TEORICO"}
-          >
+          <Select name="tipoExamen" defaultValue={data?.tipo_examen_id}>
             <SelectTrigger id="tipoExamen" className="w-full">
               <SelectValue placeholder="Seleccione el tipo" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value="TEORICO">Examen Teórico</SelectItem>
-                <SelectItem value="PRACTICO">Examen Práctico</SelectItem>
+                {catalogos
+                  ?.filter((c: any) => c.categoria === "TIPO_ACADEMICO")
+                  .map((c: any) => (
+                    <SelectItem value={c.id}>{c.nombre}</SelectItem>
+                  ))}
+                {/* <SelectItem value="TEORICO">Examen Teórico</SelectItem>
+                <SelectItem value="PRACTICO">Examen Práctico</SelectItem> */}
               </SelectGroup>
             </SelectContent>
           </Select>
@@ -96,7 +103,7 @@ export default function Form({ data, fechaSeleccionada, cursosActivos }: any) {
                 {/* Iteramos sobre los cursos que le pases como prop para llenar el select */}
                 {cursosActivos?.map((curso: any) => (
                   <SelectItem key={curso.id} value={String(curso.id)}>
-                    {curso.nombreCurso}
+                    {curso.nombre_curso}
                   </SelectItem>
                 ))}
               </SelectGroup>
