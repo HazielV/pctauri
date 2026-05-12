@@ -76,9 +76,17 @@ export const db = drizzle(
             columns.forEach((col, i) => {
               const val = values[i];
               if (val === "?") {
-                mappedData[col] = safeParams[paramIdx++];
+                const paramValue = safeParams[paramIdx++];
+                // Si el parámetro es null o el string "null", normalizamos a null
+                mappedData[col] =
+                  paramValue === "null" || paramValue === null
+                    ? null
+                    : paramValue;
               } else if (val.includes("CURRENT_TIMESTAMP")) {
                 mappedData[col] = new Date().toISOString();
+              } else if (val.toLowerCase() === "null") {
+                // <--- CORRECCIÓN AQUÍ
+                mappedData[col] = null;
               } else {
                 mappedData[col] = val.replace(/^['"]|['"]$/g, "");
               }
@@ -93,10 +101,18 @@ export const db = drizzle(
           let paramIdx = 0;
           updateMatches.forEach((match) => {
             const col = match[1];
-            if (match[2] === "?") {
-              mappedData[col] = safeParams[paramIdx++];
-            } else if (match[2].includes("CURRENT_TIMESTAMP")) {
+            const val = match[2];
+            if (val === "?") {
+              const paramValue = safeParams[paramIdx++];
+              mappedData[col] =
+                paramValue === "null" || paramValue === null
+                  ? null
+                  : paramValue;
+            } else if (val.includes("CURRENT_TIMESTAMP")) {
               mappedData[col] = new Date().toISOString();
+            } else if (val.toLowerCase() === "null") {
+              // <--- CORRECCIÓN AQUÍ
+              mappedData[col] = null;
             }
           });
         }
